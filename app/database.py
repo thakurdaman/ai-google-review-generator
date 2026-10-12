@@ -4,18 +4,26 @@ import json
 import hashlib
 from typing import Optional, List, Dict, Any
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "reviews.db")
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/reviews.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "reviews.db")
 
-def get_db():
+def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def get_db():
+    if not os.path.exists(DB_PATH):
+        init_db()
+    return get_db_connection()
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 def init_db():
-    conn = get_db()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Reseller Admin table
