@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Stand Card - {{ business.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #e2e8f0;
+        }
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-card {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
+
+    <!-- Action Toolbar (Hidden on print) -->
+    <div class="no-print max-w-md w-full mb-6 flex items-center justify-between bg-slate-900 text-white p-4 rounded-2xl shadow-lg">
+        <div>
+            <h2 class="text-sm font-bold">Counter Stand / Table Tent</h2>
+            <p class="text-xs text-slate-400">Ready to print & place on counters</p>
+        </div>
+        <button onclick="window.print()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold flex items-center space-x-2 text-white transition">
+            <i class="fa-solid fa-print"></i>
+            <span>Print Flyer</span>
+        </button>
+    </div>
+
+    <!-- Printable Card (Fits 4x6 / Table Stand) -->
+    <div class="print-card w-full max-w-sm bg-white rounded-3xl shadow-2xl border-4 border-slate-900 p-8 text-center relative overflow-hidden flex flex-col items-center justify-between min-h-[580px]">
+        
+        <!-- Top Accent bar -->
+        <div class="w-full h-3 rounded-full mb-6" style="background-color: {{ business.accent_color or '#2563eb' }}"></div>
+
+        <!-- Business Logo & Name -->
+        <div class="mb-4">
+            <div class="w-20 h-20 rounded-2xl bg-white shadow-md border border-slate-100 p-2 mx-auto mb-3 flex items-center justify-center">
+                {% if business.logo_url %}
+                <img src="{{ business.logo_url }}" alt="{{ business.name }}" class="w-full h-full object-contain rounded-xl" onerror="this.src='/static/uploads/artisan_logo.svg'">
+                {% else %}
+                <span class="text-2xl font-black text-slate-800">{{ business.name[:1] }}</span>
+                {% endif %}
+            </div>
+            <h1 class="text-xl font-extrabold text-slate-900 leading-tight">{{ business.name }}</h1>
+            <p class="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">{{ business.category }}</p>
+        </div>
+
+        <!-- Rating Headline & Stars -->
+        <div class="my-3">
+            <div class="flex items-center justify-center space-x-1.5 text-amber-400 text-2xl mb-2">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <h2 class="text-base font-extrabold text-slate-800">Enjoyed your experience?</h2>
+            <p class="text-xs text-slate-600 mt-1">Leave a quick Google review in 30 seconds!</p>
+        </div>
+
+        <!-- High-Res QR Code -->
+        <div class="my-4 p-3 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 inline-block">
+            <img src="/api/qr/{{ business.slug }}.png" alt="Scan to Review" class="w-48 h-48 object-contain rounded-lg">
+        </div>
+
+        <!-- NFC and Scan Icons -->
+        <div class="flex items-center justify-center space-x-4 text-xs font-bold text-slate-700 mb-2">
+            <span class="flex items-center space-x-1">
+                <i class="fa-solid fa-camera text-slate-500"></i>
+                <span>Scan Camera</span>
+            </span>
+            <span class="text-slate-300">•</span>
+            <span class="flex items-center space-x-1">
+                <i class="fa-solid fa-wifi text-indigo-500 rotate-90"></i>
+                <span>Tap NFC Card</span>
+            </span>
+        </div>
+
+        <!-- Direct Link / Google Badge -->
+        <div class="pt-4 border-t border-slate-100 w-full flex items-center justify-between text-[11px] text-slate-500 font-medium">
+            <div class="flex items-center space-x-1.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                <span>Google Review Partner</span>
+            </div>
+            <span class="font-mono text-slate-400">/r/{{ business.slug }}</span>
+        </div>
+
+    </div>
+
+</body>
+</html>

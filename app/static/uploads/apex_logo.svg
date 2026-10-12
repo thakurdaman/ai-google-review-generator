@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="autoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DC2626" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#autoGrad)"/>
+  <!-- Shield outline -->
+  <path d="M100 35 L155 55 V105 C155 140 100 165 100 165 C100 165 45 140 45 105 V55 Z" fill="#1E293B" stroke="#F87171" stroke-width="4"/>
+  <!-- Crossed wrench and piston/spark -->
+  <path d="M85 80 L115 120" stroke="#F1F5F9" stroke-width="8" stroke-linecap="round"/>
+  <path d="M115 80 L85 120" stroke="#F87171" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="100" cy="100" r="10" fill="#FBBF24"/>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="coffeeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#92400E" />
+      <stop offset="100%" stop-color="#451A03" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#coffeeGrad)"/>
+  <!-- Steam -->
+  <path d="M75 50 Q65 40 75 30" stroke="#FDE68A" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M100 45 Q110 35 100 25" stroke="#FDE68A" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M125 50 Q115 40 125 30" stroke="#FDE68A" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Cup -->
+  <path d="M50 70 L150 70 L140 135 Q135 155 100 155 Q65 155 60 135 Z" fill="#FFFBEB"/>
+  <!-- Handle -->
+  <path d="M145 85 C170 85 170 120 142 122" stroke="#FFFBEB" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <!-- Saucer -->
+  <ellipse cx="100" cy="165" rx="65" ry="8" fill="#FDE68A"/>
+</svg>
