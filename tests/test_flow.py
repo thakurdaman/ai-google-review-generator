@@ -20,6 +20,7 @@ from app.database import init_db, get_db
 def run_all_tests():
     print("=" * 60)
     print("🧪 RUNNING COMPREHENSIVE TEST SUITE FOR GOOGLE REVIEW SAAS")
+    print("   INCLUDING SELF-SERVE SIGNUP & UPI AUTOPAY SUBSCRIPTIONS")
     print("=" * 60)
 
     # 1. Initialize DB
@@ -47,8 +48,6 @@ def run_all_tests():
     data = res.json()
     assert "drafts" in data, "No drafts found in response"
     assert len(data["drafts"]) == 3, f"Expected 3 drafts, got {len(data['drafts'])}"
-    for idx, d in enumerate(data["drafts"]):
-        print(f"  Option {idx+1} ({d['tone']}): {d['text']}")
     print(f"  Engine used: {data.get('engine')}")
     print("  ✅ 3 natural review drafts generated successfully.")
 
@@ -94,59 +93,126 @@ def run_all_tests():
     assert len(res_qr.content) > 100
     print(f"  ✅ QR Code PNG generated ({len(res_qr.content)} bytes).")
 
-    # 8. Test Admin Login and Reseller Session Authentication
-    print("\n[TEST 7] Testing Reseller Admin Login...")
-    res_login = client.post(
-        "/admin/login",
-        data={"username": "admin", "password": "admin123"},
-        follow_redirects=False
-    )
-    assert res_login.status_code == 303, f"Expected 303 redirect, got {res_login.status_code}"
-    assert "reseller_session" in res_login.cookies
-    session_cookie = res_login.cookies["reseller_session"]
-    print("  ✅ Admin credentials validated; reseller session cookie issued.")
+    # 8. Test Self-Serve Public Signup for Business Owner
+    print("\n[TEST 7] Testing Public Self-Serve Signup for Business Owner...")
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM business_owners WHERE email = 'mario@bellanapoli.com'")
+    cursor.execute("DELETE FROM businesses WHERE name = 'Trattoria Bella Napoli'")
+    conn.commit()
+    conn.close()
 
-    # 9. Test Access to Admin Dashboard with Cookie
-    print("\n[TEST 8] Testing Admin Dashboard with Session...")
-    res_dash = client.get("/admin", cookies={"reseller_session": session_cookie})
-    assert res_dash.status_code == 200, f"Expected 200, got {res_dash.status_code}"
-    assert "ReviewBoost" in res_dash.text
-    assert "Reseller Hub" in res_dash.text
-    assert "Artisan Roast Coffee Co." in res_dash.text
-    print("  ✅ Admin Dashboard loaded with live metrics and client businesses.")
-
-    # 10. Test Admin Client Creation
-    print("\n[TEST 9] Testing Adding a New Client Business via Admin API...")
-    new_biz = {
-        "name": "Dr. Miller Orthodontics",
-        "slug": "miller-ortho",
-        "category": "Healthcare & Dental",
-        "google_review_url": "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4",
-        "logo_url": "/static/uploads/smile_logo.svg",
-        "accent_color": "#0284C7",
-        "tags_preset": ["Great Braces", "Super Gentle", "Friendly Orthodontist", "Zero Wait Time"]
+    signup_data = {
+        "business_name": "Trattoria Bella Napoli",
+        "email": "mario@bellanapoli.com",
+        "password": "napoliPassword123",
+        "category": "Restaurant & Café",
+        "google_review_url": "https://g.page/r/bellanapoli/review",
+        "accent_color": "#DC2626",
+        "accent_hex": "#DC2626",
+        "logo_url": "/static/uploads/artisan_logo.svg",
+        "tags": "Wood-Fired Pizza, Handmade Pasta, Friendly Waiters"
     }
-    res_create = client.post("/api/admin/businesses", json=new_biz, cookies={"reseller_session": session_cookie})
-    assert res_create.status_code == 200, f"Expected 200, got {res_create.status_code}"
-    new_id = res_create.json()["id"]
-    print(f"  ✅ New business created with ID: {new_id}")
+    res_signup = client.post("/signup", data=signup_data, follow_redirects=False)
+    assert res_signup.status_code == 303, f"Expected 303 redirect to /pricing, got {res_signup.status_code}"
+    assert res_signup.headers["location"] == "/pricing"
+    assert "owner_session" in res_signup.cookies
+    owner_cookie = res_signup.cookies["owner_session"]
+    print("  ✅ Owner signed up! Account created, logged in, and redirected to /pricing.")
 
-    # Verify new business landing page immediately works
-    res_new_landing = client.get("/r/miller-ortho")
-    assert res_new_landing.status_code == 200
-    assert "Dr. Miller Orthodontics" in res_new_landing.text
-    print("  ✅ Newly created business landing page verified active.")
+    # 9. Test Subscription Gating When Inactive / Pending
+    print("\n[TEST 8] Testing Subscription Gating on Newly Created Inactive Business...")
+    # Find slug for Trattoria Bella Napoli
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, slug, subscription_status FROM businesses WHERE name = 'Trattoria Bella Napoli'")
+    new_biz = cursor.fetchone()
+    conn.close()
+    assert new_biz is not None
+    new_biz_id = new_biz["id"]
+    new_slug = new_biz["slug"]
 
-    # 11. Test Printable Stand Flyer
-    print("\n[TEST 10] Testing Printable Flyer / Table Tent Generation...")
-    res_flyer = client.get(f"/admin/business/{new_id}/flyer", cookies={"reseller_session": session_cookie})
-    assert res_flyer.status_code == 200
-    assert "Dr. Miller Orthodontics" in res_flyer.text
-    assert "Scan Camera" in res_flyer.text
-    print("  ✅ Printable counter stand card rendered.")
+    res_gate = client.get(f"/r/{new_slug}")
+    assert res_gate.status_code == 402, f"Expected 402 Payment Required for inactive portal, got {res_gate.status_code}"
+    assert "temporarily paused pending subscription renewal" in res_gate.text
+    print("  ✅ Access gating active! Unsubscribed portal correctly blocked with renewal notice.")
+
+    # 10. Test Pricing & UPI Autopay Activation
+    print("\n[TEST 9] Testing Subscription Activation via UPI Autopay Mandate...")
+    # Create checkout session
+    res_checkout = client.post("/api/billing/create-checkout", json={
+        "plan_type": "monthly",
+        "payment_mode": "upi_autopay"
+    }, cookies={"owner_session": owner_cookie})
+    assert res_checkout.status_code == 200, f"Checkout failed: {res_checkout.text}"
+    checkout_info = res_checkout.json()
+    assert checkout_info["type"] == "upi_autopay"
+
+    # Verify & activate payment
+    res_verify = client.post("/api/billing/verify-payment", json={
+        "plan_type": "monthly",
+        "payment_mode": "upi_autopay",
+        "payment_id": "pay_test_upi_mandate_8899",
+        "subscription_id": checkout_info.get("subscription_id", "sub_test_8899")
+    }, cookies={"owner_session": owner_cookie})
+    assert res_verify.status_code == 200
+    assert res_verify.json()["success"] is True
+    print("  ✅ Payment verified! Monthly Plan with UPI Autopay Mandate activated.")
+
+    # Verify that the landing page is now immediately ACTIVE!
+    res_active_gate = client.get(f"/r/{new_slug}")
+    assert res_active_gate.status_code == 200
+    assert "Trattoria Bella Napoli" in res_active_gate.text
+    print("  ✅ Portal access unlocked! Customer landing page is live and active.")
+
+    # 11. Test Business Owner Dashboard & Profile Update (with Audit Logging)
+    print("\n[TEST 10] Testing Owner Dashboard and Google Review Link Update...")
+    res_owner_dash = client.get("/dashboard", cookies={"owner_session": owner_cookie})
+    assert res_owner_dash.status_code == 200
+    assert "Trattoria Bella Napoli" in res_owner_dash.text
+    assert "Active Portal" in res_owner_dash.text
+    print("  ✅ Owner dashboard loads with live stats, QR code, and billing details.")
+
+    # Update Google Review Link (Must update last_google_url_update and log activity)
+    updated_url = "https://search.google.com/local/writereview?placeid=ChIJUpdatedPlace123"
+    res_profile_update = client.put("/api/owner/profile", json={
+        "name": "Trattoria Bella Napoli",
+        "google_review_url": updated_url,
+        "category": "Italian Restaurant",
+        "accent_color": "#B91C1C",
+        "tags_preset": ["Fresh Pasta", "Warm Welcome"]
+    }, cookies={"owner_session": owner_cookie})
+    assert res_profile_update.status_code == 200
+    print("  ✅ Google review destination link updated by owner.")
+
+    # 12. Test Reseller Admin Full Visibility & Read-Only Inspection
+    print("\n[TEST 11] Testing Reseller Admin Visibility and Read-Only Inspection...")
+    # Admin login
+    res_admin_login = client.post("/admin/login", data={"username": "admin", "password": "admin123"}, follow_redirects=False)
+    assert res_admin_login.status_code == 303
+    admin_cookie = res_admin_login.cookies["reseller_session"]
+
+    # Admin dashboard overview
+    res_admin_dash = client.get("/admin", cookies={"reseller_session": admin_cookie})
+    assert res_admin_dash.status_code == 200
+    assert "Trattoria Bella Napoli" in res_admin_dash.text
+    assert "mario@bellanapoli.com" in res_admin_dash.text
+    print("  ✅ Admin dashboard lists all self-registered owners, plans, and subscription states.")
+
+    # Admin inspects business details & activity audit logs (read-only)
+    res_inspect = client.get(f"/api/admin/businesses/{new_biz_id}/inspect", cookies={"reseller_session": admin_cookie})
+    assert res_inspect.status_code == 200
+    inspect_data = res_inspect.json()
+    assert inspect_data["business"]["google_review_url"] == updated_url
+    assert len(inspect_data["logs"]) >= 3  # signup, autopay_mandate_authorized, google_url_updated
+    log_actions = [log["action"] for log in inspect_data["logs"]]
+    assert "signup" in log_actions
+    assert "autopay_mandate_authorized" in log_actions
+    assert "google_url_updated" in log_actions
+    print(f"  ✅ Admin read-only inspection confirmed! Activity audit trail: {log_actions}")
 
     print("\n" + "=" * 60)
-    print("🎉 ALL 10 TESTS PASSED WITH ZERO ERRORS!")
+    print("🎉 ALL 11 TESTS PASSED WITH ZERO ERRORS!")
     print("=" * 60)
 
 if __name__ == "__main__":
