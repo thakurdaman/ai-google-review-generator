@@ -667,6 +667,16 @@
                     <input type="password" id="settings-razorpay-secret" placeholder="Secret Key"
                            class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
                 </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                    <div>
+                        <span class="text-xs font-semibold text-white block">Payment Gateway Collection</span>
+                        <span class="text-[11px] text-slate-400 block">When disabled, all businesses get full free access without payment</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settings-payments-enabled" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
                 <p class="text-[11px] text-slate-400">
                     If left blank, the interactive sandbox simulation mode allows instant testing of UPI Autopay mandates and one-time payments.
                 </p>

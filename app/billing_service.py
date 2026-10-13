@@ -31,6 +31,11 @@ PLANS = {
     }
 }
 
+def is_payments_enabled() -> bool:
+    """Returns True if payment gateway is actively required, False if temporarily disabled (free beta launch)."""
+    val = get_setting("payments_enabled", os.getenv("PAYMENTS_ENABLED", "false")).strip().lower()
+    return val in ["1", "true", "yes", "enabled"]
+
 def get_razorpay_keys():
     key_id = get_setting("razorpay_key_id", os.getenv("RAZORPAY_KEY_ID", "")).strip()
     key_secret = get_setting("razorpay_key_secret", os.getenv("RAZORPAY_KEY_SECRET", "")).strip()
@@ -39,13 +44,32 @@ def get_razorpay_keys():
 def create_checkout_session(business_id: int, plan_type: str, payment_mode: str) -> Dict[str, Any]:
     """
     Creates either a UPI Autopay mandate subscription or a one-time payment order.
-    Supports real Razorpay API when keys are configured, and provides an instant
-    interactive sandbox checkout if keys are not yet configured.
+    When payment gateway is temporarily disabled, immediately activates account for free.
     """
     if plan_type not in PLANS:
         plan_type = "monthly"
     
     plan_info = PLANS[plan_type]
+
+    # If payment gateway is temporarily disabled, grant instant free access
+    if not is_payments_enabled():
+        verify_and_activate_subscription(
+            business_id=business_id,
+            plan_type=plan_type,
+            payment_mode="free_launch",
+            payment_id="free_launch_access",
+            order_id="",
+            subscription_id=""
+        )
+        return {
+            "mode": "free",
+            "type": "free",
+            "is_free": True,
+            "amount": 0,
+            "plan": plan_info,
+            "message": "Payment gateway is currently disabled. Your account has been activated for free!"
+        }
+
     key_id, key_secret = get_razorpay_keys()
 
     # Real Razorpay Gateway Call (if keys are configured)
@@ -162,8 +186,11 @@ def verify_and_activate_subscription(
 def is_subscription_active(business: Dict[str, Any]) -> bool:
     """
     Checks if business has an active subscription.
-    Enforces review page gating: if inactive, customers cannot access AI review portal.
+    When payment gateway is temporarily disabled, all businesses have active access.
     """
+    if not is_payments_enabled():
+        return True
+
     status = business.get("subscription_status", "inactive")
     if status == "active":
         # Check cycle end date if present

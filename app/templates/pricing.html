@@ -60,6 +60,24 @@
             </div>
         </div>
 
+        {% if not payments_enabled %}
+        <!-- Free Beta Access Announcement Banner -->
+        <div class="max-w-2xl mx-auto mb-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 flex items-center space-x-3.5 text-emerald-200 shadow-lg shadow-emerald-500/5">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shrink-0">
+                <i class="fa-solid fa-gift"></i>
+            </div>
+            <div>
+                <h4 class="text-xs sm:text-sm font-bold text-white flex items-center space-x-2">
+                    <span>🎉 Free Beta Launch Active</span>
+                    <span class="text-[10px] font-bold bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full">100% Free</span>
+                </h4>
+                <p class="text-[11px] sm:text-xs text-emerald-300/80 mt-0.5">
+                    Payment gateway is temporarily disabled. Click either plan below to activate your account for ₹0 with zero card or UPI mandate required!
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Pricing Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
 
@@ -107,11 +125,15 @@
                 <div>
                     <button type="button" onclick="initiateCheckout('monthly')" 
                             class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-700 hover:bg-slate-600 border border-slate-600 transition flex items-center justify-center space-x-2">
+                        {% if not payments_enabled %}
+                        <span>Activate Free Monthly Access (₹0)</span>
+                        {% else %}
                         <span>Subscribe Monthly (₹999)</span>
+                        {% endif %}
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
                     <p class="text-[10px] text-center text-slate-500 mt-2 payment-mode-note">
-                        Recurring UPI Autopay mandate • Cancel anytime in 1 tap
+                        {% if not payments_enabled %}Free Beta Access • No payment or card required{% else %}Recurring UPI Autopay mandate • Cancel anytime in 1 tap{% endif %}
                     </p>
                 </div>
             </div>
@@ -167,11 +189,15 @@
                 <div>
                     <button type="button" onclick="initiateCheckout('yearly')" 
                             class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
+                        {% if not payments_enabled %}
+                        <span>Activate Free Annual Access (₹0)</span>
+                        {% else %}
                         <span>Subscribe Yearly (₹8,999)</span>
+                        {% endif %}
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
                     <p class="text-[10px] text-center text-slate-400 mt-2 payment-mode-note">
-                        Recurring UPI Autopay mandate • Billed once annually
+                        {% if not payments_enabled %}Free Beta Access • Full Pro features included{% else %}Recurring UPI Autopay mandate • Billed once annually{% endif %}
                     </p>
                 </div>
             </div>
@@ -294,6 +320,16 @@
 
             const data = await resp.json();
             currentSession = data;
+
+            // Free Beta Launch Mode (Payment Gateway Disabled)
+            if (data.is_free || data.mode === 'free') {
+                modal.classList.add('hidden');
+                showToast('🎉 Free Launch Access Activated! Redirecting to dashboard...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 700);
+                return;
+            }
 
             // If real Razorpay keys are configured and returned
             if (data.mode === 'live' && data.key_id && window.Razorpay) {

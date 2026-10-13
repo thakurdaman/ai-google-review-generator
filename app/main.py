@@ -31,7 +31,7 @@ from .qr_service import (
 )
 from .billing_service import (
     PLANS, create_checkout_session, verify_and_activate_subscription,
-    is_subscription_active, cancel_autopay_mandate
+    is_subscription_active, cancel_autopay_mandate, is_payments_enabled
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -111,6 +111,7 @@ class SettingsUpdateRequest(BaseModel):
     razorpay_key_secret: Optional[str] = ""
     google_client_id: Optional[str] = ""
     google_client_secret: Optional[str] = ""
+    payments_enabled: Optional[bool] = None
 
 class TestAiRequest(BaseModel):
     api_key: str
@@ -239,9 +240,13 @@ async def signup_submit(
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else ["Friendly Staff", "Quick Service"]
     now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
+    payments_on = is_payments_enabled()
+    init_active = 0 if payments_on else 1
+    init_status = "pending_payment" if payments_on else "active"
+
     cursor.execute("""
         INSERT INTO businesses (slug, name, category, google_review_url, logo_url, accent_color, tags_preset, active, subscription_status, plan_tier, payment_method, last_google_url_update)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending_payment', 'monthly', 'upi_autopay', ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'monthly', 'upi_autopay', ?)
     """, (
         slug,
         bname_clean,
@@ -250,6 +255,8 @@ async def signup_submit(
         logo_url,
         brand_color,
         json.dumps(tag_list),
+        init_active,
+        init_status,
         now_str
     ))
     business_id = cursor.lastrowid
@@ -270,9 +277,10 @@ async def signup_submit(
     log_activity(business_id, "signup", f"Owner {email_clean} self-registered business '{bname_clean}'")
     log_activity(business_id, "google_url_updated", f"Configured Google review link during signup: {gov_url}")
 
-    # 4. Set session cookie and redirect to plan selection
+    # 4. Set session cookie and redirect (to /dashboard if free launch, else /pricing)
     token = create_owner_token(owner_id, email_clean, business_id)
-    resp = RedirectResponse(url="/pricing", status_code=status.HTTP_303_SEE_OTHER)
+    target_url = "/dashboard" if not payments_on else "/pricing"
+    resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
     resp.set_cookie(
         key="owner_session",
         value=token,
@@ -325,7 +333,7 @@ async def owner_login_submit(
 
     token = create_owner_token(owner["id"], owner["email"], owner["business_id"])
     target_url = "/dashboard"
-    if owner.get("subscription_status") not in ["active", "trialing"]:
+    if is_payments_enabled() and owner.get("subscription_status") not in ["active", "trialing"]:
         target_url = "/pricing"
 
     resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
@@ -458,7 +466,7 @@ async def google_oauth_callback(
 
         token = create_owner_token(existing_owner["id"], email, existing_owner.get("business_id", 0))
         target_url = "/dashboard"
-        if existing_owner.get("subscription_status") not in ["active", "trialing"]:
+        if is_payments_enabled() and existing_owner.get("subscription_status") not in ["active", "trialing"]:
             target_url = "/pricing"
 
         resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
@@ -558,9 +566,13 @@ async def google_signup_complete_submit(
     conn = get_db()
     cursor = conn.cursor()
 
+    payments_on = is_payments_enabled()
+    init_active = 0 if payments_on else 1
+    init_status = "pending_payment" if payments_on else "active"
+
     cursor.execute("""
         INSERT INTO businesses (slug, name, category, google_review_url, logo_url, accent_color, tags_preset, active, subscription_status, plan_tier, payment_method, last_google_url_update)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending_payment', 'monthly', 'upi_autopay', ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'monthly', 'upi_autopay', ?)
     """, (
         slug,
         bname_clean,
@@ -569,6 +581,8 @@ async def google_signup_complete_submit(
         logo_url,
         brand_color,
         json.dumps(tag_list),
+        init_active,
+        init_status,
         now_str
     ))
     business_id = cursor.lastrowid
@@ -587,7 +601,8 @@ async def google_signup_complete_submit(
     log_activity(business_id, "google_url_updated", f"Configured Google review link: {gov_url}")
 
     token_str = create_owner_token(owner_id, email_clean, business_id)
-    resp = RedirectResponse(url="/pricing", status_code=status.HTTP_303_SEE_OTHER)
+    target_url = "/dashboard" if not payments_on else "/pricing"
+    resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
     resp.set_cookie(
         key="owner_session",
         value=token_str,
@@ -605,12 +620,14 @@ async def google_signup_complete_submit(
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
     owner = get_current_owner(request)
+    payments_on = is_payments_enabled()
     return templates.TemplateResponse(
         request=request,
         name="pricing.html",
         context={
             "owner": owner,
-            "plans": PLANS
+            "plans": PLANS,
+            "payments_enabled": payments_on
         }
     )
 
@@ -1284,7 +1301,8 @@ async def api_get_settings(current_user: str = Depends(require_reseller)):
         "razorpay_key_id": rzp_key,
         "razorpay_key_secret": rzp_secret,
         "google_client_id": google_client_id,
-        "google_client_secret": google_client_secret
+        "google_client_secret": google_client_secret,
+        "payments_enabled": is_payments_enabled()
     }
 
 
@@ -1303,6 +1321,8 @@ async def api_save_settings(
         set_setting("google_client_id", data.google_client_id.strip())
     if data.google_client_secret is not None:
         set_setting("google_client_secret", data.google_client_secret.strip())
+    if data.payments_enabled is not None:
+        set_setting("payments_enabled", "true" if data.payments_enabled else "false")
     return {"status": "saved"}
 
 

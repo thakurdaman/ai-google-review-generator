@@ -98,6 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (document.getElementById('settings-google-secret')) {
                         document.getElementById('settings-google-secret').value = data.google_client_secret || '';
                     }
+                    const chkPayments = document.getElementById('settings-payments-enabled');
+                    if (chkPayments) {
+                        chkPayments.checked = data.payments_enabled === true;
+                    }
                 }
             } catch (e) {}
         });
@@ -186,6 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const googleSecretElem = document.getElementById('settings-google-secret');
             const googleId = googleIdElem ? googleIdElem.value.trim() : '';
             const googleSecret = googleSecretElem ? googleSecretElem.value.trim() : '';
+            const chkPayments = document.getElementById('settings-payments-enabled');
+            const paymentsEnabled = chkPayments ? chkPayments.checked : false;
 
             try {
                 const resp = await fetch('/api/admin/settings', {
@@ -196,7 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         razorpay_key_id: rzpKey,
                         razorpay_key_secret: rzpSecret,
                         google_client_id: googleId,
-                        google_client_secret: googleSecret
+                        google_client_secret: googleSecret,
+                        payments_enabled: paymentsEnabled
                     })
                 });
 
