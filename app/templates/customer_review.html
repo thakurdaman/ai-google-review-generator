@@ -1,269 +1,327 @@
 {% extends "base.html" %}
 
-{% block title %}Share Your Feedback - {{ business.name }}{% endblock %}
+{% block title %}{{ business.name }} - Google Customer Review{% endblock %}
 
 {% block head %}
 <style>
-    /* Mobile-first polish */
+    /* Tactile Mobile Controls */
     .star-btn {
-        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease;
+        transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
     }
     .star-btn:active {
-        transform: scale(1.3);
+        transform: scale(1.22);
     }
     .chip {
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: 40px;
     }
     .chip.selected {
-        background-color: {{ business.accent_color or '#2563eb' }};
-        color: white;
-        border-color: {{ business.accent_color or '#2563eb' }};
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px {{ business.accent_color or '#2563eb' }}40;
+        background-color: #0F172A;
+        color: #FFFFFF;
+        border-color: #0F172A;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
     }
     .review-card {
-        transition: all 0.2s ease;
+        transition: all 0.18s ease;
     }
     .review-card.active-review {
-        border-color: {{ business.accent_color or '#2563eb' }};
-        background-color: #f8fafc;
-        box-shadow: 0 0 0 2px {{ business.accent_color or '#2563eb' }};
-    }
-    @keyframes pulseGlow {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.85; transform: scale(1.03); }
-    }
-    .cta-pulse {
-        animation: pulseGlow 3s infinite ease-in-out;
+        border-color: #2563EB;
+        background-color: #F0F5FF;
+        box-shadow: 0 0 0 1.5px #2563EB;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white flex items-center justify-center p-4 sm:p-6">
-    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden relative">
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-6 text-slate-900">
+    
+    <!-- Customer Flow Wrapper -->
+    <div class="w-full max-w-md mx-auto my-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
-        <!-- Top Header / Branding Bar -->
-        <div class="pt-8 pb-4 px-6 text-center border-b border-slate-50 relative">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white shadow-md border border-slate-100 p-2 mx-auto mb-3">
+        <!-- Top Header & Business Identity -->
+        <header class="p-5 sm:p-6 text-center border-b border-slate-100 bg-white">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-slate-50 border border-slate-200 p-2 mx-auto mb-3 shadow-sm">
                 {% if business.logo_url %}
-                    <img src="{{ business.logo_url }}" alt="{{ business.name }}" class="w-full h-full object-contain rounded-xl" onerror="this.src='/static/uploads/artisan_logo.svg'">
+                    <img src="{{ business.logo_url }}" alt="{{ business.name }}" class="w-full h-full object-contain rounded-lg" onerror="this.src='/static/uploads/artisan_logo.svg'">
                 {% else %}
-                    <div class="w-full h-full rounded-xl flex items-center justify-center text-white font-bold text-2xl" style="background-color: {{ business.accent_color or '#2563eb' }}">
+                    <div class="w-full h-full rounded-lg flex items-center justify-center text-white font-bold text-xl font-heading" style="background-color: {{ business.accent_color or '#0F172A' }}">
                         {{ business.name[:1] }}
                     </div>
                 {% endif %}
             </div>
-            <h1 class="text-xl font-extrabold text-slate-800 tracking-tight leading-snug">{{ business.name }}</h1>
-            <p class="text-xs font-medium text-slate-500 mt-1 flex items-center justify-center space-x-1">
+            
+            <h1 class="text-xl sm:text-2xl font-bold font-heading text-slate-900 tracking-tight leading-snug">
+                {{ business.name }}
+            </h1>
+            
+            <div class="flex items-center justify-center space-x-2 text-xs text-slate-500 mt-1">
                 <span>{{ business.category }}</span>
-                <span>•</span>
-                <span class="text-amber-500 flex items-center"><i class="fa-solid fa-star text-[10px] mr-1"></i>Google Verified</span>
-            </p>
-        </div>
+                <span class="text-slate-300">•</span>
+                <span class="inline-flex items-center text-amber-600 font-medium">
+                    <i class="fa-solid fa-star text-[11px] mr-1 text-amber-500"></i> Google Verified
+                </span>
+            </div>
 
-        <div class="p-6">
+            <!-- Flow Progress Indicator -->
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                <span id="step-badge" class="text-brand-600 uppercase tracking-wider font-bold">Step 1 of 3</span>
+                <span class="text-slate-400">Quick 30-sec feedback</span>
+            </div>
+        </header>
 
-            <!-- STEP 1: Star Rating Selector -->
-            <div id="step-rating" class="transition-all duration-300">
-                <div class="text-center mb-6">
-                    <h2 class="text-lg font-bold text-slate-800">How was your experience today?</h2>
-                    <p class="text-sm text-slate-500 mt-1">Tap a star to rate your visit</p>
+        <!-- Main Interactive Steps Container -->
+        <main class="p-5 sm:p-6">
+
+            <!-- ========================================== -->
+            <!-- STEP 1: Tactile Star Rating Selector       -->
+            <!-- ========================================== -->
+            <section id="step-rating" class="transition-all duration-200">
+                <div class="text-center mb-5">
+                    <h2 class="text-base sm:text-lg font-bold font-heading text-slate-900">
+                        How was your visit today?
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">Tap a star to rate your experience</p>
                 </div>
 
-                <!-- 5 Stars Container -->
-                <div class="flex justify-center items-center space-x-2.5 sm:space-x-3 my-6 touch-manipulation">
+                <!-- 5 Large Touch Targets -->
+                <div class="flex justify-center items-center space-x-2 sm:space-x-3 my-5 touch-manipulation">
                     {% for i in range(1, 6) %}
                     <button type="button" 
                             data-rating="{{ i }}" 
-                            class="star-btn text-slate-200 hover:text-amber-400 focus:outline-none p-1 text-4xl sm:text-5xl"
+                            class="star-btn text-slate-200 hover:text-amber-400 focus:outline-none p-1 text-4xl sm:text-5xl transition-colors duration-150"
                             aria-label="Rate {{ i }} stars">
                         <i class="fa-solid fa-star"></i>
                     </button>
                     {% endfor %}
                 </div>
 
-                <!-- Rating Status Text -->
-                <div class="text-center min-h-[28px]">
-                    <span id="rating-label" class="text-sm font-semibold text-slate-400">Select rating</span>
-                </div>
-            </div>
-
-            <!-- STEP 2A: Positive Flow (4-5 Stars) -> Quick Tap Chips & AI Generation -->
-            <div id="step-positive" class="hidden transition-all duration-300">
-                <div class="text-center mb-5">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-2">
-                        <i class="fa-solid fa-face-smile-beam mr-1.5"></i> We're so glad you had a great visit!
+                <!-- Live Rating Status Label -->
+                <div class="text-center min-h-[26px]">
+                    <span id="rating-label" class="text-xs sm:text-sm font-semibold text-slate-400">
+                        Tap 1 to 5 stars
                     </span>
-                    <h3 class="text-base font-bold text-slate-800">What stood out to you?</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Tap 2 or 3 highlights below</p>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- STEP 2A: Positive Flow (4-5 Stars)         -->
+            <!-- Quick Highlights & Instant Draft Generator -->
+            <!-- ========================================== -->
+            <section id="step-positive" class="hidden transition-all duration-200 pt-2">
+                <div class="text-center mb-5">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
+                        <i class="fa-solid fa-thumbs-up mr-1.5 text-emerald-600"></i> We're delighted you enjoyed it!
+                    </span>
+                    <h3 class="text-base font-bold font-heading text-slate-900">
+                        What stood out during your visit?
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Select 1 or more highlights below</p>
                 </div>
 
-                <!-- Quick Tap Options (Chips) -->
+                <!-- Quick-select tags pills -->
                 <div id="chips-container" class="flex flex-wrap gap-2 justify-center mb-5">
-                    <!-- Populated dynamically via JS from business tags -->
+                    <!-- Injected dynamically via customer.js -->
                 </div>
 
-                <!-- Optional Custom Note -->
+                <!-- Optional specific remark -->
                 <div class="mb-5">
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Anything specific to mention? <span class="text-slate-400">(optional)</span></label>
+                    <label for="custom-note-input" class="block text-xs font-semibold text-slate-700 mb-1">
+                        Any specific detail or staff name? <span class="text-slate-400 font-normal">(optional)</span>
+                    </label>
                     <input type="text" id="custom-note-input" 
-                           placeholder="e.g. delicious espresso, super quick oil change..." 
-                           class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                           placeholder="e.g., delicious food, quick billing, warm hospitality..." 
+                           class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-slate-800 placeholder-slate-400 transition">
                 </div>
 
-                <!-- Generate Reviews Button -->
-                <button id="btn-generate-ai" 
-                        class="w-full py-3.5 px-4 rounded-xl font-bold text-white shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
-                        style="background-color: {{ business.accent_color or '#2563eb' }}; box-shadow: 0 4px 14px {{ business.accent_color or '#2563eb' }}40;">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <!-- Generate Drafts Button -->
+                <button type="button" id="btn-generate-ai" 
+                        class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.99] shadow-sm transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-xs"></i>
                     <span>Generate Review Drafts</span>
                 </button>
-            </div>
+            </section>
 
-            <!-- STEP 2B: Negative Flow (1-3 Stars) -> Private Feedback Form (STRICTLY NO AI) -->
-            <div id="step-negative" class="hidden transition-all duration-300">
+
+            <!-- ========================================== -->
+            <!-- STEP 2B: Negative Flow (1-3 Stars)         -->
+            <!-- Private Feedback Direct to Leadership      -->
+            <!-- ========================================== -->
+            <section id="step-negative" class="hidden transition-all duration-200 pt-2">
                 <div class="text-center mb-5">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 mb-2">
-                        <i class="fa-solid fa-circle-exclamation mr-1.5"></i> We're sorry we fell short
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 mb-2">
+                        <i class="fa-solid fa-circle-exclamation mr-1.5 text-rose-600"></i> We're genuinely sorry
                     </span>
-                    <h3 class="text-base font-bold text-slate-800">Tell management what happened</h3>
-                    <p class="text-xs text-slate-500 mt-1">Your comments go directly to our leadership team so we can address your concerns immediately.</p>
+                    <h3 class="text-base font-bold font-heading text-slate-900">
+                        Help us make it right
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Your message goes directly to {{ business.name }} management so we can look into this and improve immediately.
+                    </p>
                 </div>
 
                 <form id="private-feedback-form" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">What could we have done better? <span class="text-rose-500">*</span></label>
+                        <label for="feedback-message" class="block text-xs font-semibold text-slate-700 mb-1">
+                            What went wrong with your visit? <span class="text-rose-500">*</span>
+                        </label>
                         <textarea id="feedback-message" required rows="3" 
-                                  placeholder="Please describe your experience and what we can do to make it right..." 
-                                  class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"></textarea>
+                                  placeholder="Please let us know what happened and how we could have served you better..." 
+                                  class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition text-slate-800"></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Your Name <span class="text-slate-400 font-normal">(optional)</span></label>
-                            <input type="text" id="feedback-name" placeholder="John D." 
-                                   class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                            <label for="feedback-name" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Your Name <span class="text-slate-400 font-normal">(optional)</span>
+                            </label>
+                            <input type="text" id="feedback-name" placeholder="Your name" 
+                                   class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none text-slate-800">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Phone or Email <span class="text-slate-400 font-normal">(optional)</span></label>
-                            <input type="text" id="feedback-contact" placeholder="For follow-up" 
-                                   class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                            <label for="feedback-contact" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Phone or Email <span class="text-slate-400 font-normal">(optional)</span>
+                            </label>
+                            <input type="text" id="feedback-contact" placeholder="For resolution" 
+                                   class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none text-slate-800">
                         </div>
                     </div>
 
                     <button type="submit" id="btn-submit-feedback"
-                            class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center space-x-2">
+                            class="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
-                        <span>Send Private Feedback</span>
+                        <span>Send Confidential Feedback</span>
                     </button>
-                    <p class="text-[11px] text-center text-slate-400">This feedback is kept strictly confidential and internal.</p>
+                    
+                    <p class="text-[11px] text-center text-slate-400">
+                        Kept strictly private and never published publicly.
+                    </p>
                 </form>
-            </div>
+            </section>
 
-            <!-- STEP 3A: AI Drafts Display & Edit (For 4-5 Stars) -->
-            <div id="step-ai-results" class="hidden transition-all duration-300">
+
+            <!-- ========================================== -->
+            <!-- STEP 3A: AI Drafts Display & Edit          -->
+            <!-- ========================================== -->
+            <section id="step-ai-results" class="hidden transition-all duration-200 pt-2">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-bold text-slate-800">Choose your favorite draft:</h3>
-                    <span id="ai-engine-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 font-medium text-slate-500 flex items-center">
-                        <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>AI Crafted
+                    <h3 class="text-xs sm:text-sm font-bold font-heading text-slate-900">
+                        Select your preferred review:
+                    </h3>
+                    <span id="ai-engine-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 font-semibold text-slate-600 border border-slate-200 flex items-center">
+                        <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Natural Draft
                     </span>
                 </div>
 
                 <!-- 3 Draft Cards Container -->
                 <div id="drafts-list" class="space-y-2.5 mb-4">
-                    <!-- Cards populated via JS -->
+                    <!-- Populated via customer.js -->
                 </div>
 
                 <!-- Edit Textarea for Selected Draft -->
                 <div class="mb-4">
-                    <div class="flex items-center justify-between mb-1">
-                        <label class="text-xs font-semibold text-slate-600 flex items-center">
-                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400"></i> Edit review text:
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="final-review-text" class="text-xs font-semibold text-slate-700 flex items-center">
+                            <i class="fa-solid fa-pen text-slate-400 mr-1.5 text-[10px]"></i> Edit or add to this text:
                         </label>
-                        <span class="text-[10px] text-slate-400">Feel free to tweak</span>
+                        <span class="text-[10px] text-slate-400">Feel free to personalize</span>
                     </div>
                     <textarea id="final-review-text" rows="3" 
-                              class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition font-normal text-slate-800"></textarea>
+                              class="w-full p-3 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-slate-900 transition leading-relaxed"></textarea>
                 </div>
 
-                <!-- Copy & Post to Google CTA -->
-                <button id="btn-post-google" 
-                        class="cta-pulse w-full py-4 px-4 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-2.5">
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <!-- Copy & Open Google CTA -->
+                <button type="button" id="btn-post-google" 
+                        class="w-full py-4 px-4 bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.99] text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2.5">
+                    <svg class="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
                     </svg>
-                    <span class="text-base text-white font-extrabold tracking-wide">Copy & Post to Google</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1 text-white opacity-80"></i>
+                    <span class="text-sm sm:text-base font-extrabold tracking-tight">Copy & Open Google</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-80 ml-1"></i>
                 </button>
 
-                <p class="text-[11px] text-center text-slate-400 mt-2.5 flex items-center justify-center space-x-1">
-                    <i class="fa-regular fa-clipboard"></i>
-                    <span>Review is automatically copied to your clipboard</span>
+                <!-- Helpful microcopy -->
+                <p class="text-[11px] text-center text-slate-500 mt-2.5 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
+                    <span>Review automatically copied • Just tap 5 stars & paste</span>
                 </p>
-            </div>
+            </section>
 
-            <!-- THANK YOU / SUCCESS SCREEN (For Private Feedback) -->
-            <div id="step-feedback-thanks" class="hidden text-center py-6">
-                <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+
+            <!-- ========================================== -->
+            <!-- STEP 3B: Private Feedback Submission Thanks-->
+            <!-- ========================================== -->
+            <section id="step-feedback-thanks" class="hidden text-center py-6">
+                <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto mb-3 text-2xl">
                     <i class="fa-solid fa-check"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800">Thank you for your feedback</h3>
-                <p class="text-sm text-slate-600 mt-2">
-                    Your message has been directly submitted to the management at <strong>{{ business.name }}</strong>.
+                <h3 class="text-base sm:text-lg font-bold font-heading text-slate-900">
+                    Thank you for your valuable feedback
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                    Your message has been privately shared with the management at <strong>{{ business.name }}</strong>.
                 </p>
-                <p class="text-xs text-slate-500 mt-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    We appreciate you helping us improve our service!
-                </p>
-            </div>
+                <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500">
+                    We take every concern seriously and appreciate you helping us serve you better.
+                </div>
+            </section>
 
-        </div>
+        </main>
 
-        <!-- Safe footer -->
-        <div class="py-3 px-6 bg-slate-50 border-t border-slate-100 text-center">
-            <p class="text-[10px] text-slate-400">Powered by ReviewBoost • Instant QR & NFC Review Portal</p>
-        </div>
+        <!-- Clean Micro Footer -->
+        <footer class="py-3 px-6 bg-slate-50 border-t border-slate-100 text-center">
+            <p class="text-[11px] text-slate-400 font-medium">
+                Verified Google Review Link • Instant QR & NFC Portal
+            </p>
+        </footer>
 
     </div>
+
 </div>
 
-<!-- Modal / Bottom Sheet: Google Redirect Instructions -->
-<div id="redirect-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl transform transition-all animate-bounce-short">
-        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+<!-- Google Redirect Bottom Sheet / Modal -->
+<div id="redirect-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-xl border border-slate-200">
+        
+        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl flex items-center justify-center mx-auto mb-3 text-xl">
             <i class="fa-solid fa-clipboard-check"></i>
         </div>
-        <h4 class="text-lg font-bold text-slate-800">Review Copied!</h4>
-        <p class="text-xs text-slate-600 mt-1 mb-4 leading-relaxed">
-            We've copied your review to your clipboard and are opening Google Reviews now.
+        
+        <h4 class="text-base font-bold font-heading text-slate-900">
+            Review Copied to Clipboard!
+        </h4>
+        <p class="text-xs text-slate-500 mt-1 mb-4 leading-relaxed">
+            Opening Google Reviews for {{ business.name }} in 1 second.
         </p>
 
-        <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 text-left text-xs text-blue-900 mb-5 space-y-1.5">
+        <!-- Practical 3-step guide for non-technical customers -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-left text-xs text-slate-700 mb-5 space-y-2">
             <div class="flex items-start space-x-2">
-                <span class="font-bold text-blue-600">1.</span>
-                <span>Tap the 5 stars on Google's page.</span>
+                <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
+                <span>Tap the <strong>5 stars</strong> on Google's review box.</span>
             </div>
             <div class="flex items-start space-x-2">
-                <span class="font-bold text-blue-600">2.</span>
-                <span><strong>Tap & hold</strong> in the review box, then tap <strong>Paste</strong>.</span>
+                <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
+                <span><strong>Long-press</strong> inside the text box and tap <strong>Paste</strong>.</span>
             </div>
             <div class="flex items-start space-x-2">
-                <span class="font-bold text-blue-600">3.</span>
-                <span>Tap <strong>Post</strong>. Thank you!</span>
+                <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
+                <span>Tap <strong>Post</strong>. You're done in 10 seconds!</span>
             </div>
         </div>
 
         <a id="modal-google-link" href="{{ business.google_review_url }}" target="_blank"
-           class="block w-full py-3 bg-[#1a73e8] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#1557b0] transition">
+           class="block w-full py-3 bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition">
             Continue to Google <i class="fa-solid fa-arrow-right ml-1"></i>
         </a>
     </div>
 </div>
 
-<!-- Data injected for client script -->
+<!-- Injected business metadata -->
 <script>
     const BUSINESS_DATA = {
         id: {{ business.id }},

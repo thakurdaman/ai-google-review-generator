@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}ReviewBoost - Automated 5-Star Google Reviews for Indian Businesses{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-900">
+
+    <!-- Top Navigation -->
+    <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <a href="/" class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 font-extrabold shadow-sm">
+                    <i class="fa-solid fa-star text-sm"></i>
+                </div>
+                <div>
+                    <span class="text-base font-bold font-heading text-slate-900 tracking-tight block leading-tight">ReviewBoost</span>
+                    <span class="text-[10px] text-slate-500 font-medium block">For Indian Retail & Service</span>
+                </div>
+            </a>
+
+            <!-- Center Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-xs font-semibold text-slate-600">
+                <a href="#how-it-works" class="hover:text-slate-900 transition">How It Works</a>
+                <a href="#review-shield" class="hover:text-slate-900 transition">Negative Review Shield</a>
+                <a href="#counter-flyer" class="hover:text-slate-900 transition">Counter Stands</a>
+                <a href="#pricing" class="hover:text-slate-900 transition">Pricing</a>
+            </nav>
+
+            <!-- Right Actions -->
+            <div class="flex items-center space-x-3 text-xs font-semibold">
+                <a href="/login" class="px-3.5 py-2 text-slate-700 hover:text-slate-900 font-bold transition">
+                    Sign In
+                </a>
+                <a href="/signup" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-sm transition">
+                    Start Free
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-12 sm:pb-16 text-center">
+        
+        <!-- Audience badge -->
+        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/80 mb-6">
+            <i class="fa-solid fa-store mr-1.5 text-amber-600"></i>
+            <span>Designed for Indian Retailers, Cafes, Diagnostic Labs & Clinics</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-slate-900 tracking-tight max-w-4xl mx-auto leading-[1.15]">
+            Turn your daily footfall into <span class="text-brand-600">verified 5-star</span> Google reviews.
+        </h1>
+
+        <p class="text-sm sm:text-lg text-slate-600 max-w-2xl mx-auto mt-4 sm:mt-6 leading-relaxed">
+            Customers scan your counter QR code or tap an NFC card. Our assistant crafts a genuine 5-star draft in 15 seconds. Unhappy customers reach you privately before posting online.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-8 sm:mt-10">
+            <a href="/signup" 
+               class="w-full sm:w-auto px-7 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl shadow-sm transition flex items-center justify-center space-x-2">
+                <span>Set Up Your Business Free</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+            <a href="/r/artisan-roast" target="_blank"
+               class="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-bold text-sm rounded-xl shadow-sm transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-mobile-screen text-slate-500"></i>
+                <span>Try Live Customer Demo (30s)</span>
+            </a>
+        </div>
+
+        <!-- Trust metrics micro-bar -->
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+            <span class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>No app install needed</span>
+            </span>
+            <span>•</span>
+            <span class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Works on any smartphone</span>
+            </span>
+            <span>•</span>
+            <span class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-shield text-emerald-600"></i>
+                <span>1-3★ Private Shield included</span>
+            </span>
+        </div>
+
+    </section>
+
+    <!-- SECTION 1: HOW IT WORKS IN 3 STEPS -->
+    <section id="how-it-works" class="py-16 bg-white border-y border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="text-xs font-bold text-brand-600 uppercase tracking-wider block mb-2 font-heading">
+                    Effortless Process
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-bold font-heading text-slate-900 tracking-tight">
+                    How it works in 30 seconds
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-600 mt-2">
+                    Customers standing at your counter or dining table can complete their review before paying their bill.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                
+                <!-- Step 1 -->
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center mb-4 font-heading">
+                            1
+                        </div>
+                        <h3 class="text-base font-bold font-heading text-slate-900 mb-2">
+                            Scan or Tap at Counter
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Customer scans your customized table tent QR code or taps the NFC counter plate. Opens instantly in their mobile browser.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200/80 text-[11px] font-semibold text-slate-500 flex items-center">
+                        <i class="fa-solid fa-qrcode mr-1.5 text-slate-400"></i> Zero app download required
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white font-bold text-sm flex items-center justify-center mb-4 font-heading">
+                            2
+                        </div>
+                        <h3 class="text-base font-bold font-heading text-slate-900 mb-2">
+                            Tap 2 Quick Highlights
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            No typing fatigue. They tap 5 stars and pick tags like "Quick Service", "Authentic Taste", or "Clean Clinic".
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200/80 text-[11px] font-semibold text-slate-500 flex items-center">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1.5 text-amber-500"></i> Natural phrasing generated
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white font-bold text-sm flex items-center justify-center mb-4 font-heading">
+                            3
+                        </div>
+                        <h3 class="text-base font-bold font-heading text-slate-900 mb-2">
+                            1-Tap Copy & Paste to Google
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            The review draft is copied to their clipboard. Google Reviews opens, they tap 5 stars and paste. Finished in 15 seconds!
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200/80 text-[11px] font-semibold text-emerald-700 flex items-center">
+                        <i class="fa-solid fa-check mr-1.5"></i> Boosts local Google Maps rank
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SECTION 2: THE NEGATIVE REVIEW SHIELD -->
+    <section id="review-shield" class="py-16 bg-[#F8FAFC]">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            
+            <div class="p-8 sm:p-12 rounded-3xl bg-slate-900 text-white border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8">
+                
+                <div class="max-w-xl">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 inline-block mb-3">
+                        <i class="fa-solid fa-shield-halved mr-1"></i> Reputation Protection
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold font-heading text-white tracking-tight leading-tight">
+                        Unhappy customers reach you privately. Never Google.
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-3 leading-relaxed">
+                        If a visitor selects 1, 2, or 3 stars, they are immediately routed to a confidential direct-to-owner feedback box. You can contact them and resolve their concern before they damage your rating.
+                    </p>
+                    <div class="mt-6 flex flex-wrap gap-4 text-xs font-semibold text-slate-300">
+                        <span class="flex items-center"><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 4 & 5 Stars go directly to Google</span>
+                        <span class="flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-1.5"></i> 1-3 Stars stay strictly internal</span>
+                    </div>
+                </div>
+
+                <div class="w-full sm:w-72 bg-slate-800/90 border border-slate-700 p-5 rounded-2xl shrink-0">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-700 text-xs">
+                        <span class="text-slate-400 font-medium">Smart Gating Engine</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-bold">Active</span>
+                    </div>
+                    <div class="space-y-3 mt-3 text-xs">
+                        <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between">
+                            <span class="text-slate-300">⭐⭐⭐⭐⭐ 5 Stars</span>
+                            <span class="text-emerald-400 font-bold text-[11px]"><i class="fa-brands fa-google mr-1"></i>Google</span>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between">
+                            <span class="text-slate-300">⭐⭐ 2 Stars</span>
+                            <span class="text-rose-400 font-bold text-[11px]"><i class="fa-solid fa-envelope mr-1"></i>Private Inbox</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SECTION 3: COUNTER STANDS & FLYERS -->
+    <section id="counter-flyer" class="py-16 bg-white border-y border-slate-200">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                
+                <div>
+                    <span class="text-xs font-bold text-brand-600 uppercase tracking-wider block mb-2 font-heading">
+                        Counter Setup
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-bold font-heading text-slate-900 tracking-tight">
+                        Print your counter stands in 1 click.
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
+                        Every business dashboard comes with an automatic 4x6 table tent and counter stand flyer. Download the print-ready sheet, put it on your billing counter, and start collecting reviews today.
+                    </p>
+                    
+                    <ul class="space-y-2.5 text-xs sm:text-sm text-slate-700 mt-6">
+                        <li class="flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                            <span>Standard 4x6 / A5 counter frame size</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                            <span>High-resolution dynamic QR code</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                            <span>Works alongside NFC smart cards & tap plates</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-8">
+                        <a href="/signup" class="inline-flex items-center space-x-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition">
+                            <span>Get Your Free Counter Stand</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Flyer mockup card -->
+                <div class="bg-slate-50 border border-slate-200 p-6 rounded-3xl flex items-center justify-center">
+                    <div class="bg-white border border-slate-300 shadow-md rounded-2xl p-5 max-w-xs w-full text-center">
+                        <div class="w-12 h-12 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center mx-auto mb-2 text-lg font-bold">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <h4 class="text-sm font-bold font-heading text-slate-900">Your Business Name</h4>
+                        <p class="text-[10px] text-slate-500 mb-4">Loved your experience? Scan to leave a 5-star Google review!</p>
+                        <div class="w-36 h-36 bg-slate-100 border border-slate-200 rounded-xl mx-auto flex items-center justify-center p-2 mb-3">
+                            <img src="/api/qr/artisan-roast.png" alt="QR Preview" class="w-full h-full object-contain">
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-600 block">Scan with any Camera App</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SECTION 4: PRICING -->
+    <section id="pricing" class="py-16 bg-[#F8FAFC]">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="text-xs font-bold text-brand-600 uppercase tracking-wider block mb-2 font-heading">
+                    Honest Pricing
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-bold font-heading text-slate-900 tracking-tight">
+                    Simple pricing for serious local growth
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-600 mt-2">
+                    No hidden setup fees. Unlimited review generation. Cancel anytime.
+                </p>
+
+                {% if not payments_enabled %}
+                <!-- Free Beta Launch Notice -->
+                <div class="mt-4 inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
+                    <i class="fa-solid fa-gift text-emerald-600"></i>
+                    <span>Free Beta Launch Active — 100% Free Access Right Now</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                
+                <!-- Monthly Plan -->
+                <div class="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 font-heading">Monthly Pro</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Flexible</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <span class="text-3xl font-extrabold font-heading text-slate-900">₹999</span>
+                            <span class="text-xs text-slate-500">/ month</span>
+                        </div>
+
+                        <p class="text-xs text-slate-600 mb-6">
+                            Ideal for single stores and cafes starting review automation.
+                        </p>
+
+                        <ul class="space-y-3 text-xs text-slate-700 mb-8">
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>Unlimited QR scans & NFC taps</span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>Natural 5-star review drafts generator</span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>1-3★ Negative Review Shield inbox</span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>Printable 4x6 Table Tent & Counter Stand</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a href="/signup" class="w-full py-3 text-center bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition">
+                        {% if not payments_enabled %}Get Free Beta Access{% else %}Subscribe Monthly{% endif %}
+                    </a>
+                </div>
+
+                <!-- Annual Plan -->
+                <div class="p-6 sm:p-8 rounded-2xl bg-white border-2 border-brand-600 flex flex-col justify-between shadow-md relative">
+                    <div class="absolute -top-3 right-6 px-3 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 shadow-sm">
+                        SAVE 25% + 2 MONTHS FREE
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-brand-600 font-heading">Annual Growth</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Best Value</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <span class="text-3xl font-extrabold font-heading text-slate-900">₹8,999</span>
+                            <span class="text-xs text-slate-500">/ year <span class="text-emerald-700 font-semibold">(₹749/mo)</span></span>
+                        </div>
+
+                        <p class="text-xs text-slate-600 mb-6">
+                            Best value for established retailers locking in maximum yearly savings.
+                        </p>
+
+                        <ul class="space-y-3 text-xs text-slate-700 mb-8">
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span><strong>Everything in Monthly Pro included</strong></span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>Save ₹2,989 compared to monthly billing</span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>High-res vector QR export (SVG)</span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                                <span>Priority WhatsApp onboarding support</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a href="/signup" class="w-full py-3 text-center bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition">
+                        {% if not payments_enabled %}Get Free Annual Beta{% else %}Subscribe Annual{% endif %}
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-10 bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+            <div class="flex items-center space-x-2">
+                <span class="font-bold text-slate-800">ReviewBoost</span>
+                <span>•</span>
+                <span>Self-serve Google Review & NFC Portal for Indian Retail</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/login" class="hover:text-slate-900 transition">Owner Login</a>
+                <a href="/admin/login" class="hover:text-slate-900 transition">Admin Portal</a>
+                <a href="/signup" class="hover:text-slate-900 font-bold transition">Register Business</a>
+            </div>
+        </div>
+    </footer>
+
+</div>
+{% endblock %}

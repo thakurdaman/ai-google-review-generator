@@ -1,208 +1,238 @@
 {% extends "base.html" %}
 
-{% block title %}Sign Up - Start Collecting 5-Star Google Reviews{% endblock %}
+{% block title %}Register Your Business - ReviewBoost{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4 sm:p-6">
-    <!-- Ambient background glow -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-40 -right-40 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
-    </div>
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col justify-between p-4 sm:p-8">
 
-    <div class="w-full max-w-4xl bg-slate-800/90 backdrop-blur-xl border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden relative z-10 grid grid-cols-1 lg:grid-cols-12">
-        
-        <!-- Left Banner: Value Proposition -->
-        <div class="lg:col-span-5 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-900 p-8 flex flex-col justify-between text-white border-b lg:border-b-0 lg:border-r border-slate-700/60">
+    <!-- Simple Top Nav -->
+    <header class="max-w-5xl w-full mx-auto flex items-center justify-between pb-6">
+        <a href="/" class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 font-extrabold text-xs">
+                <i class="fa-solid fa-star"></i>
+            </div>
             <div>
-                <div class="flex items-center space-x-2.5 mb-8">
-                    <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-amber-300 text-lg shadow-sm">
-                        <i class="fa-solid fa-star"></i>
-                    </div>
-                    <div>
-                        <span class="text-base font-black tracking-tight">ReviewBoost</span>
-                        <span class="block text-[11px] text-brand-200 font-medium">Business Portal</span>
-                    </div>
-                </div>
+                <span class="text-base font-bold font-heading text-slate-900">ReviewBoost</span>
+            </div>
+        </a>
+        <div class="text-xs text-slate-600">
+            Already registered? <a href="/login" class="font-bold text-slate-900 hover:underline ml-1">Sign In</a>
+        </div>
+    </header>
 
-                <h2 class="text-2xl font-black tracking-tight leading-snug mb-3">
-                    Skyrocket your Google reviews on autopilot.
-                </h2>
-                <p class="text-xs text-brand-100/90 leading-relaxed mb-6">
-                    Turn happy in-store customers into 5-star Google reviews in 30 seconds with mobile QR & NFC tap.
+    <!-- Registration Card -->
+    <main class="max-w-5xl w-full mx-auto my-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+        
+        <!-- Left Side: Merchant Context & Benefits -->
+        <aside class="lg:col-span-5 bg-slate-900 p-8 sm:p-10 text-white flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800">
+            <div>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 inline-block mb-4">
+                    For Indian Merchants & Retailers
+                </span>
+
+                <h1 class="text-2xl sm:text-3xl font-extrabold font-heading text-white tracking-tight leading-snug mb-3">
+                    Collect 5-star Google reviews from walk-in customers.
+                </h1>
+                
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-8">
+                    Set up your counter QR stands in 2 minutes. Protect your local reputation with automatic negative review shielding.
                 </p>
 
-                <div class="space-y-3.5 text-xs">
-                    <div class="flex items-start space-x-2.5">
-                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                <div class="space-y-4 text-xs">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </div>
-                        <span class="text-slate-200"><strong class="text-white">AI-Drafted Reviews:</strong> 3 authentic variations tailored to customer experiences.</span>
+                        <span class="text-slate-300"><strong class="text-white">Instant Counter Stands:</strong> Download ready-to-print 4x6 table tents and stands.</span>
                     </div>
-                    <div class="flex items-start space-x-2.5">
-                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+
+                    <div class="flex items-start space-x-3">
+                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </div>
-                        <span class="text-slate-200"><strong class="text-white">Review Shielding:</strong> 1-3 star ratings are caught privately before reaching Google.</span>
+                        <span class="text-slate-300"><strong class="text-white">Natural Review Generator:</strong> Customers select highlights; genuine phrasing is drafted in 10s.</span>
                     </div>
-                    <div class="flex items-start space-x-2.5">
-                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+
+                    <div class="flex items-start space-x-3">
+                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                             <i class="fa-solid fa-check text-[10px]"></i>
                         </div>
-                        <span class="text-slate-200"><strong class="text-white">Instant Table Stand:</strong> Printable 4x6 counter stand flyer and high-res QR codes.</span>
-                    </div>
-                    <div class="flex items-start space-x-2.5">
-                        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
-                            <i class="fa-solid fa-check text-[10px]"></i>
-                        </div>
-                        <span class="text-slate-200"><strong class="text-white">UPI Autopay Ready:</strong> Low-cost monthly or discounted yearly plans.</span>
+                        <span class="text-slate-300"><strong class="text-white">Review Shielding:</strong> 1-3 star ratings stay confidential in your private inbox.</span>
                     </div>
                 </div>
             </div>
 
-            <div class="pt-8 border-t border-brand-600/40 mt-8 text-[11px] text-brand-200">
-                Already registered? <a href="/login" class="text-white font-bold underline hover:text-amber-300 transition">Sign in to your dashboard</a>
+            <div class="pt-8 border-t border-slate-800 mt-8 text-xs text-slate-400">
+                Need help finding your Google link? <br>
+                <span class="text-slate-300">We'll guide you step-by-step right after signup.</span>
             </div>
-        </div>
+        </aside>
 
-        <!-- Right: Registration Form -->
-        <div class="lg:col-span-7 p-6 sm:p-8">
+        <!-- Right Side: Clean Form -->
+        <div class="lg:col-span-7 p-6 sm:p-10">
+            
             <div class="mb-6">
-                <h1 class="text-xl font-extrabold text-white">Create your business account</h1>
-                <p class="text-xs text-slate-400 mt-1">Set up your profile and start collecting reviews in 2 minutes.</p>
+                <h2 class="text-xl font-bold font-heading text-slate-900">
+                    Register your business
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">
+                    Enter your store details below to generate your review portal.
+                </p>
             </div>
 
             {% if error %}
-            <div class="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium flex items-center space-x-2">
-                <i class="fa-solid fa-circle-exclamation text-sm"></i>
+            <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
+                <i class="fa-solid fa-circle-exclamation text-sm shrink-0"></i>
                 <span>{{ error }}</span>
             </div>
             {% endif %}
 
-            <!-- Google Sign-Up Button -->
+            <!-- 1-Click Google Sign Up -->
             <a href="/auth/google/login?action=signup" 
-               class="w-full py-3 px-4 bg-white hover:bg-slate-100 text-slate-800 font-bold rounded-xl shadow-md transition-all duration-150 flex items-center justify-center space-x-3 text-xs sm:text-sm mb-5 group">
+               class="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold rounded-xl shadow-sm transition flex items-center justify-center space-x-3 text-xs sm:text-sm mb-5">
                 <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                <span class="text-slate-800">Sign Up with Google / Gmail</span>
+                <span>Continue with Google / Gmail</span>
             </a>
 
             <!-- Divider -->
             <div class="relative flex items-center justify-center mb-5">
-                <div class="border-t border-slate-700 w-full"></div>
-                <span class="bg-slate-850 px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">or register with email</span>
-                <div class="border-t border-slate-700 w-full"></div>
+                <div class="border-t border-slate-200 w-full"></div>
+                <span class="bg-white px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">or fill out form</span>
+                <div class="border-t border-slate-200 w-full"></div>
             </div>
 
-            <form method="POST" action="/signup" enctype="multipart/form-data" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Standard Registration Form -->
+            <form action="/signup" method="POST" enctype="multipart/form-data" class="space-y-4">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Business Name <span class="text-rose-400">*</span></label>
-                        <input type="text" name="business_name" required placeholder="e.g. Blue Lagoon Bistro"
-                               class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Business Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="business_name" required 
+                               placeholder="e.g., Sharma Sweets, Apollo Dental" 
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900">
                     </div>
+
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Business Category</label>
-                        <input type="text" name="category" placeholder="e.g. Italian Restaurant, Dental Clinic, Auto Repair"
-                               class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Category <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="category" class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900">
+                            <option value="Restaurant & Café">Restaurant, Café & Bakery</option>
+                            <option value="Retail & Kirana">Retail Store & Kirana</option>
+                            <option value="Healthcare & Clinic">Doctor Clinic & Diagnostic Lab</option>
+                            <option value="Salon & Spa">Salon, Spa & Beauty</option>
+                            <option value="Automotive & Garage">Car Service & Auto Garage</option>
+                            <option value="Fitness & Gym">Gym, Yoga & Fitness Studio</option>
+                            <option value="Professional Services">CA, Legal & Professional</option>
+                            <option value="General">Other Local Business</option>
+                        </select>
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Owner Email Address <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="email" name="email" required 
+                               placeholder="owner@yourstore.com" 
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Account Password <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="password" name="password" required 
+                               placeholder="Minimum 6 characters" 
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900">
+                    </div>
+                </div>
+
+                <!-- Google Review URL -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Google Review Link <span class="text-rose-400">*</span></label>
-                    <input type="url" name="google_review_url" required placeholder="https://g.page/r/.../review or Place ID review link"
-                           class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                    <p class="text-[11px] text-slate-400 mt-1">Found in your Google Business Profile under "Ask for reviews". You can update this anytime.</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-semibold text-slate-700">
+                            Google Review Link <span class="text-rose-500">*</span>
+                        </label>
+                        <a href="https://support.google.com/business/answer/7035772" target="_blank" class="text-[11px] text-brand-600 hover:underline font-medium">
+                            How to find your link?
+                        </a>
+                    </div>
+                    <input type="url" name="google_review_url" required 
+                           placeholder="https://g.page/r/.../review or https://search.google.com/local/writereview?placeid=..." 
+                           class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none font-mono text-slate-800 text-[11px]">
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        Customers who give 4 or 5 stars will be sent directly to this Google page.
+                    </p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Your Email Address <span class="text-rose-400">*</span></label>
-                        <input type="email" name="email" required placeholder="owner@business.com"
-                               class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Password <span class="text-rose-400">*</span></label>
-                        <input type="password" name="password" required minlength="6" placeholder="At least 6 characters"
-                               class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                    </div>
+                <!-- Preset Tags -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">
+                        Positive Highlights for Customers <span class="text-slate-400 font-normal">(Comma separated)</span>
+                    </label>
+                    <input type="text" name="tags" 
+                           value="Friendly Staff, Quick Service, Great Quality, Clean Store"
+                           class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900">
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- Logo & Accent Color -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Brand Accent Color</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Store Logo (Optional)</label>
+                        <input type="file" name="logo_file" accept="image/*"
+                               class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Brand Accent Color</label>
                         <div class="flex items-center space-x-2">
-                            <input type="color" name="accent_color" value="#2563EB" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0 p-0">
-                            <input type="text" name="accent_hex" value="#2563EB" readonly class="w-full px-3 py-2 bg-slate-900/70 border border-slate-700 rounded-xl text-xs text-white font-mono">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Business Logo <span class="text-slate-400 font-normal">(optional)</span></label>
-                        <div class="relative">
-                            <input type="file" name="logo_file" accept="image/*" id="logoFileInput"
-                                   class="hidden">
-                            <label for="logoFileInput"
-                                   class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 border-dashed rounded-xl text-xs sm:text-sm text-slate-400 cursor-pointer hover:border-brand-500 hover:text-brand-400 transition flex items-center space-x-2">
-                                <i class="fa-solid fa-cloud-arrow-up text-base"></i>
-                                <span id="logoFileName">Choose logo from device...</span>
-                            </label>
-                            <div id="logoPreview" class="mt-2 hidden">
-                                <img id="logoPreviewImg" src="" alt="Logo preview" class="h-10 w-10 rounded-lg object-cover border border-slate-700">
-                            </div>
+                            <input type="color" id="accent_color" name="accent_color" value="#0F172A"
+                                   class="w-10 h-10 rounded-xl border border-slate-200 p-0.5 cursor-pointer bg-white">
+                            <input type="text" id="accent_hex" name="accent_hex" value="#0F172A"
+                                   class="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl text-slate-700 uppercase">
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Experience Highlights (Tap options for customers)</label>
-                    <input type="text" name="tags" value="Friendly Staff, Quick Service, Great Quality, Clean Atmosphere"
-                           class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                    <p class="text-[11px] text-slate-400 mt-1">Comma-separated options customers can tap to personalize their review.</p>
+                <div class="pt-3">
+                    <button type="submit" 
+                            class="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition">
+                        Register & View Dashboard
+                    </button>
+                    <p class="text-[11px] text-center text-slate-400 mt-2">
+                        By continuing, you agree to ReviewBoost terms of service and privacy policy.
+                    </p>
                 </div>
 
-                <button type="submit" 
-                        class="w-full py-3.5 px-4 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/30 transition-all duration-200 flex items-center justify-center space-x-2 text-sm mt-2">
-                    <span>Create Account & Choose Plan</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
             </form>
+
         </div>
 
-    </div>
+    </main>
+
+    <!-- Simple footer -->
+    <footer class="max-w-5xl w-full mx-auto text-center text-xs text-slate-400 pt-6">
+        ReviewBoost • Automated Google Review Management
+    </footer>
+
 </div>
 
 <script>
-    const colorPicker = document.querySelector('input[type="color"]');
-    const colorHex = document.querySelector('input[name="accent_hex"]');
+    const colorPicker = document.getElementById('accent_color');
+    const colorHex = document.getElementById('accent_hex');
     if (colorPicker && colorHex) {
-        colorPicker.addEventListener('input', () => {
-            colorHex.value = colorPicker.value;
-        });
-    }
-
-    // Logo file upload preview
-    const logoInput = document.getElementById('logoFileInput');
-    const logoFileName = document.getElementById('logoFileName');
-    const logoPreview = document.getElementById('logoPreview');
-    const logoPreviewImg = document.getElementById('logoPreviewImg');
-    if (logoInput) {
-        logoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                logoFileName.textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    logoPreviewImg.src = ev.target.result;
-                    logoPreview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                logoFileName.textContent = 'Choose logo from device...';
-                logoPreview.classList.add('hidden');
+        colorPicker.addEventListener('input', (e) => colorHex.value = e.target.value.toUpperCase());
+        colorHex.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                colorPicker.value = e.target.value;
             }
         });
     }

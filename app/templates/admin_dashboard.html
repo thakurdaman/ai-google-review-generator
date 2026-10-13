@@ -1,35 +1,35 @@
 {% extends "base.html" %}
 
-{% block title %}Reseller Dashboard - ReviewBoost{% endblock %}
+{% block title %}Platform Admin - ReviewBoost{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+<div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col">
 
     <!-- Top Navigation Bar -->
-    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-amber-300 font-black shadow-md shadow-brand-500/20">
-                <i class="fa-solid fa-star text-base"></i>
-            </div>
+            <a href="/" class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 font-extrabold shadow-xs">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+            </a>
             <div>
-                <span class="text-base font-extrabold tracking-tight text-white flex items-center">
-                    ReviewBoost <span class="ml-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30">Reseller Hub</span>
+                <span class="text-base font-bold font-heading text-slate-900 flex items-center leading-tight">
+                    ReviewBoost <span class="ml-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">Admin Console</span>
                 </span>
-                <span class="text-xs text-slate-400">Google Review Growth Engine & Subscription Manager</span>
+                <span class="text-xs text-slate-500 font-medium">Merchant Directory & Platform Subscriptions</span>
             </div>
         </div>
 
-        <div class="flex items-center space-x-2 sm:space-x-4">
-            <button id="btn-open-settings" class="px-3 py-2 bg-slate-700/60 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-300 border border-slate-600 flex items-center space-x-1.5 transition">
-                <i class="fa-solid fa-gear text-slate-400"></i>
-                <span class="hidden sm:inline">Settings (AI & Payments)</span>
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button id="btn-open-settings" class="px-3.5 py-1.5 bg-white hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 flex items-center space-x-1.5 shadow-xs transition">
+                <i class="fa-solid fa-sliders text-slate-500"></i>
+                <span class="hidden sm:inline">Settings (Keys & Gateway)</span>
             </button>
-            <button id="btn-open-add-business" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white shadow-md shadow-brand-600/30 flex items-center space-x-1.5 transition">
+            <button id="btn-open-add-business" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-xl text-xs font-bold text-white shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-plus text-xs"></i>
-                <span>Add Client</span>
+                <span>Add Merchant</span>
             </button>
-            <div class="h-5 w-px bg-slate-700"></div>
-            <a href="/admin/logout" class="text-slate-400 hover:text-rose-400 text-xs font-medium flex items-center space-x-1 transition" title="Sign Out">
+            <div class="h-4 w-px bg-slate-200"></div>
+            <a href="/admin/logout" class="text-slate-400 hover:text-rose-600 text-xs font-medium flex items-center space-x-1 transition p-1" title="Sign Out">
                 <i class="fa-solid fa-right-from-bracket"></i>
                 <span class="hidden sm:inline">Logout</span>
             </a>
@@ -37,258 +37,212 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-6">
 
-        <!-- Analytics Overview Stats -->
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <!-- Analytics Overview Stats (Dense 5-grid) -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
             <!-- Total Businesses -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Client Businesses</span>
-                    <i class="fa-solid fa-store text-brand-400"></i>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Client Stores</span>
+                    <i class="fa-solid fa-store text-brand-600 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-white" id="stat-total-businesses">{{ stats.total_businesses }}</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">Registered clients</span>
+                <div class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900" id="stat-total-businesses">{{ stats.total_businesses }}</div>
+                <span class="text-[11px] text-slate-500 mt-1 inline-block">Registered merchants</span>
             </div>
 
-            <!-- Active Subscriptions & MRR -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Active Subscriptions</span>
-                    <i class="fa-solid fa-credit-card text-emerald-400"></i>
+            <!-- Active Subscriptions -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Active Subscriptions</span>
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-emerald-300" id="stat-active-subs">{{ stats.active_subscriptions }}</div>
-                <span class="text-[11px] text-emerald-400 mt-1 inline-block">₹{{ "{:,.0f}".format(stats.platform_mrr) }} / mo MRR</span>
+                <div class="text-2xl sm:text-3xl font-extrabold font-heading text-emerald-700" id="stat-active-subs">{{ stats.active_subscriptions }}</div>
+                <span class="text-[11px] text-emerald-700 font-semibold mt-1 inline-block">Active review portals</span>
             </div>
 
-            <!-- Total Scans -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Total Scans</span>
-                    <i class="fa-solid fa-qrcode text-indigo-400"></i>
+            <!-- Platform MRR -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Monthly Run Rate</span>
+                    <i class="fa-solid fa-indian-rupee-sign text-amber-500 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-white" id="stat-total-scans">{{ stats.total_scans }}</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">QR & NFC visits</span>
+                <div class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900" id="stat-mrr">₹{{ "{:,.0f}".format(stats.platform_mrr) }}</div>
+                <span class="text-[11px] text-slate-500 mt-1 inline-block">Recurring SaaS revenue</span>
             </div>
 
-            <!-- Completed Google Reviews -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Google Reviews</span>
-                    <i class="fa-solid fa-star text-amber-400"></i>
+            <!-- Completed 5-Star Reviews -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">5★ Reviews Posted</span>
+                    <i class="fa-solid fa-star text-amber-500 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-amber-300" id="stat-total-reviews">{{ stats.total_completed }}</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">{{ stats.conversion_rate }}% conversion</span>
+                <div class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900" id="stat-reviews">{{ stats.total_completed }}</div>
+                <span class="text-[11px] text-slate-500 mt-1 inline-block">{{ stats.conversion_rate }}% conversion rate</span>
             </div>
 
-            <!-- Private Feedback Intercepted -->
-            <div class="col-span-2 lg:col-span-1 bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Shielded Complaints</span>
-                    <i class="fa-solid fa-shield-halved text-rose-400"></i>
+            <!-- Shielded Complaints -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs col-span-2 lg:col-span-1">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Shielded Feedback</span>
+                    <i class="fa-solid fa-shield-halved text-rose-500 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-rose-300" id="stat-total-feedback">{{ stats.total_feedback }}</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">1-3★ kept private</span>
+                <div class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900" id="stat-feedback">{{ stats.total_feedback }}</div>
+                <span class="text-[11px] text-rose-700 font-semibold mt-1 inline-block">1-3★ kept internal</span>
             </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="flex items-center space-x-2 border-b border-slate-700 pb-3 overflow-x-auto">
-            <button id="tab-btn-businesses" class="tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm flex items-center space-x-2 shrink-0">
-                <i class="fa-solid fa-building-user"></i>
+        <div class="flex items-center space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
+            <button id="tab-btn-businesses" class="tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-xs flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-store"></i>
                 <span>Client Businesses ({{ businesses|length }})</span>
             </button>
-            <button id="tab-btn-owners" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0">
-                <i class="fa-solid fa-users-gear text-emerald-400"></i>
-                <span>Business Owners & Subscriptions</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-bold ml-1">{{ owners|length }}</span>
+            <button id="tab-btn-owners" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>Store Owners ({{ owners|length }})</span>
             </button>
-            <button id="tab-btn-feedback" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0">
-                <i class="fa-solid fa-inbox text-rose-400"></i>
-                <span>Shielded Feedback</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-300 font-bold ml-1">{{ feedbacks|length }}</span>
+            <button id="tab-btn-feedback" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-shield-halved text-rose-500"></i>
+                <span>Shielded Feedback ({{ feedbacks|length }})</span>
             </button>
-            <button id="tab-btn-payments" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0">
-                <i class="fa-solid fa-receipt text-indigo-400"></i>
-                <span>Platform Invoices & Payments</span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-bold ml-1">{{ payments|length }}</span>
+            <button id="tab-btn-payments" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-receipt text-emerald-600"></i>
+                <span>Platform Invoices ({{ payments|length }})</span>
             </button>
         </div>
 
-        <!-- SECTION 1: Client Businesses Cards -->
+        <!-- SECTION 1: Client Businesses Directory -->
         <div id="section-businesses" class="space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="relative flex-1 max-w-md">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">
+            
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text" id="business-search" placeholder="Search businesses by name or category..." 
-                           class="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <input type="text" id="business-search" 
+                           placeholder="Search by store name, slug, or category..." 
+                           class="w-full pl-8 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500">
                 </div>
-                <span class="text-xs text-slate-400">
-                    Self-serve signups appear here automatically with active/inactive subscription badges.
-                </span>
+                <div class="flex items-center space-x-2">
+                    <button onclick="document.getElementById('business-search').value=''; document.getElementById('business-search').dispatchEvent(new Event('input'))"
+                            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition">
+                        Clear Filter
+                    </button>
+                </div>
             </div>
 
-            <!-- Businesses Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="businesses-grid">
-                {% for b in businesses %}
-                <div class="business-card bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 hover:border-slate-600 transition-all flex flex-col justify-between"
-                     data-name="{{ b.name|lower }}" data-category="{{ b.category|lower }}">
-                    <div>
-                        <!-- Business Header -->
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-12 h-12 rounded-xl bg-white p-1.5 flex items-center justify-center shadow">
-                                    {% if b.logo_url %}
-                                    <img src="{{ b.logo_url }}" alt="{{ b.name }}" class="w-full h-full object-contain rounded-lg" onerror="this.src='/static/uploads/artisan_logo.svg'">
-                                    {% else %}
-                                    <span class="text-slate-800 font-bold text-lg">{{ b.name[:1] }}</span>
-                                    {% endif %}
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-white text-base leading-snug">{{ b.name }}</h3>
-                                    <span class="text-xs text-slate-400">{{ b.category }}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Subscription Badge -->
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {% if b.subscription_status in ['active', 'trialing'] %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% else %}bg-rose-500/20 text-rose-300 border border-rose-500/30{% endif %}">
-                                {{ b.subscription_status|title }}
-                            </span>
-                        </div>
-
-                        <!-- Landing Short Link & Quick Actions -->
-                        <div class="bg-slate-900/60 rounded-xl p-2.5 mb-3 border border-slate-800 flex items-center justify-between">
-                            <div class="truncate text-xs text-slate-300 font-mono flex items-center space-x-1 mr-2">
-                                <i class="fa-solid fa-link text-slate-500 text-[10px]"></i>
-                                <span class="truncate">/r/{{ b.slug }}</span>
-                            </div>
-                            <div class="flex items-center space-x-1.5 shrink-0">
-                                <button onclick="copyLandingLink('{{ b.slug }}')" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition" title="Copy customer short link">
-                                    <i class="fa-solid fa-copy"></i>
-                                </button>
-                                <a href="/r/{{ b.slug }}" target="_blank" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition" title="Test landing page">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Mini Analytics Bar -->
-                        <div class="grid grid-cols-3 gap-2 py-2 border-y border-slate-700/60 mb-4 text-center">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block">Scans</span>
-                                <span class="text-xs font-bold text-white">{{ b.scans_count }}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block">5★ Reviews</span>
-                                <span class="text-xs font-bold text-amber-300">{{ b.reviews_count }}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block">Feedback</span>
-                                <span class="text-xs font-bold text-rose-300">{{ b.feedback_count }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Actions Footer -->
-                    <div class="pt-1 flex items-center justify-between border-t border-slate-700/40">
-                        <div class="flex items-center space-x-2">
-                            <button onclick="inspectBusiness({{ b.id }})"
-                                    class="px-2.5 py-1.5 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition" title="Inspect Analytics & Activity Logs (Read-Only)">
-                                <i class="fa-solid fa-chart-line text-xs"></i>
-                                <span>Inspect</span>
-                            </button>
-                            <button onclick="openQrModal('{{ b.id }}', '{{ b.name | escape }}', '{{ b.slug }}')" 
-                                    class="px-2.5 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition">
-                                <i class="fa-solid fa-qrcode text-xs"></i>
-                                <span>QR</span>
-                            </button>
-                            <a href="/admin/business/{{ b.id }}/flyer" target="_blank"
-                               class="px-2.5 py-1.5 bg-slate-700/60 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center space-x-1 transition" title="Print table tent flyer">
-                                <i class="fa-solid fa-print"></i>
-                            </a>
-                        </div>
-
-                        <div class="flex items-center space-x-1">
-                            <button onclick="openEditModal({{ b.id }})" 
-                                    class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition" title="Edit Client Business">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button onclick="deleteBusiness({{ b.id }}, '{{ b.name | escape }}')" 
-                                    class="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-700 transition" title="Delete Client Business">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- SECTION 2: Business Owners & Subscriptions Management -->
-        <div id="section-owners" class="hidden space-y-4">
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-base font-bold text-white flex items-center">
-                            <i class="fa-solid fa-users-gear text-emerald-400 mr-2"></i>
-                            Registered Business Owners & Active Subscriptions
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">
-                            Complete platform-wide list of self-registered business owners, their chosen billing plans, and last activity timestamps.
-                        </p>
-                    </div>
-                </div>
-
+            <!-- Dense Table View for Desktop -->
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="text-slate-400 border-b border-slate-700 pb-2">
-                                <th class="pb-3 font-semibold">Business & Owner</th>
-                                <th class="pb-3 font-semibold">Signup Date</th>
-                                <th class="pb-3 font-semibold">Selected Plan</th>
-                                <th class="pb-3 font-semibold">Billing Mode</th>
-                                <th class="pb-3 font-semibold">Subscription Status</th>
-                                <th class="pb-3 font-semibold">Last Login</th>
-                                <th class="pb-3 font-semibold">Google Link Updated</th>
-                                <th class="pb-3 font-semibold text-right">Actions</th>
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                            <tr>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Store</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Category</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Status</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Plan</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Scans</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">5★ Reviews</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Shielded</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-700/60">
-                            {% for o in owners %}
-                            <tr class="text-slate-300 hover:bg-slate-800/40 transition">
-                                <td class="py-3.5 pr-2">
-                                    <div class="font-bold text-white text-sm leading-snug">{{ o.business_name }}</div>
-                                    <span class="text-slate-400 text-xs">{{ o.owner_email or o.contact_email or 'Self-serve Owner' }}</span>
+                        <tbody class="divide-y divide-slate-100" id="businesses-table-body">
+                            {% for b in businesses %}
+                            <tr class="business-card hover:bg-slate-50/80 transition" data-name="{{ b.name|lower }}" data-category="{{ b.category|lower }}">
+                                <td class="py-3.5 px-4">
+                                    <div class="flex items-center space-x-2.5">
+                                        <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 p-1 flex items-center justify-center shrink-0">
+                                            {% if b.logo_url %}
+                                            <img src="{{ b.logo_url }}" alt="Logo" class="w-full h-full object-contain rounded" onerror="this.src='/static/uploads/artisan_logo.svg'">
+                                            {% else %}
+                                            <span class="font-bold text-slate-700 font-heading text-xs">{{ b.name[:1] }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-slate-900 text-xs sm:text-sm">{{ b.name }}</div>
+                                            <a href="/r/{{ b.slug }}" target="_blank" class="text-[11px] text-brand-600 hover:underline font-mono">
+                                                /r/{{ b.slug }}
+                                            </a>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="py-3.5 text-slate-400 whitespace-nowrap">{{ o.signup_date or o.created_at }}</td>
-                                <td class="py-3.5">
-                                    <span class="font-bold text-white">{{ o.plan_tier|title }}</span>
-                                    <span class="text-[10px] text-slate-400 block">{% if o.plan_tier == 'yearly' %}₹8,999/yr{% else %}₹999/mo{% endif %}</span>
-                                </td>
-                                <td class="py-3.5">
-                                    {% if o.payment_method == 'upi_autopay' %}
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center w-fit space-x-1">
-                                        <i class="fa-solid fa-rotate text-[8px] mr-1"></i>UPI Autopay
-                                    </span>
+                                <td class="py-3.5 px-4 text-slate-600 font-medium">{{ b.category }}</td>
+                                <td class="py-3.5 px-4">
+                                    {% if b.subscription_status in ['active', 'trialing'] %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
                                     {% else %}
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700 text-slate-300">One-Time</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Pending</span>
                                     {% endif %}
                                 </td>
-                                <td class="py-3.5">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {% if o.subscription_status in ['active', 'trialing'] %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% else %}bg-rose-500/20 text-rose-300 border border-rose-500/30{% endif %}">
+                                <td class="py-3.5 px-4 font-semibold text-slate-800">
+                                    {{ b.plan_tier|title }}
+                                </td>
+                                <td class="py-3.5 px-4 text-slate-700 font-semibold">{{ b.scans_count }}</td>
+                                <td class="py-3.5 px-4 font-bold text-slate-900">{{ b.reviews_count }}</td>
+                                <td class="py-3.5 px-4 text-rose-600 font-semibold">{{ b.feedback_count }}</td>
+                                <td class="py-3.5 px-4 text-right">
+                                    <div class="flex items-center justify-end space-x-1">
+                                        <button onclick="inspectBusiness({{ b.id }})" 
+                                                class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="Inspect Analytics & Logs">
+                                            <i class="fa-solid fa-eye text-xs"></i>
+                                        </button>
+                                        <button onclick="openQrModal('{{ b.name|escape }}', '{{ b.slug }}')" 
+                                                class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="View Stand & QR">
+                                            <i class="fa-solid fa-qrcode text-xs"></i>
+                                        </button>
+                                        <button onclick="openEditModal({{ b.id }})" 
+                                                class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="Edit Business">
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </button>
+                                        <button onclick="deleteBusiness({{ b.id }}, '{{ b.name|escape }}')" 
+                                                class="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition" title="Delete Business">
+                                            <i class="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION 2: Registered Store Owners -->
+        <div id="section-owners" class="hidden space-y-4">
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="p-4 border-b border-slate-100">
+                    <h2 class="text-sm font-bold font-heading text-slate-900">Registered Business Owners</h2>
+                    <p class="text-xs text-slate-500">Self-registered store accounts, login history, and subscription status</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                            <tr>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Owner Name</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Email Address</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Business</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Subscription</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Last Login</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Signup Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for o in owners %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="py-3 px-4 font-bold text-slate-900">{{ o.owner_name or 'Store Owner' }}</td>
+                                <td class="py-3 px-4 font-mono text-slate-700">{{ o.owner_email }}</td>
+                                <td class="py-3 px-4 font-semibold text-slate-800">{{ o.business_name }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {% if o.subscription_status in ['active', 'trialing'] %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
                                         {{ o.subscription_status|title }}
                                     </span>
                                 </td>
-                                <td class="py-3.5 text-slate-400 whitespace-nowrap">{{ o.last_login_at or 'Recently' }}</td>
-                                <td class="py-3.5 text-slate-400 whitespace-nowrap">{{ o.last_google_url_update or 'Initial Setup' }}</td>
-                                <td class="py-3.5 text-right whitespace-nowrap">
-                                    <button onclick="inspectBusiness({{ o.business_id or o.id }})" 
-                                            class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-lg text-xs transition">
-                                        Inspect (Read-Only)
-                                    </button>
-                                </td>
+                                <td class="py-3 px-4 text-slate-500">{{ o.last_login_at or 'Never' }}</td>
+                                <td class="py-3 px-4 text-slate-500">{{ o.signup_date }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -297,56 +251,44 @@
             </div>
         </div>
 
-        <!-- SECTION 3: Shielded Private Feedback Inbox -->
+        <!-- SECTION 3: Shielded Feedback Audit -->
         <div id="section-feedback" class="hidden space-y-4">
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-base font-bold text-white flex items-center">
-                            <i class="fa-solid fa-shield-halved text-rose-400 mr-2"></i>
-                            Shielded Negative Customer Feedback
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">
-                            These 1-3 star ratings were intercepted privately so they did NOT hurt the client's public Google rating. Resellers and business owners can resolve customer issues directly!
-                        </p>
-                    </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="mb-4">
+                    <h2 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                        <i class="fa-solid fa-shield-halved text-rose-500 mr-2"></i>
+                        Shielded Customer Complaints
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        These ratings were caught privately on client landing pages and kept completely off Google.
+                    </p>
                 </div>
 
                 {% if feedbacks|length == 0 %}
-                <div class="text-center py-12 text-slate-400">
-                    <i class="fa-solid fa-circle-check text-3xl text-emerald-500 mb-2"></i>
-                    <p class="text-sm font-semibold text-white">No negative feedback reported</p>
-                    <p class="text-xs text-slate-400 mt-1">All your client customers have had 4 and 5-star experiences!</p>
-                </div>
+                <p class="text-xs text-slate-400 py-6 text-center">No private feedback entries recorded.</p>
                 {% else %}
                 <div class="space-y-3">
                     {% for fb in feedbacks %}
-                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div class="space-y-1.5">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div class="space-y-1.5 flex-1">
                             <div class="flex items-center space-x-2.5">
-                                <span class="px-2 py-0.5 rounded text-xs font-bold {% if fb.rating == 1 %}bg-rose-500/20 text-rose-400 border border-rose-500/30{% elif fb.rating == 2 %}bg-orange-500/20 text-orange-400 border border-orange-500/30{% else %}bg-amber-500/20 text-amber-400 border border-amber-500/30{% endif %}">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold {% if fb.rating == 1 %}bg-rose-100 text-rose-700 border border-rose-200{% elif fb.rating == 2 %}bg-amber-100 text-amber-700 border border-amber-200{% else %}bg-slate-200 text-slate-700 border border-slate-300{% endif %}">
                                     {{ fb.rating }} ★ Rating
                                 </span>
-                                <span class="text-xs font-bold text-white">{{ fb.business_name }}</span>
-                                <span class="text-[11px] text-slate-500">• {{ fb.created_at }}</span>
+                                <span class="font-bold text-slate-900 text-xs">{{ fb.business_name }}</span>
+                                <span class="text-xs text-slate-400">• {{ fb.created_at }}</span>
                             </div>
-                            <p class="text-sm text-slate-200 bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                            <p class="text-xs sm:text-sm text-slate-800 bg-white p-3 rounded-lg border border-slate-200">
                                 "{{ fb.feedback_text }}"
                             </p>
-                            <div class="text-xs text-slate-400 flex items-center space-x-3 pt-1">
+                            <div class="text-xs text-slate-500 flex items-center space-x-4 pt-1">
                                 {% if fb.customer_name %}
-                                <span><i class="fa-solid fa-user text-slate-500 mr-1"></i>{{ fb.customer_name }}</span>
+                                <span><i class="fa-solid fa-user text-slate-400 mr-1"></i>{{ fb.customer_name }}</span>
                                 {% endif %}
                                 {% if fb.customer_contact %}
-                                <span><i class="fa-solid fa-envelope text-slate-500 mr-1"></i>{{ fb.customer_contact }}</span>
+                                <span><i class="fa-solid fa-phone text-slate-400 mr-1"></i>{{ fb.customer_contact }}</span>
                                 {% endif %}
                             </div>
-                        </div>
-
-                        <div class="shrink-0 flex items-center space-x-2">
-                            <span class="text-[10px] uppercase font-bold px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                                {{ fb.status }}
-                            </span>
                         </div>
                     </div>
                     {% endfor %}
@@ -357,17 +299,15 @@
 
         <!-- SECTION 4: Platform Payments & Invoices -->
         <div id="section-payments" class="hidden space-y-4">
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-base font-bold text-white flex items-center">
-                            <i class="fa-solid fa-receipt text-indigo-400 mr-2"></i>
-                            Platform Invoices & Payment Transactions
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-0.5">
-                            All incoming payments, UPI Autopay mandate charges, and renewal receipts across all registered businesses.
-                        </p>
-                    </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="mb-4">
+                    <h2 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                        <i class="fa-solid fa-receipt text-emerald-600 mr-2"></i>
+                        Platform Invoices & Receipts
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        Incoming payments, UPI Autopay mandate charges, and renewal receipts across all registered businesses.
+                    </p>
                 </div>
 
                 {% if payments|length == 0 %}
@@ -375,37 +315,37 @@
                 {% else %}
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="text-slate-400 border-b border-slate-700 pb-2">
-                                <th class="pb-3 font-semibold">Date</th>
-                                <th class="pb-3 font-semibold">Business</th>
-                                <th class="pb-3 font-semibold">Plan Tier</th>
-                                <th class="pb-3 font-semibold">Payment Mode</th>
-                                <th class="pb-3 font-semibold">Amount</th>
-                                <th class="pb-3 font-semibold">Status</th>
-                                <th class="pb-3 font-semibold">Transaction ID</th>
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                            <tr>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Date</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Store</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Plan</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Mode</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Amount</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Status</th>
+                                <th class="py-3 px-4 font-bold uppercase tracking-wider font-heading">Transaction ID</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-700/60">
+                        <tbody class="divide-y divide-slate-100">
                             {% for p in payments %}
-                            <tr class="text-slate-300 hover:bg-slate-800/40 transition">
-                                <td class="py-3 text-slate-400 whitespace-nowrap">{{ p.created_at }}</td>
-                                <td class="py-3 font-bold text-white">{{ p.business_name }}</td>
-                                <td class="py-3 font-medium">{{ p.plan_type|title }}</td>
-                                <td class="py-3">
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">{{ p.created_at }}</td>
+                                <td class="py-3 px-4 font-bold text-slate-900">{{ p.business_name }}</td>
+                                <td class="py-3 px-4 font-medium text-slate-800">{{ p.plan_type|title }}</td>
+                                <td class="py-3 px-4">
                                     {% if p.payment_mode == 'upi_autopay' %}
-                                    <span class="text-emerald-400 font-bold flex items-center"><i class="fa-solid fa-rotate text-[8px] mr-1"></i>UPI Autopay</span>
+                                    <span class="text-emerald-700 font-semibold flex items-center"><i class="fa-solid fa-rotate text-[8px] mr-1"></i>UPI Autopay</span>
                                     {% else %}
-                                    <span class="text-slate-300">One-Time</span>
+                                    <span class="text-slate-600">One-Time</span>
                                     {% endif %}
                                 </td>
-                                <td class="py-3 font-bold text-white">₹{{ "%.2f"|format(p.amount) }}</td>
-                                <td class="py-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <td class="py-3 px-4 font-bold text-slate-900">₹{{ "%.2f"|format(p.amount) }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         {{ p.status|title }}
                                     </span>
                                 </td>
-                                <td class="py-3 font-mono text-slate-400 text-[11px]">{{ p.razorpay_payment_id or 'TXN_LOCAL_OK' }}</td>
+                                <td class="py-3 px-4 font-mono text-slate-500 text-[11px]">{{ p.razorpay_payment_id or 'TXN_LOCAL_OK' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -420,35 +360,33 @@
 
 <!-- ================= MODALS ================= -->
 
-<!-- 1. Inspect Business Modal (Read-Only Transparency for Admin) -->
-<div id="modal-inspect-business" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 max-w-2xl w-full rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+<!-- 1. Inspect Business Modal -->
+<div id="modal-inspect-business" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 max-w-2xl w-full rounded-2xl p-6 shadow-xl overflow-y-auto max-h-[90vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
             <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center">
-                    <i class="fa-solid fa-eye"></i>
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-eye text-xs"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-white leading-tight" id="inspect-business-name">Business Overview</h3>
-                    <span class="text-[11px] text-slate-400">Admin Read-Only Transparency View</span>
+                    <h3 class="text-base font-bold font-heading text-slate-900 leading-tight" id="inspect-business-name">Business Overview</h3>
+                    <span class="text-[11px] text-slate-500">Read-Only Analytics & Audit History</span>
                 </div>
             </div>
-            <button onclick="closeModal('modal-inspect-business')" class="text-slate-400 hover:text-white text-lg">
+            <button onclick="closeModal('modal-inspect-business')" class="text-slate-400 hover:text-slate-700 text-base">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
-        <!-- Content populated via JS -->
-        <div class="space-y-5" id="inspect-content">
-            <!-- Loading placeholder -->
+        <div class="space-y-4" id="inspect-content">
             <div class="py-8 text-center text-slate-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
                 <p class="text-xs">Loading business analytics and audit logs...</p>
             </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-800 text-right">
-            <button onclick="closeModal('modal-inspect-business')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
+        <div class="pt-4 border-t border-slate-100 text-right">
+            <button onclick="closeModal('modal-inspect-business')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
                 Close
             </button>
         </div>
@@ -456,93 +394,86 @@
 </div>
 
 <!-- 2. Add Business Modal -->
-<div id="modal-add-business" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 max-w-lg w-full rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center">
-                <i class="fa-solid fa-store text-brand-400 mr-2"></i> Add Client Business
+<div id="modal-add-business" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 max-w-lg w-full rounded-2xl p-6 shadow-xl overflow-y-auto max-h-[90vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                <i class="fa-solid fa-store text-slate-700 mr-2 text-sm"></i> Add Merchant Store
             </h3>
-            <button onclick="closeModal('modal-add-business')" class="text-slate-400 hover:text-white text-lg">
+            <button onclick="closeModal('modal-add-business')" class="text-slate-400 hover:text-slate-700">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <form id="form-add-business" class="space-y-4">
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Business Name <span class="text-rose-400">*</span></label>
-                <input type="text" id="add-name" required placeholder="e.g. Bella Roma Italian Bistro"
-                       class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Business Name <span class="text-rose-500">*</span></label>
+                <input type="text" id="add-name" required placeholder="e.g. Sharma Sweets"
+                       class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Unique Slug / Short Link</label>
-                    <input type="text" id="add-slug" required placeholder="bella-roma"
-                           class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono focus:ring-2 focus:ring-brand-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Slug</label>
+                    <input type="text" id="add-slug" required placeholder="sharma-sweets"
+                           class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono focus:ring-2 focus:ring-brand-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
-                    <select id="add-category" class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
-                        <option value="Restaurant & Café">Restaurant & Café</option>
-                        <option value="Healthcare & Dental">Healthcare & Dental</option>
-                        <option value="Automotive Repair">Automotive Repair</option>
-                        <option value="Salon & Spa">Salon & Spa</option>
-                        <option value="Home & Contractor Services">Home & Contractor Services</option>
-                        <option value="Retail & Boutique">Retail & Boutique</option>
-                        <option value="Professional Services">Professional Services</option>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                    <select id="add-category" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        <option value="Restaurant & Café">Restaurant, Café & Bakery</option>
+                        <option value="Retail & Kirana">Retail Store & Kirana</option>
+                        <option value="Healthcare & Clinic">Doctor Clinic & Diagnostic Lab</option>
+                        <option value="Salon & Spa">Salon, Spa & Beauty</option>
+                        <option value="Automotive & Garage">Car Service & Auto Garage</option>
+                        <option value="General">General Local Business</option>
                     </select>
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">
-                    Google Review Link <span class="text-rose-400">*</span>
-                </label>
-                <input type="url" id="add-google-url" required 
-                       placeholder="https://g.page/r/.../review or Place ID link"
-                       class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
-                <p class="text-[11px] text-slate-400 mt-1">Get this directly from the client's Google Business Profile "Ask for reviews" link.</p>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Review Link <span class="text-rose-500">*</span></label>
+                <input type="url" id="add-google-url" required placeholder="https://g.page/r/.../review or Place ID link"
+                       class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono text-[11px] focus:ring-2 focus:ring-brand-500 outline-none">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Logo URL or Upload</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Logo URL (Optional)</label>
                     <input type="text" id="add-logo-url" placeholder="/static/uploads/artisan_logo.svg" 
-                           class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Brand Accent Color</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Brand Accent Color</label>
                     <div class="flex items-center space-x-2">
-                        <input type="color" id="add-accent-color" value="#2563EB" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0 p-0">
-                        <input type="text" id="add-accent-hex" value="#2563EB" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono">
+                        <input type="color" id="add-accent-color" value="#0F172A" class="w-9 h-9 rounded-lg cursor-pointer bg-white border border-slate-200 p-0.5">
+                        <input type="text" id="add-accent-hex" value="#0F172A" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono uppercase">
                     </div>
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Experience Tags (Comma-separated for quick tap)</label>
-                <input type="text" id="add-tags" 
-                       value="Friendly Staff, Fast Service, Delicious Food, Clean Space, Great Atmosphere" 
-                       class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
-                <p class="text-[11px] text-slate-400 mt-1">Customers tap 2-3 of these to fuel the AI review generator.</p>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tags (Comma-separated)</label>
+                <input type="text" id="add-tags" value="Friendly Staff, Fast Service, Great Quality, Clean Space" 
+                       class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
             </div>
 
-            <div class="pt-3 border-t border-slate-800 flex justify-end space-x-3">
-                <button type="button" onclick="closeModal('modal-add-business')" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-lg shadow-brand-600/30">Create Business</button>
+            <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2.5">
+                <button type="button" onclick="closeModal('modal-add-business')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-xs transition">Create Business</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- 3. Edit Business Modal -->
-<div id="modal-edit-business" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 max-w-lg w-full rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center">
-                <i class="fa-solid fa-pen-to-square text-brand-400 mr-2"></i> Edit Business
+<div id="modal-edit-business" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 max-w-lg w-full rounded-2xl p-6 shadow-xl overflow-y-auto max-h-[90vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                <i class="fa-solid fa-pen-to-square text-slate-700 mr-2 text-sm"></i> Edit Business
             </h3>
-            <button onclick="closeModal('modal-edit-business')" class="text-slate-400 hover:text-white text-lg">
+            <button onclick="closeModal('modal-edit-business')" class="text-slate-400 hover:text-slate-700">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -550,165 +481,168 @@
         <form id="form-edit-business" class="space-y-4">
             <input type="hidden" id="edit-id">
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Business Name</label>
-                <input type="text" id="edit-name" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Business Name</label>
+                <input type="text" id="edit-name" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Slug</label>
-                    <input type="text" id="edit-slug" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono focus:ring-2 focus:ring-brand-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Slug</label>
+                    <input type="text" id="edit-slug" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono focus:ring-2 focus:ring-brand-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Category</label>
-                    <input type="text" id="edit-category" class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                    <input type="text" id="edit-category" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Google Review URL</label>
-                <input type="url" id="edit-google-url" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Review URL</label>
+                <input type="url" id="edit-google-url" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono text-[11px] focus:ring-2 focus:ring-brand-500 outline-none">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Logo URL</label>
-                    <input type="text" id="edit-logo-url" class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Logo URL</label>
+                    <input type="text" id="edit-logo-url" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Accent Color</label>
-                    <input type="text" id="edit-accent-color" class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white font-mono">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Accent Color</label>
+                    <input type="text" id="edit-accent-color" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Tags (Comma-separated)</label>
-                <input type="text" id="edit-tags" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tags (Comma-separated)</label>
+                <input type="text" id="edit-tags" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
             </div>
 
-            <div class="pt-3 border-t border-slate-800 flex justify-end space-x-3">
-                <button type="button" onclick="closeModal('modal-edit-business')" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-lg shadow-brand-600/30">Save Changes</button>
+            <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2.5">
+                <button type="button" onclick="closeModal('modal-edit-business')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-xs transition">Save Changes</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- 4. QR Code & Stand Material Modal -->
-<div id="modal-qr" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center">
-        <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-4">
-            <h3 class="text-base font-bold text-white truncate" id="qr-modal-title">QR Code & Stand</h3>
-            <button onclick="closeModal('modal-qr')" class="text-slate-400 hover:text-white">
+<div id="modal-qr" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 max-w-sm w-full rounded-2xl p-6 shadow-xl text-center">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-4">
+            <h3 class="text-sm font-bold font-heading text-slate-900 truncate" id="qr-modal-title">QR Code & Stand</h3>
+            <button onclick="closeModal('modal-qr')" class="text-slate-400 hover:text-slate-700">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl shadow-inner inline-block my-2 border border-slate-200">
-            <img id="qr-image-preview" src="" alt="QR Code" class="w-52 h-52 object-contain mx-auto">
+        <div class="bg-slate-50 p-4 rounded-xl inline-block my-2 border border-slate-200">
+            <img id="qr-image-preview" src="" alt="QR Code" class="w-48 h-48 object-contain mx-auto">
         </div>
 
-        <p class="text-xs text-slate-400 mt-2 mb-4" id="qr-direct-link-display"></p>
+        <p class="text-xs text-slate-500 font-mono mt-2 mb-4" id="qr-direct-link-display"></p>
 
         <div class="space-y-2">
-            <a id="qr-download-png" href="#" download class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition">
+            <a id="qr-download-png" href="#" download class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition shadow-xs">
                 <i class="fa-solid fa-download"></i>
                 <span>Download High-Res PNG</span>
             </a>
-            <a id="qr-flyer-btn" href="#" target="_blank" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 border border-slate-700 transition">
+            <a id="qr-flyer-btn" href="#" target="_blank" class="w-full py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 border border-slate-200 transition">
                 <i class="fa-solid fa-print"></i>
-                <span>Print Table Tent / Counter Stand Flyer</span>
+                <span>Print Counter Stand Flyer</span>
             </a>
         </div>
     </div>
 </div>
 
-<!-- 5. Reseller Settings (AI & Razorpay Payments) Modal -->
-<div id="modal-settings" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 max-w-lg w-full rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center">
-                <i class="fa-solid fa-sliders text-amber-400 mr-2"></i> Platform Settings
+<!-- 5. Platform Settings Modal -->
+<div id="modal-settings" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 max-w-lg w-full rounded-2xl p-6 shadow-xl overflow-y-auto max-h-[90vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                <i class="fa-solid fa-sliders text-slate-700 mr-2 text-sm"></i> Platform Settings
             </h3>
-            <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-white text-lg">
+            <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-700">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <form id="form-settings" class="space-y-4">
             <!-- OpenAI Section -->
-            <div class="pb-3 border-b border-slate-800">
-                <label class="block text-xs font-semibold text-slate-300 mb-1">OpenAI API Key (Optional)</label>
+            <div class="pb-3 border-b border-slate-100">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">OpenAI API Key (Optional)</label>
                 <input type="password" id="settings-openai-key" 
                        placeholder="sk-proj-..." 
-                       class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-brand-500 outline-none">
-                <p class="text-[11px] text-slate-400 mt-1">
+                       class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:ring-2 focus:ring-brand-500 outline-none">
+                <p class="text-[11px] text-slate-500 mt-1">
                     Used for GPT-4o mini review drafting. If left blank, the built-in smart natural generator functions automatically.
                 </p>
-                <button type="button" id="btn-test-ai" class="mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-semibold text-slate-300 transition flex items-center space-x-1.5">
+                <button type="button" id="btn-test-ai" class="mt-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition flex items-center space-x-1.5">
                     <i class="fa-solid fa-vial text-xs"></i>
                     <span>Test OpenAI Connection</span>
                 </button>
             </div>
 
             <!-- Razorpay Gateway Section -->
-            <div class="pb-3 border-b border-slate-800 space-y-2">
-                <label class="block text-xs font-bold text-white flex items-center">
-                    <i class="fa-solid fa-credit-card text-emerald-400 mr-1.5"></i>
+            <div class="pb-3 border-b border-slate-100 space-y-2.5">
+                <label class="block text-xs font-bold font-heading text-slate-900 flex items-center">
+                    <i class="fa-solid fa-credit-card text-emerald-600 mr-1.5"></i>
                     Razorpay Gateway (UPI Autopay & Cards)
                 </label>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-0.5">Razorpay Key ID</label>
+                    <label class="block text-[11px] text-slate-500 mb-0.5">Razorpay Key ID</label>
                     <input type="text" id="settings-razorpay-key" placeholder="rzp_live_..."
-                           class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                           class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono">
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-0.5">Razorpay Key Secret</label>
+                    <label class="block text-[11px] text-slate-500 mb-0.5">Razorpay Key Secret</label>
                     <input type="password" id="settings-razorpay-secret" placeholder="Secret Key"
-                           class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                           class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono">
                 </div>
-                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                
+                <!-- Master Gateway Toggle -->
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <div>
-                        <span class="text-xs font-semibold text-white block">Payment Gateway Collection</span>
-                        <span class="text-[11px] text-slate-400 block">When disabled, all businesses get full free access without payment</span>
+                        <span class="text-xs font-semibold text-slate-800 block">Payment Gateway Collection</span>
+                        <span class="text-[11px] text-slate-500 block">When disabled, all businesses get full free access without payment</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="settings-payments-enabled" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                     </label>
                 </div>
-                <p class="text-[11px] text-slate-400">
-                    If left blank, the interactive sandbox simulation mode allows instant testing of UPI Autopay mandates and one-time payments.
+                
+                <p class="text-[11px] text-slate-500">
+                    If left blank, the interactive sandbox simulation mode allows instant testing of UPI Autopay mandates.
                 </p>
             </div>
 
-            <!-- Google OAuth / Gmail Sign-In Section -->
-            <div class="pb-3 border-b border-slate-800 space-y-2">
-                <label class="block text-xs font-bold text-white flex items-center">
-                    <i class="fa-brands fa-google text-rose-400 mr-1.5"></i>
+            <!-- Google OAuth Section -->
+            <div class="pb-3 border-b border-slate-100 space-y-2">
+                <label class="block text-xs font-bold font-heading text-slate-900 flex items-center">
+                    <i class="fa-brands fa-google text-rose-500 mr-1.5"></i>
                     Google OAuth (Sign In & Sign Up with Gmail)
                 </label>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-0.5">Google Client ID</label>
+                    <label class="block text-[11px] text-slate-500 mb-0.5">Google Client ID</label>
                     <input type="text" id="settings-google-id" placeholder="...apps.googleusercontent.com"
-                           class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                           class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono">
                 </div>
                 <div>
-                    <label class="block text-[11px] text-slate-400 mb-0.5">Google Client Secret</label>
+                    <label class="block text-[11px] text-slate-500 mb-0.5">Google Client Secret</label>
                     <input type="password" id="settings-google-secret" placeholder="Client Secret"
-                           class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                           class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono">
                 </div>
-                <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] space-y-1">
-                    <span class="text-slate-400 font-semibold block">Authorized Redirect URI (Set in Google Cloud Console):</span>
-                    <div class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-700 font-mono text-brand-300 select-all text-[11px]">
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] space-y-1">
+                    <span class="text-slate-600 font-semibold block">Authorized Redirect URI:</span>
+                    <div class="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono text-slate-800 select-all text-[11px]">
                         <span id="google-redirect-uri-display">https://ai-google-review-generator-iota.vercel.app/auth/google/callback</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end space-x-2 pt-2">
-                <button type="button" onclick="closeModal('modal-settings')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white shadow-md transition">Save Settings</button>
+            <div class="flex items-center justify-end space-x-2.5 pt-2">
+                <button type="button" onclick="closeModal('modal-settings')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl text-xs font-bold text-white shadow-xs transition">Save Settings</button>
             </div>
         </form>
     </div>

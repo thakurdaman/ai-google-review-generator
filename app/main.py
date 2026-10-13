@@ -145,7 +145,7 @@ def generate_slug(name: str) -> str:
 # ROOT & PUBLIC NAVIGATION
 # ==========================================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     # If owner is logged in -> owner dashboard
     owner = get_current_owner(request)
@@ -155,8 +155,15 @@ async def root(request: Request):
     reseller = get_current_reseller(request)
     if reseller:
         return RedirectResponse(url="/admin")
-    # Otherwise go to owner login / signup
-    return RedirectResponse(url="/login")
+    # Otherwise render high-converting landing page
+    return templates.TemplateResponse(
+        request=request,
+        name="landing.html",
+        context={
+            "plans": PLANS,
+            "payments_enabled": is_payments_enabled()
+        }
+    )
 
 
 # ==========================================

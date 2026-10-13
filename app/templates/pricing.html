@@ -3,120 +3,120 @@
 {% block title %}Choose Your Plan - ReviewBoost{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between p-4 sm:p-8">
+<div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col justify-between p-4 sm:p-8">
 
     <!-- Top Brand Header -->
-    <header class="max-w-5xl w-full mx-auto flex items-center justify-between pb-6 border-b border-slate-800">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-amber-300 font-black shadow-md shadow-brand-500/20">
-                <i class="fa-solid fa-star"></i>
+    <header class="max-w-5xl w-full mx-auto flex items-center justify-between pb-6 border-b border-slate-200">
+        <a href="/" class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 font-extrabold shadow-sm">
+                <i class="fa-solid fa-star text-sm"></i>
             </div>
             <div>
-                <span class="text-base font-extrabold text-white">ReviewBoost</span>
-                <span class="block text-[11px] text-slate-400">Subscription & Billing</span>
+                <span class="text-base font-bold font-heading text-slate-900">ReviewBoost</span>
+                <span class="block text-[11px] text-slate-500 font-medium">Subscription & Billing</span>
             </div>
-        </div>
+        </a>
 
         <div class="flex items-center space-x-3 text-xs">
             {% if owner %}
-            <span class="text-slate-300 hidden sm:inline">{{ owner.business_name }}</span>
-            <a href="/logout" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition">Logout</a>
+            <span class="text-slate-600 hidden sm:inline font-medium">{{ owner.business_name }}</span>
+            <a href="/logout" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">Logout</a>
             {% else %}
-            <a href="/login" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition">Log In</a>
+            <a href="/login" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">Sign In</a>
             {% endif %}
         </div>
     </header>
 
     <!-- Main Pricing Container -->
-    <main class="max-w-5xl w-full mx-auto py-8">
+    <main class="max-w-5xl w-full mx-auto py-10">
         
         <!-- Header text -->
-        <div class="text-center max-w-2xl mx-auto mb-10">
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30 inline-block mb-3">
-                <i class="fa-solid fa-bolt mr-1"></i> Activate Your Review Portal
+        <div class="text-center max-w-2xl mx-auto mb-8">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-block mb-3">
+                <i class="fa-solid fa-bolt mr-1 text-amber-600"></i> Activate Your Review Portal
             </span>
-            <h1 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+            <h1 class="text-2xl sm:text-4xl font-extrabold font-heading text-slate-900 tracking-tight">
                 Simple, transparent pricing for serious growth.
             </h1>
-            <p class="text-xs sm:text-sm text-slate-400 mt-2">
-                Turn customers into verified 5-star Google reviews. Select a plan below to activate your landing page and download your QR stands.
+            <p class="text-xs sm:text-sm text-slate-600 mt-2">
+                Turn store footfall into verified 5-star Google reviews. Select a plan below to activate your landing page and download your counter stands.
             </p>
-        </div>
-
-        <!-- Payment Mode Toggle -->
-        <div class="flex justify-center mb-10">
-            <div class="bg-slate-800/90 border border-slate-700 p-1.5 rounded-2xl inline-flex space-x-2">
-                <button type="button" id="toggle-mode-autopay" 
-                        class="px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-md flex items-center space-x-2 transition-all">
-                    <i class="fa-solid fa-rotate text-xs"></i>
-                    <span>UPI Autopay Mandate</span>
-                    <span class="text-[10px] bg-emerald-500 text-slate-950 font-black px-1.5 py-0.5 rounded">Recommended</span>
-                </button>
-                <button type="button" id="toggle-mode-onetime" 
-                        class="px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white flex items-center space-x-2 transition-all">
-                    <i class="fa-regular fa-credit-card text-xs"></i>
-                    <span>One-Time Payment</span>
-                </button>
-            </div>
         </div>
 
         {% if not payments_enabled %}
         <!-- Free Beta Access Announcement Banner -->
-        <div class="max-w-2xl mx-auto mb-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 flex items-center space-x-3.5 text-emerald-200 shadow-lg shadow-emerald-500/5">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shrink-0">
+        <div class="max-w-2xl mx-auto mb-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 flex items-center space-x-3.5 text-emerald-900 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0">
                 <i class="fa-solid fa-gift"></i>
             </div>
             <div>
-                <h4 class="text-xs sm:text-sm font-bold text-white flex items-center space-x-2">
+                <h4 class="text-xs sm:text-sm font-bold font-heading text-emerald-900 flex items-center space-x-2">
                     <span>🎉 Free Beta Launch Active</span>
-                    <span class="text-[10px] font-bold bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full">100% Free</span>
+                    <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">100% Free</span>
                 </h4>
-                <p class="text-[11px] sm:text-xs text-emerald-300/80 mt-0.5">
+                <p class="text-[11px] sm:text-xs text-emerald-700 mt-0.5">
                     Payment gateway is temporarily disabled. Click either plan below to activate your account for ₹0 with zero card or UPI mandate required!
                 </p>
             </div>
         </div>
         {% endif %}
 
+        <!-- Payment Mode Toggle -->
+        <div class="flex justify-center mb-10">
+            <div class="bg-white border border-slate-200 p-1.5 rounded-2xl inline-flex space-x-2 shadow-sm">
+                <button type="button" id="toggle-mode-autopay" 
+                        class="px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-sm flex items-center space-x-2 transition-all">
+                    <i class="fa-solid fa-rotate text-xs"></i>
+                    <span>UPI Autopay Mandate</span>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-200">Recommended</span>
+                </button>
+                <button type="button" id="toggle-mode-onetime" 
+                        class="px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 flex items-center space-x-2 transition-all">
+                    <i class="fa-regular fa-credit-card text-xs"></i>
+                    <span>One-Time Payment</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Pricing Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
 
             <!-- PLAN 1: Monthly Plan -->
-            <div class="plan-card bg-slate-800/80 border border-slate-700/80 rounded-3xl p-6 sm:p-8 flex flex-col justify-between hover:border-slate-600 transition relative">
+            <div class="plan-card bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 flex flex-col justify-between hover:border-slate-300 transition shadow-sm relative">
                 <div>
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Monthly Plan</span>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-300">Flexible</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 font-heading">Monthly Plan</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Flexible</span>
                     </div>
 
                     <div class="mb-4">
-                        <span class="text-3xl sm:text-4xl font-black text-white">₹999</span>
-                        <span class="text-xs text-slate-400">/ month</span>
+                        <span class="text-3xl sm:text-4xl font-extrabold font-heading text-slate-900">₹999</span>
+                        <span class="text-xs text-slate-500">/ month</span>
                     </div>
 
-                    <p class="text-xs text-slate-400 mb-6">
-                        Perfect for single locations getting started with automated review generation.
+                    <p class="text-xs text-slate-600 mb-6">
+                        Perfect for single retail stores and cafes getting started with automated review generation.
                     </p>
 
-                    <ul class="space-y-3 text-xs text-slate-300 mb-8">
+                    <ul class="space-y-3 text-xs text-slate-700 mb-8">
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>Unlimited QR code scans & NFC taps</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
-                            <span>AI-powered natural review drafts (GPT-4o mini)</span>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                            <span>Natural review drafting assistant</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>1-3★ Review Gating & private feedback inbox</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>Printable 4x6 Table Tent & Counter Stand flyer</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>Full real-time conversion & scan analytics</span>
                         </li>
                     </ul>
@@ -124,7 +124,7 @@
 
                 <div>
                     <button type="button" onclick="initiateCheckout('monthly')" 
-                            class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-700 hover:bg-slate-600 border border-slate-600 transition flex items-center justify-center space-x-2">
+                            class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-900 hover:bg-slate-800 transition flex items-center justify-center space-x-2 shadow-sm">
                         {% if not payments_enabled %}
                         <span>Activate Free Monthly Access (₹0)</span>
                         {% else %}
@@ -139,48 +139,48 @@
             </div>
 
             <!-- PLAN 2: Yearly Plan (Featured) -->
-            <div class="plan-card bg-gradient-to-b from-brand-950/60 via-slate-800 to-slate-800 border-2 border-brand-500 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl shadow-brand-500/10 relative">
+            <div class="plan-card bg-white border-2 border-brand-600 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md relative">
                 
                 <!-- Badge -->
-                <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md flex items-center space-x-1">
+                <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full text-[11px] font-black bg-amber-400 text-slate-950 shadow-sm flex items-center space-x-1 font-heading">
                     <i class="fa-solid fa-crown text-[10px]"></i>
                     <span>SAVE 25% + 2 MONTHS FREE</span>
                 </div>
 
                 <div>
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-xs font-bold uppercase tracking-wider text-brand-300">Annual Growth</span>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Best Value</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-brand-600 font-heading">Annual Growth</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Best Value</span>
                     </div>
 
                     <div class="mb-4">
-                        <span class="text-3xl sm:text-4xl font-black text-white">₹8,999</span>
-                        <span class="text-xs text-slate-400">/ year <span class="text-emerald-400 font-bold">(₹749/mo)</span></span>
+                        <span class="text-3xl sm:text-4xl font-extrabold font-heading text-slate-900">₹8,999</span>
+                        <span class="text-xs text-slate-500">/ year <span class="text-emerald-700 font-bold">(₹749/mo)</span></span>
                     </div>
 
-                    <p class="text-xs text-slate-400 mb-6">
+                    <p class="text-xs text-slate-600 mb-6">
                         Best value for established businesses. Lock in maximum savings for the whole year.
                     </p>
 
-                    <ul class="space-y-3 text-xs text-slate-300 mb-8">
+                    <ul class="space-y-3 text-xs text-slate-700 mb-8">
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span><strong>All Monthly Pro features included</strong></span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>Save ₹2,989 compared to monthly billing</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
-                            <span>Priority AI Generation response speed</span>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                            <span>Priority review generation response speed</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>High-resolution vector SVG QR export</span>
                         </li>
                         <li class="flex items-center space-x-2.5">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <span>Dedicated priority onboarding support</span>
                         </li>
                     </ul>
@@ -188,7 +188,7 @@
 
                 <div>
                     <button type="button" onclick="initiateCheckout('yearly')" 
-                            class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2">
+                            class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-brand-600 hover:bg-brand-700 transition flex items-center justify-center space-x-2 shadow-sm">
                         {% if not payments_enabled %}
                         <span>Activate Free Annual Access (₹0)</span>
                         {% else %}
@@ -196,7 +196,7 @@
                         {% endif %}
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
-                    <p class="text-[10px] text-center text-slate-400 mt-2 payment-mode-note">
+                    <p class="text-[10px] text-center text-slate-500 mt-2 payment-mode-note">
                         {% if not payments_enabled %}Free Beta Access • Full Pro features included{% else %}Recurring UPI Autopay mandate • Billed once annually{% endif %}
                     </p>
                 </div>
@@ -206,64 +206,64 @@
 
         <!-- Gateway Security Badge -->
         <div class="mt-12 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-4">
-            <span class="flex items-center space-x-1.5"><i class="fa-solid fa-shield-halved text-emerald-400"></i><span>256-Bit SSL Encrypted</span></span>
+            <span class="flex items-center space-x-1.5"><i class="fa-solid fa-shield-halved text-emerald-600"></i><span>256-Bit Bank Encryption</span></span>
             <span>•</span>
-            <span class="flex items-center space-x-1.5"><i class="fa-brands fa-google-pay text-base text-slate-300"></i><span>UPI Autopay Supported</span></span>
+            <span class="flex items-center space-x-1.5"><i class="fa-brands fa-google-pay text-base text-slate-700"></i><span>UPI Autopay Supported</span></span>
             <span>•</span>
-            <span class="flex items-center space-x-1.5"><i class="fa-solid fa-building-columns text-slate-300"></i><span>All Indian UPI Apps & Banks</span></span>
+            <span class="flex items-center space-x-1.5"><i class="fa-solid fa-building-columns text-slate-700"></i><span>All Indian Banks, GPay & PhonePe</span></span>
         </div>
 
     </main>
 
     <!-- Simple Footer -->
-    <footer class="max-w-5xl w-full mx-auto pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
+    <footer class="max-w-5xl w-full mx-auto pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
         ReviewBoost • Self-serve Google Review Collection Platform
     </footer>
 
 </div>
 
 <!-- Payment Processing Modal -->
-<div id="payment-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center">
+<div id="payment-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 max-w-sm w-full rounded-2xl p-6 shadow-xl text-center">
         
         <div id="payment-loading" class="space-y-4 py-4">
-            <div class="w-16 h-16 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center mx-auto text-2xl animate-spin">
+            <div class="w-14 h-14 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center mx-auto text-2xl animate-spin">
                 <i class="fa-solid fa-circle-notch"></i>
             </div>
-            <h3 class="text-base font-bold text-white" id="payment-modal-title">Setting up payment...</h3>
-            <p class="text-xs text-slate-400" id="payment-modal-desc">Connecting to payment gateway</p>
+            <h3 class="text-base font-bold font-heading text-slate-900" id="payment-modal-title">Setting up payment...</h3>
+            <p class="text-xs text-slate-500" id="payment-modal-desc">Connecting to payment gateway</p>
         </div>
 
         <div id="payment-confirm" class="hidden space-y-4 text-left">
-            <div class="text-center pb-2 border-b border-slate-800">
-                <span class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto text-xl mb-2">
+            <div class="text-center pb-2 border-b border-slate-100">
+                <span class="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center mx-auto text-xl mb-2">
                     <i class="fa-solid fa-qrcode"></i>
                 </span>
-                <h3 class="text-base font-bold text-white">Confirm UPI Payment</h3>
-                <p class="text-xs text-slate-400" id="confirm-plan-text"></p>
+                <h3 class="text-base font-bold font-heading text-slate-900">Confirm Payment</h3>
+                <p class="text-xs text-slate-500" id="confirm-plan-text"></p>
             </div>
 
-            <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/80 space-y-2 text-xs">
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs">
                 <div class="flex justify-between">
-                    <span class="text-slate-400">Payment Mode:</span>
-                    <span class="font-bold text-emerald-400" id="confirm-mode-badge">UPI Autopay</span>
+                    <span class="text-slate-500">Payment Mode:</span>
+                    <span class="font-bold text-slate-900" id="confirm-mode-badge">UPI Autopay</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-400">Total Amount:</span>
-                    <span class="font-bold text-white" id="confirm-amount-text">₹999.00</span>
+                    <span class="text-slate-500">Total Amount:</span>
+                    <span class="font-bold text-slate-900" id="confirm-amount-text">₹999.00</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-400">Supported Apps:</span>
-                    <span class="text-slate-300">GPay, PhonePe, Paytm, BHIM</span>
+                    <span class="text-slate-500">Supported:</span>
+                    <span class="text-slate-700 font-medium">GPay, PhonePe, Paytm, BHIM</span>
                 </div>
             </div>
 
             <button type="button" id="btn-complete-payment"
-                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                    class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-check"></i>
                 <span>Authorize & Activate Review Portal</span>
             </button>
-            <button type="button" onclick="closePaymentModal()" class="w-full text-center text-xs text-slate-400 hover:text-white py-1">Cancel</button>
+            <button type="button" onclick="closePaymentModal()" class="w-full text-center text-xs text-slate-500 hover:text-slate-800 py-1">Cancel</button>
         </div>
 
     </div>
@@ -282,15 +282,15 @@
 
     btnAutopay.addEventListener('click', () => {
         selectedMode = 'upi_autopay';
-        btnAutopay.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-md flex items-center space-x-2 transition-all';
-        btnOnetime.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white flex items-center space-x-2 transition-all';
+        btnAutopay.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-sm flex items-center space-x-2 transition-all';
+        btnOnetime.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 flex items-center space-x-2 transition-all';
         notes.forEach(n => n.textContent = 'Recurring UPI Autopay mandate • Cancel anytime in 1 tap');
     });
 
     btnOnetime.addEventListener('click', () => {
         selectedMode = 'one_time';
-        btnOnetime.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-md flex items-center space-x-2 transition-all';
-        btnAutopay.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white flex items-center space-x-2 transition-all';
+        btnOnetime.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-sm flex items-center space-x-2 transition-all';
+        btnAutopay.className = 'px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 flex items-center space-x-2 transition-all';
         notes.forEach(n => n.textContent = 'One-time payment for single billing cycle • No recurring charge');
     });
 
@@ -341,7 +341,7 @@
                         name: "{{ owner.business_name if owner else '' }}",
                         email: "{{ owner.email if owner else '' }}"
                     },
-                    theme: { color: "#2563EB" },
+                    theme: { color: "#0F172A" },
                     handler: async function (response) {
                         await finalizeVerification(
                             planType, 

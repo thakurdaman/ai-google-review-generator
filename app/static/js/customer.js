@@ -98,14 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
         stepAiResults.classList.add('hidden');
         stepFeedbackThanks.classList.add('hidden');
 
+        const stepBadge = document.getElementById('step-badge');
         if (rating >= 4) {
             // Positive Flow -> Show quick tap options + AI generation
+            if (stepBadge) stepBadge.textContent = 'Step 2 of 3 • Highlights';
             stepNegative.classList.add('hidden');
             stepPositive.classList.remove('hidden');
             // Auto-scroll slightly to positive container
             stepPositive.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
             // Negative Flow -> Strictly skip AI, show private feedback
+            if (stepBadge) stepBadge.textContent = 'Step 2 of 3 • Direct Feedback';
             stepPositive.classList.add('hidden');
             stepNegative.classList.remove('hidden');
             stepNegative.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -163,6 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Reveal drafts step
+            const stepBadge = document.getElementById('step-badge');
+            if (stepBadge) stepBadge.textContent = 'Step 3 of 3 • Select & Post';
             document.getElementById('step-positive').classList.add('hidden');
             const stepAiResults = document.getElementById('step-ai-results');
             stepAiResults.classList.remove('hidden');

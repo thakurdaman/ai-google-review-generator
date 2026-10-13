@@ -1,50 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Owner Dashboard - {{ owner.business_name }}{% endblock %}
+{% block title %}Store Dashboard - {{ owner.business_name }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+<div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col">
 
     <!-- Top Navigation Bar -->
-    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-md">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 p-1 flex items-center justify-center shadow-xs">
                 {% if owner.logo_url %}
                 <img src="{{ owner.logo_url }}" alt="{{ owner.business_name }}" class="w-full h-full object-contain rounded-lg" onerror="this.src='/static/uploads/artisan_logo.svg'">
                 {% else %}
-                <span class="text-slate-800 font-extrabold text-base">{{ owner.business_name[:1] }}</span>
+                <span class="text-slate-800 font-extrabold text-base font-heading">{{ owner.business_name[:1] }}</span>
                 {% endif %}
             </div>
             <div>
                 <div class="flex items-center space-x-2">
-                    <span class="text-base font-extrabold text-white leading-tight">{{ owner.business_name }}</span>
+                    <span class="text-base font-bold font-heading text-slate-900 leading-tight">{{ owner.business_name }}</span>
                     {% if is_active %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1">
-                        <i class="fa-solid fa-circle text-[6px] mr-1"></i>Active Portal
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1">
+                        <i class="fa-solid fa-circle text-[5px] mr-1 text-emerald-500"></i>Active Portal
                     </span>
                     {% else %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center space-x-1">
-                        <i class="fa-solid fa-circle-exclamation mr-1"></i>Inactive / Renewal Due
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center space-x-1">
+                        <i class="fa-solid fa-circle-exclamation mr-1 text-rose-500"></i>Renewal Required
                     </span>
                     {% endif %}
                 </div>
-                <span class="text-xs text-slate-400">{{ owner.category }} • {{ owner.email }}</span>
+                <span class="text-xs text-slate-500 font-medium">{{ owner.category }} • {{ owner.email }}</span>
             </div>
         </div>
 
         <div class="flex items-center space-x-2 sm:space-x-3">
             <a href="/r/{{ owner.business_slug }}" target="_blank"
-               class="px-3 py-1.5 bg-slate-700/60 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 border border-slate-600 flex items-center space-x-1.5 transition">
-                <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
-                <span class="hidden sm:inline">Preview Customer Page</span>
+               class="px-3.5 py-1.5 bg-white hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 border border-slate-200 flex items-center space-x-1.5 shadow-xs transition">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+                <span class="hidden sm:inline">Open Review Page</span>
             </a>
             <a href="/dashboard/flyer" target="_blank"
-               class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white shadow-md shadow-indigo-600/20 flex items-center space-x-1.5 transition">
+               class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-xl text-xs font-bold text-white shadow-xs flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-print text-xs"></i>
-                <span class="hidden sm:inline">Print Table Stand</span>
+                <span class="hidden sm:inline">Print Counter Stand</span>
             </a>
-            <div class="h-4 w-px bg-slate-700"></div>
-            <a href="/logout" class="text-slate-400 hover:text-rose-400 text-xs font-medium transition" title="Logout">
+            <div class="h-4 w-px bg-slate-200"></div>
+            <a href="/logout" class="text-slate-400 hover:text-rose-600 text-xs font-medium transition p-1" title="Logout">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
@@ -52,193 +52,193 @@
 
     <!-- Subscription Status Notice (If Inactive) -->
     {% if not is_active %}
-    <div class="bg-rose-500/10 border-b border-rose-500/30 px-4 sm:px-8 py-3 text-rose-200 flex flex-col sm:flex-row items-center justify-between text-xs gap-2">
+    <div class="bg-amber-50 border-b border-amber-200 px-4 sm:px-8 py-3 text-amber-900 flex flex-col sm:flex-row items-center justify-between text-xs gap-2">
         <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
-            <span><strong>Your review collection portal is currently inactive:</strong> Customers cannot generate reviews until subscription is activated.</span>
+            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm"></i>
+            <span><strong>Your review collection is paused:</strong> Your customers cannot generate drafts until your subscription is activated.</span>
         </div>
-        <a href="/pricing" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg shrink-0 transition">
-            Activate Subscription (₹999/mo or ₹8,999/yr) <i class="fa-solid fa-arrow-right ml-1"></i>
+        <a href="/pricing" class="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shrink-0 transition">
+            Activate Subscription <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
         </a>
     </div>
     {% endif %}
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 space-y-6">
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8 space-y-6">
 
-        <!-- Metrics Overview -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <!-- Scans -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Total Scans</span>
-                    <i class="fa-solid fa-qrcode text-indigo-400"></i>
+        <!-- Top 3 Primary Metrics that Matter to Indian Shopkeepers -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <!-- Metric 1: Reviews -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Google 5★ Reviews</span>
+                    <i class="fa-solid fa-star text-amber-500 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-white">{{ metrics.scans_count }}</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">QR code & NFC visits</span>
+                <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ metrics.reviews_count }}</div>
+                <span class="text-xs text-emerald-700 font-semibold mt-1 inline-block">
+                    <i class="fa-solid fa-arrow-trend-up mr-0.5"></i> Posted to Google Maps
+                </span>
             </div>
 
-            <!-- 5-Star Reviews Generated -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Completed 5★ Reviews</span>
-                    <i class="fa-solid fa-star text-amber-400"></i>
+            <!-- Metric 2: Scans -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Counter Scans & Taps</span>
+                    <i class="fa-solid fa-qrcode text-brand-600 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-amber-300">{{ metrics.reviews_count }}</div>
-                <span class="text-[11px] text-emerald-400 mt-1 inline-block"><i class="fa-solid fa-arrow-trend-up mr-0.5"></i>Posted to Google</span>
+                <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ metrics.scans_count }}</div>
+                <span class="text-xs text-slate-500 mt-1 inline-block">
+                    {{ metrics.conversion_rate }}% completed review rate
+                </span>
             </div>
 
-            <!-- Conversion Rate -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Conversion Rate</span>
-                    <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+            <!-- Metric 3: Shielded Complaints -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Shielded Complaints</span>
+                    <i class="fa-solid fa-shield-halved text-rose-500 text-sm"></i>
                 </div>
-                <div class="text-2xl sm:text-3xl font-black text-white">{{ metrics.conversion_rate }}%</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">Scan-to-review ratio</span>
+                <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ metrics.feedback_count }}</div>
+                <span class="text-xs text-rose-700 font-semibold mt-1 inline-block">
+                    1–3★ kept off Google public rating
+                </span>
             </div>
 
-            <!-- Shielded Private Complaints -->
-            <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Shielded Bad Reviews</span>
-                    <i class="fa-solid fa-shield-halved text-rose-400"></i>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black text-rose-300">{{ metrics.feedback_count }}</div>
-                <span class="text-[11px] text-slate-400 mt-1 inline-block">1-3★ kept off Google</span>
-            </div>
         </div>
 
         <!-- Tabbed Navigation -->
-        <div class="flex items-center space-x-2 border-b border-slate-700 pb-3 overflow-x-auto">
-            <button id="owner-tab-qr" onclick="switchOwnerTab('qr')" class="owner-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm flex items-center space-x-2 shrink-0">
+        <div class="flex items-center space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
+            <button id="owner-tab-qr" onclick="switchOwnerTab('qr')" class="owner-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-xs flex items-center space-x-2 shrink-0 transition">
                 <i class="fa-solid fa-qrcode"></i>
-                <span>QR & NFC Stand</span>
+                <span>Counter Stands & QR</span>
             </button>
-            <button id="owner-tab-feedback" onclick="switchOwnerTab('feedback')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0">
-                <i class="fa-solid fa-shield-halved text-rose-400"></i>
-                <span>Shielded Feedback ({{ feedbacks|length }})</span>
+            <button id="owner-tab-feedback" onclick="switchOwnerTab('feedback')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-envelope-open-text text-amber-500"></i>
+                <span>Private Feedback ({{ feedbacks|length }})</span>
             </button>
-            <button id="owner-tab-settings" onclick="switchOwnerTab('settings')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0">
+            <button id="owner-tab-settings" onclick="switchOwnerTab('settings')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
                 <i class="fa-solid fa-sliders"></i>
-                <span>Google Link & Profile</span>
+                <span>Google Link & Store Profile</span>
             </button>
-            <button id="owner-tab-billing" onclick="switchOwnerTab('billing')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0">
-                <i class="fa-solid fa-credit-card text-emerald-400"></i>
-                <span>Plan & Billing</span>
+            <button id="owner-tab-billing" onclick="switchOwnerTab('billing')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-credit-card text-emerald-600"></i>
+                <span>Plan & Invoices</span>
             </button>
         </div>
 
-        <!-- SECTION 1: QR & NFC Material -->
+        <!-- SECTION 1: QR & Counter Stand Material -->
         <div id="section-owner-qr" class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
             <!-- QR Display Card -->
-            <div class="md:col-span-5 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 text-center flex flex-col items-center justify-between">
+            <div class="md:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 text-center flex flex-col items-center justify-between shadow-xs">
                 <div>
-                    <h3 class="text-base font-bold text-white mb-1">Your Live Review QR Code</h3>
-                    <p class="text-xs text-slate-400 mb-4">Print this or place it on counters, tables, or NFC cards</p>
+                    <h3 class="text-base font-bold font-heading text-slate-900 mb-1">Your Store QR Code</h3>
+                    <p class="text-xs text-slate-500 mb-4">Print this or place it on counters, bills, or NFC plates</p>
                     
-                    <div class="bg-white p-4 rounded-2xl inline-block shadow-inner border border-slate-200">
+                    <div class="bg-slate-50 p-4 rounded-2xl inline-block border border-slate-200">
                         <img src="/api/qr/{{ owner.business_slug }}.png" alt="QR Code" class="w-48 h-48 object-contain">
                     </div>
 
-                    <div class="mt-4 bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <span class="font-mono text-slate-300 truncate mr-2">/r/{{ owner.business_slug }}</span>
-                        <button onclick="copyLandingLink('{{ owner.business_slug }}')" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-brand-400 rounded-lg transition" title="Copy short URL">
-                            <i class="fa-solid fa-copy"></i>
+                    <div class="mt-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                        <span class="font-mono text-slate-700 truncate mr-2 select-all">/r/{{ owner.business_slug }}</span>
+                        <button onclick="copyLandingLink('{{ owner.business_slug }}')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition" title="Copy short URL">
+                            <i class="fa-solid fa-copy mr-1"></i>Copy
                         </button>
                     </div>
                 </div>
 
-                <div class="w-full space-y-2 mt-6">
-                    <a href="/api/qr/{{ owner.business_slug }}.png?download=true" download
-                       class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Download High-Res PNG</span>
-                    </a>
+                <div class="w-full space-y-2.5 mt-6">
                     <a href="/dashboard/flyer" target="_blank"
-                       class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 border border-slate-600 transition">
+                       class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition shadow-xs">
                         <i class="fa-solid fa-print"></i>
-                        <span>Print 4x6 Table Tent Flyer</span>
+                        <span>Print Ready 4x6 Counter Stand Flyer</span>
+                    </a>
+                    <a href="/api/qr/{{ owner.business_slug }}.png?download=true" download
+                       class="w-full py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 border border-slate-200 transition">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Download QR Code Image (PNG)</span>
                     </a>
                 </div>
             </div>
 
-            <!-- Instructions & NFC Guidance -->
+            <!-- Practical Counter Setup Guide -->
             <div class="md:col-span-7 space-y-4">
-                <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 space-y-4">
-                    <h3 class="text-base font-bold text-white flex items-center">
-                        <i class="fa-solid fa-lightbulb text-amber-400 mr-2"></i>
-                        How to collect 5-star reviews on site
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+                    <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                        <i class="fa-solid fa-lightbulb text-amber-500 mr-2 text-sm"></i>
+                        How to get 10+ Google reviews every week
                     </h3>
 
-                    <div class="space-y-3 text-xs text-slate-300">
-                        <div class="flex items-start space-x-3 bg-slate-900/50 p-3.5 rounded-xl border border-slate-800">
-                            <span class="w-6 h-6 rounded-full bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center shrink-0">1</span>
+                    <div class="space-y-3 text-xs text-slate-600">
+                        <div class="flex items-start space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                            <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 font-heading">1</span>
                             <div>
-                                <strong class="text-white">Print the Counter Stand:</strong>
-                                <p class="text-slate-400 mt-0.5">Click "Print 4x6 Table Tent Flyer" above and place the printed stand card on your billing counter, dining tables, or reception desk.</p>
+                                <strong class="text-slate-900">Place Flyer Near the Cash Counter:</strong>
+                                <p class="text-slate-500 mt-0.5">Click "Print Ready Counter Stand" on the left. Put the printout in an acrylic 4x6 T-stand on your checkout counter where customers wait for billing.</p>
                             </div>
                         </div>
 
-                        <div class="flex items-start space-x-3 bg-slate-900/50 p-3.5 rounded-xl border border-slate-800">
-                            <span class="w-6 h-6 rounded-full bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center shrink-0">2</span>
+                        <div class="flex items-start space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                            <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 font-heading">2</span>
                             <div>
-                                <strong class="text-white">Program Cheap NFC Cards / Stickers:</strong>
-                                <p class="text-slate-400 mt-0.5">Use free mobile apps like <em>NFC Tools</em> to write your short link to inexpensive NFC tags ($0.20 each). Customers just tap their smartphone against it.</p>
+                                <strong class="text-slate-900">Use Cheap NFC Cards or Stickers:</strong>
+                                <p class="text-slate-500 mt-0.5">Write your short link <code>/r/{{ owner.business_slug }}</code> to inexpensive NFC stickers or tags. Customers can simply tap their phone against the stand.</p>
                             </div>
                         </div>
 
-                        <div class="flex items-start space-x-3 bg-slate-900/50 p-3.5 rounded-xl border border-slate-800">
-                            <span class="w-6 h-6 rounded-full bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center shrink-0">3</span>
+                        <div class="flex items-start space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                            <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 font-heading">3</span>
                             <div>
-                                <strong class="text-white">Customer Taps & AI Writes the Review:</strong>
-                                <p class="text-slate-400 mt-0.5">Customers choose their stars and order highlights. If 4-5 stars, OpenAI drafts 3 natural reviews. If 1-3 stars, it catches their feedback privately without touching Google!</p>
+                                <strong class="text-slate-900">Let the AI Assistant Do the Work:</strong>
+                                <p class="text-slate-500 mt-0.5">Customers choose 2 highlights; the assistant generates 3 authentic drafts. With 1 tap, the text is copied directly into Google Reviews!</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
         <!-- SECTION 2: Shielded Negative Feedback (1-3 Stars) -->
         <div id="section-owner-feedback" class="hidden space-y-4">
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
                 <div class="mb-4">
-                    <h3 class="text-base font-bold text-white flex items-center">
-                        <i class="fa-solid fa-shield-halved text-rose-400 mr-2"></i>
-                        Shielded Negative Customer Feedback
+                    <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
+                        <i class="fa-solid fa-shield-halved text-rose-500 mr-2"></i>
+                        Private Customer Complaints Inbox
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">
-                        These ratings were caught privately on your landing page. They were NEVER sent to Google, protecting your public rating while giving you a chance to make things right!
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        These ratings were caught privately on your landing page. They were <strong>never sent to Google</strong>, protecting your public rating while giving you an opportunity to resolve customer concerns!
                     </p>
                 </div>
 
                 {% if feedbacks|length == 0 %}
                 <div class="text-center py-12 text-slate-400">
                     <i class="fa-solid fa-circle-check text-4xl text-emerald-500 mb-2"></i>
-                    <p class="text-sm font-bold text-white">Zero negative complaints!</p>
-                    <p class="text-xs text-slate-400 mt-1">All your customers have had 4 and 5-star experiences.</p>
+                    <p class="text-sm font-bold text-slate-800">Zero complaints recorded!</p>
+                    <p class="text-xs text-slate-500 mt-1">Your visitors have given 4 and 5-star feedback.</p>
                 </div>
                 {% else %}
                 <div class="space-y-3">
                     {% for fb in feedbacks %}
-                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div class="space-y-1.5 flex-1">
                             <div class="flex items-center space-x-2.5">
-                                <span class="px-2 py-0.5 rounded text-xs font-bold {% if fb.rating == 1 %}bg-rose-500/20 text-rose-400 border border-rose-500/30{% elif fb.rating == 2 %}bg-orange-500/20 text-orange-400 border border-orange-500/30{% else %}bg-amber-500/20 text-amber-400 border border-amber-500/30{% endif %}">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold {% if fb.rating == 1 %}bg-rose-100 text-rose-700 border border-rose-200{% elif fb.rating == 2 %}bg-amber-100 text-amber-700 border border-amber-200{% else %}bg-slate-200 text-slate-700 border border-slate-300{% endif %}">
                                     {{ fb.rating }} ★ Rating
                                 </span>
                                 <span class="text-xs text-slate-400">• {{ fb.created_at }}</span>
                             </div>
-                            <p class="text-sm text-slate-200 bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                            <p class="text-xs sm:text-sm text-slate-800 bg-white p-3 rounded-lg border border-slate-200">
                                 "{{ fb.feedback_text }}"
                             </p>
-                            <div class="text-xs text-slate-400 flex items-center space-x-4 pt-1">
+                            <div class="text-xs text-slate-500 flex items-center space-x-4 pt-1">
                                 {% if fb.customer_name %}
-                                <span><i class="fa-solid fa-user text-slate-500 mr-1"></i>{{ fb.customer_name }}</span>
+                                <span><i class="fa-solid fa-user text-slate-400 mr-1"></i>{{ fb.customer_name }}</span>
                                 {% endif %}
                                 {% if fb.customer_contact %}
-                                <span><i class="fa-solid fa-envelope text-slate-500 mr-1"></i>{{ fb.customer_contact }}</span>
+                                <span><i class="fa-solid fa-phone text-slate-400 mr-1"></i>{{ fb.customer_contact }}</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -251,58 +251,58 @@
 
         <!-- SECTION 3: Profile & Google Review Link Settings -->
         <div id="section-owner-settings" class="hidden">
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 max-w-2xl">
-                <div class="mb-5 pb-3 border-b border-slate-700">
-                    <h3 class="text-base font-bold text-white">Profile & Google Review Destination</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Control where customers are redirected and how your portal looks.</p>
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-xs">
+                <div class="mb-5 pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold font-heading text-slate-900">Store Profile & Google Destination</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Control where customers are redirected and your store branding.</p>
                 </div>
 
                 <form id="form-owner-profile" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Business Name</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Business Name</label>
                         <input type="text" id="owner-setting-name" value="{{ owner.business_name }}" required
-                               class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">
-                            Google Review Link <span class="text-rose-400">*</span>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Google Review Destination Link <span class="text-rose-500">*</span>
                         </label>
                         <input type="url" id="owner-setting-google-url" value="{{ owner.google_review_url }}" required
-                               class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white focus:ring-2 focus:ring-brand-500 outline-none">
-                        <p class="text-[11px] text-slate-400 mt-1">
-                            Updating this link takes effect immediately for all scans and is recorded in your activity log.
+                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono text-[11px] focus:ring-2 focus:ring-brand-500 outline-none">
+                        <p class="text-[11px] text-slate-500 mt-1">
+                            Changes take effect immediately for all counter scans.
                         </p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Business Category</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Business Category</label>
                             <input type="text" id="owner-setting-category" value="{{ owner.category }}"
-                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white">
+                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Accent Brand Color</label>
-                            <input type="text" id="owner-setting-color" value="{{ owner.accent_color or '#2563EB' }}"
-                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-mono">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Brand Accent Color</label>
+                            <input type="text" id="owner-setting-color" value="{{ owner.accent_color or '#0F172A' }}"
+                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Logo URL</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Logo URL</label>
                         <input type="text" id="owner-setting-logo" value="{{ owner.logo_url or '' }}"
-                               class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white">
+                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Experience Tags (Comma-separated)</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Experience Tags (Comma-separated)</label>
                         <input type="text" id="owner-setting-tags" value="{{ tags_str }}"
-                               class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white">
+                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
                     </div>
 
                     <div class="pt-2">
                         <button type="submit" 
-                                class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center space-x-1.5">
+                                class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-xs transition flex items-center space-x-1.5">
                             <i class="fa-solid fa-check"></i>
                             <span>Save Profile Changes</span>
                         </button>
@@ -313,27 +313,28 @@
 
         <!-- SECTION 4: Plan & Billing Management -->
         <div id="section-owner-billing" class="hidden space-y-6">
+            
             <!-- Current Plan Card -->
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-700 gap-3">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-100 gap-3">
                     <div>
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Subscription Plan</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-heading">Current Plan</span>
                         <div class="flex items-center space-x-3 mt-1">
-                            <h3 class="text-xl font-black text-white">
+                            <h3 class="text-xl font-bold font-heading text-slate-900">
                                 {% if owner.plan_tier == 'yearly' %}Annual Growth Plan{% else %}Monthly Pro Plan{% endif %}
                             </h3>
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {% if is_active %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% else %}bg-rose-500/20 text-rose-300 border border-rose-500/30{% endif %}">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {% if is_active %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
                                 {{ owner.subscription_status|title }}
                             </span>
                         </div>
                     </div>
 
                     <div class="flex items-center space-x-2">
-                        <a href="/pricing" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs shadow transition">
-                            Change Plan / Upgrade
+                        <a href="/pricing" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-xs transition">
+                            Change Plan
                         </a>
                         {% if owner.payment_method == 'upi_autopay' %}
-                        <button onclick="cancelAutopay()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold rounded-xl text-xs transition">
+                        <button onclick="cancelAutopay()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
                             Cancel Autopay
                         </button>
                         {% endif %}
@@ -342,66 +343,66 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs">
                     <div>
-                        <span class="text-slate-400 block mb-0.5">Billing Method:</span>
-                        <strong class="text-white flex items-center">
+                        <span class="text-slate-500 block mb-0.5">Billing Method:</span>
+                        <strong class="text-slate-900 flex items-center">
                             {% if owner.payment_method == 'upi_autopay' %}
-                            <i class="fa-solid fa-rotate text-emerald-400 mr-1.5"></i> UPI Autopay Mandate (Recurring)
+                            <i class="fa-solid fa-rotate text-emerald-600 mr-1.5"></i> UPI Autopay Mandate (Recurring)
                             {% else %}
-                            <i class="fa-regular fa-credit-card text-indigo-400 mr-1.5"></i> One-Time Payment
+                            <i class="fa-regular fa-credit-card text-slate-700 mr-1.5"></i> One-Time Payment
                             {% endif %}
                         </strong>
                     </div>
 
                     <div>
-                        <span class="text-slate-400 block mb-0.5">Billing Cycle End / Renewal:</span>
-                        <strong class="text-white">{{ owner.subscription_cycle_end or 'Active' }}</strong>
+                        <span class="text-slate-500 block mb-0.5">Cycle End / Renewal:</span>
+                        <strong class="text-slate-900">{{ owner.subscription_cycle_end or 'Active' }}</strong>
                     </div>
 
                     <div>
-                        <span class="text-slate-400 block mb-0.5">Rate:</span>
-                        <strong class="text-amber-300">{% if owner.plan_tier == 'yearly' %}₹8,999 / year{% else %}₹999 / month{% endif %}</strong>
+                        <span class="text-slate-500 block mb-0.5">Current Rate:</span>
+                        <strong class="text-slate-900">{% if owner.plan_tier == 'yearly' %}₹8,999 / year{% else %}₹999 / month{% endif %}</strong>
                     </div>
                 </div>
             </div>
 
             <!-- Invoices & Payment History Table -->
-            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-                <h3 class="text-base font-bold text-white mb-4">Payment & Invoice History</h3>
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <h3 class="text-base font-bold font-heading text-slate-900 mb-4">Payment & Receipt History</h3>
 
                 {% if payments|length == 0 %}
-                <p class="text-xs text-slate-400 py-4">No payment transactions recorded yet.</p>
+                <p class="text-xs text-slate-500 py-4">No payment transactions recorded yet.</p>
                 {% else %}
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
-                            <tr class="text-slate-400 border-b border-slate-700 pb-2">
+                            <tr class="text-slate-500 border-b border-slate-200 pb-2">
                                 <th class="pb-2 font-semibold">Date</th>
                                 <th class="pb-2 font-semibold">Plan</th>
-                                <th class="pb-2 font-semibold">Payment Method</th>
+                                <th class="pb-2 font-semibold">Payment Mode</th>
                                 <th class="pb-2 font-semibold">Amount</th>
                                 <th class="pb-2 font-semibold">Status</th>
-                                <th class="pb-2 font-semibold">Transaction ID</th>
+                                <th class="pb-2 font-semibold">Transaction Reference</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-700/60">
+                        <tbody class="divide-y divide-slate-100">
                             {% for p in payments %}
-                            <tr class="text-slate-300">
-                                <td class="py-3 text-slate-400">{{ p.created_at }}</td>
-                                <td class="py-3 font-semibold text-white">{{ p.plan_type|title }}</td>
+                            <tr class="text-slate-700">
+                                <td class="py-3 text-slate-500">{{ p.created_at }}</td>
+                                <td class="py-3 font-semibold text-slate-900">{{ p.plan_type|title }}</td>
                                 <td class="py-3">
                                     {% if p.payment_mode == 'upi_autopay' %}
-                                    <span class="text-emerald-400 font-medium">UPI Autopay</span>
+                                    <span class="text-emerald-700 font-semibold">UPI Autopay</span>
                                     {% else %}
-                                    <span class="text-slate-300">One-Time</span>
+                                    <span class="text-slate-700">One-Time</span>
                                     {% endif %}
                                 </td>
-                                <td class="py-3 font-bold text-white">₹{{ "%.2f"|format(p.amount) }}</td>
+                                <td class="py-3 font-bold text-slate-900">₹{{ "%.2f"|format(p.amount) }}</td>
                                 <td class="py-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         {{ p.status|title }}
                                     </span>
                                 </td>
-                                <td class="py-3 font-mono text-slate-400 text-[11px]">{{ p.razorpay_payment_id or 'TXN_LOCAL_OK' }}</td>
+                                <td class="py-3 font-mono text-slate-500 text-[11px]">{{ p.razorpay_payment_id or 'TXN_LOCAL_OK' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -409,6 +410,7 @@
                 </div>
                 {% endif %}
             </div>
+
         </div>
 
     </main>
@@ -418,9 +420,9 @@
 <script>
     function switchOwnerTab(tabName) {
         document.querySelectorAll('.owner-tab-btn').forEach(b => {
-            b.className = 'owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center space-x-2 shrink-0';
+            b.className = 'owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition';
         });
-        document.getElementById(`owner-tab-${tabName}`).className = 'owner-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm flex items-center space-x-2 shrink-0';
+        document.getElementById(`owner-tab-${tabName}`).className = 'owner-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-xs flex items-center space-x-2 shrink-0 transition';
 
         ['qr', 'feedback', 'settings', 'billing'].forEach(s => {
             document.getElementById(`section-owner-${s}`).classList.add('hidden');
