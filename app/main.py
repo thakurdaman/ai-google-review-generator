@@ -2,6 +2,8 @@ import os
 import json
 import re
 import uuid
+import requests
+import urllib.parse
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, Request, Response, Form, Depends, HTTPException, status, UploadFile, File
@@ -17,7 +19,9 @@ from .database import (
 )
 from .auth import (
     authenticate_reseller, create_session_token, get_current_reseller, require_reseller,
-    authenticate_owner, create_owner_token, get_current_owner, require_owner
+    authenticate_owner, create_owner_token, get_current_owner, require_owner,
+    get_owner_by_email, create_oauth_state_token, verify_oauth_state_token,
+    create_google_signup_token, verify_google_signup_token
 )
 from .ai_service import (
     generate_review_drafts, test_openai_connection
@@ -105,9 +109,18 @@ class SettingsUpdateRequest(BaseModel):
     openai_api_key: Optional[str] = ""
     razorpay_key_id: Optional[str] = ""
     razorpay_key_secret: Optional[str] = ""
+    google_client_id: Optional[str] = ""
+    google_client_secret: Optional[str] = ""
 
 class TestAiRequest(BaseModel):
     api_key: str
+
+
+def get_base_url(request: Request) -> str:
+    """Accurately derive base URL behind reverse proxies like Vercel edge."""
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc))
+    return f"{proto}://{host}"
 
 
 # Helper: Generate clean unique slug
@@ -150,13 +163,13 @@ async def root(request: Request):
 # ==========================================
 
 @app.get("/signup", response_class=HTMLResponse)
-async def signup_page(request: Request):
+async def signup_page(request: Request, error: Optional[str] = None):
     if get_current_owner(request):
         return RedirectResponse(url="/dashboard")
     return templates.TemplateResponse(
         request=request,
         name="signup.html",
-        context={"error": None}
+        context={"error": error}
     )
 
 @app.post("/signup")
@@ -275,13 +288,13 @@ async def signup_submit(
 # ==========================================
 
 @app.get("/login", response_class=HTMLResponse)
-async def owner_login_page(request: Request):
+async def owner_login_page(request: Request, error: Optional[str] = None):
     if get_current_owner(request):
         return RedirectResponse(url="/dashboard")
     return templates.TemplateResponse(
         request=request,
         name="owner_login.html",
-        context={"error": None}
+        context={"error": error}
     )
 
 @app.post("/login")
@@ -329,6 +342,259 @@ async def owner_login_submit(
 async def owner_logout():
     resp = RedirectResponse(url="/login")
     resp.delete_cookie("owner_session")
+    return resp
+
+
+# ==========================================
+# GOOGLE / GMAIL OAUTH (SIGN IN & SIGN UP)
+# ==========================================
+
+@app.get("/auth/google/login")
+async def google_oauth_login(request: Request, action: Optional[str] = "login"):
+    client_id = get_setting("google_client_id", os.getenv("GOOGLE_CLIENT_ID", "")).strip()
+    target_page = "/signup" if action == "signup" else "/login"
+
+    if not client_id:
+        return RedirectResponse(
+            url=f"{target_page}?error=Google+Sign-In+is+not+configured+yet.+Please+add+Google+Client+ID+in+Admin+Settings.",
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    base_url = get_base_url(request)
+    redirect_uri = f"{base_url}/auth/google/callback"
+    state_token = create_oauth_state_token(action=action or "login")
+
+    google_auth_params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state_token,
+        "access_type": "online",
+        "prompt": "select_account"
+    }
+    auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(google_auth_params)}"
+    return RedirectResponse(url=auth_url, status_code=status.HTTP_303_SEE_OTHER)
+
+
+@app.get("/auth/google/callback")
+async def google_oauth_callback(
+    request: Request,
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None
+):
+    action = verify_oauth_state_token(state) if state else "login"
+    login_fallback = "/signup" if action == "signup" else "/login"
+
+    if error:
+        return RedirectResponse(url=f"{login_fallback}?error=Google+sign-in+cancelled", status_code=status.HTTP_303_SEE_OTHER)
+
+    if not code:
+        return RedirectResponse(url=f"{login_fallback}?error=Missing+Google+authorization+code", status_code=status.HTTP_303_SEE_OTHER)
+
+    client_id = get_setting("google_client_id", os.getenv("GOOGLE_CLIENT_ID", "")).strip()
+    client_secret = get_setting("google_client_secret", os.getenv("GOOGLE_CLIENT_SECRET", "")).strip()
+
+    if not client_id or not client_secret:
+        return RedirectResponse(url=f"{login_fallback}?error=Google+OAuth+credentials+are+not+configured", status_code=status.HTTP_303_SEE_OTHER)
+
+    base_url = get_base_url(request)
+    redirect_uri = f"{base_url}/auth/google/callback"
+
+    # 1. Exchange code for access token
+    try:
+        token_resp = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code"
+            },
+            timeout=10
+        )
+        if token_resp.status_code != 200:
+            return RedirectResponse(url=f"{login_fallback}?error=Failed+to+exchange+token+with+Google", status_code=status.HTTP_303_SEE_OTHER)
+
+        tokens = token_resp.json()
+        access_token = tokens.get("access_token")
+        if not access_token:
+            return RedirectResponse(url=f"{login_fallback}?error=Google+did+not+return+access+token", status_code=status.HTTP_303_SEE_OTHER)
+
+        # 2. Fetch Google User Profile
+        user_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10
+        )
+        if user_resp.status_code != 200:
+            return RedirectResponse(url=f"{login_fallback}?error=Could+not+retrieve+Google+user+profile", status_code=status.HTTP_303_SEE_OTHER)
+
+        user_info = user_resp.json()
+        email = user_info.get("email", "").strip().lower()
+        full_name = user_info.get("name", "")
+        picture = user_info.get("picture", "")
+
+        if not email:
+            return RedirectResponse(url=f"{login_fallback}?error=Google+account+has+no+verified+email", status_code=status.HTTP_303_SEE_OTHER)
+
+    except Exception as e:
+        return RedirectResponse(url=f"{login_fallback}?error=Google+connection+error", status_code=status.HTTP_303_SEE_OTHER)
+
+    # 3. Check if owner already exists
+    existing_owner = get_owner_by_email(email)
+    if existing_owner:
+        now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE business_owners SET last_login_at = ? WHERE id = ?", (now_str, existing_owner["id"]))
+        conn.commit()
+        conn.close()
+
+        if existing_owner.get("business_id"):
+            log_activity(existing_owner["business_id"], "login", f"Owner signed in via Google ({email})")
+
+        token = create_owner_token(existing_owner["id"], email, existing_owner.get("business_id", 0))
+        target_url = "/dashboard"
+        if existing_owner.get("subscription_status") not in ["active", "trialing"]:
+            target_url = "/pricing"
+
+        resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
+        resp.set_cookie(
+            key="owner_session",
+            value=token,
+            httponly=True,
+            max_age=86400 * 14,
+            samesite="lax"
+        )
+        return resp
+
+    # 4. New user: generate signed token and redirect to finish business setup
+    signup_token = create_google_signup_token(email=email, name=full_name, picture=picture)
+    return RedirectResponse(
+        url=f"/signup/google-complete?token={signup_token}",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@app.get("/signup/google-complete", response_class=HTMLResponse)
+async def google_signup_complete_page(request: Request, token: Optional[str] = None):
+    if get_current_owner(request):
+        return RedirectResponse(url="/dashboard")
+
+    profile = verify_google_signup_token(token) if token else None
+    if not profile:
+        return RedirectResponse(url="/signup?error=Google+session+expired.+Please+try+again.")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="google_signup_complete.html",
+        context={
+            "profile": profile,
+            "token": token,
+            "error": None
+        }
+    )
+
+
+@app.post("/signup/google-complete")
+async def google_signup_complete_submit(
+    request: Request,
+    token: str = Form(...),
+    business_name: str = Form(...),
+    category: str = Form("General"),
+    google_review_url: str = Form(...),
+    accent_color: Optional[str] = Form("#2563EB"),
+    accent_hex: Optional[str] = Form("#2563EB"),
+    logo_file: Optional[UploadFile] = File(None),
+    tags: Optional[str] = Form("Friendly Staff, Quick Service, Great Quality")
+):
+    profile = verify_google_signup_token(token)
+    if not profile:
+        return RedirectResponse(url="/signup?error=Session+expired.+Please+sign+up+with+Google+again.")
+
+    email_clean = profile["email"].strip().lower()
+    full_name = profile.get("name") or business_name.strip()
+    bname_clean = business_name.strip()
+    gov_url = google_review_url.strip()
+
+    if not bname_clean or not gov_url:
+        return templates.TemplateResponse(
+            request=request,
+            name="google_signup_complete.html",
+            context={
+                "profile": profile,
+                "token": token,
+                "error": "Business Name and Google Review Link are required."
+            },
+            status_code=400
+        )
+
+    # Check if registered concurrently
+    if get_owner_by_email(email_clean):
+        return RedirectResponse(url="/login?error=An+account+with+this+Google+email+already+exists.+Please+sign+in.")
+
+    # Handle logo upload
+    logo_url = None
+    if logo_file and logo_file.filename:
+        contents = await logo_file.read()
+        if len(contents) <= 2 * 1024 * 1024:
+            uploads_dir = os.path.join(BASE_DIR, "static", "uploads")
+            os.makedirs(uploads_dir, exist_ok=True)
+            ext = os.path.splitext(logo_file.filename)[1] or ".png"
+            safe_name = f"{uuid.uuid4().hex[:12]}{ext}"
+            file_path = os.path.join(uploads_dir, safe_name)
+            with open(file_path, "wb") as fp:
+                fp.write(contents)
+            logo_url = f"/static/uploads/{safe_name}"
+
+    slug = generate_slug(bname_clean)
+    brand_color = accent_hex or accent_color or "#2563EB"
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else ["Friendly Staff", "Quick Service"]
+    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO businesses (slug, name, category, google_review_url, logo_url, accent_color, tags_preset, active, subscription_status, plan_tier, payment_method, last_google_url_update)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending_payment', 'monthly', 'upi_autopay', ?)
+    """, (
+        slug,
+        bname_clean,
+        category,
+        gov_url,
+        logo_url,
+        brand_color,
+        json.dumps(tag_list),
+        now_str
+    ))
+    business_id = cursor.lastrowid
+
+    cursor.execute("""
+        INSERT INTO business_owners (email, password_hash, full_name, business_id, last_login_at)
+        VALUES (?, 'oauth:google', ?, ?, ?)
+    """, (email_clean, full_name, business_id, now_str))
+    owner_id = cursor.lastrowid
+
+    cursor.execute("UPDATE businesses SET owner_id = ? WHERE id = ?", (owner_id, business_id))
+    conn.commit()
+    conn.close()
+
+    log_activity(business_id, "signup", f"Owner {email_clean} registered business '{bname_clean}' via Google")
+    log_activity(business_id, "google_url_updated", f"Configured Google review link: {gov_url}")
+
+    token_str = create_owner_token(owner_id, email_clean, business_id)
+    resp = RedirectResponse(url="/pricing", status_code=status.HTTP_303_SEE_OTHER)
+    resp.set_cookie(
+        key="owner_session",
+        value=token_str,
+        httponly=True,
+        max_age=86400 * 14,
+        samesite="lax"
+    )
     return resp
 
 
@@ -1011,10 +1277,14 @@ async def api_get_settings(current_user: str = Depends(require_reseller)):
     api_key = get_setting("openai_api_key", os.getenv("OPENAI_API_KEY", ""))
     rzp_key = get_setting("razorpay_key_id", os.getenv("RAZORPAY_KEY_ID", ""))
     rzp_secret = get_setting("razorpay_key_secret", os.getenv("RAZORPAY_KEY_SECRET", ""))
+    google_client_id = get_setting("google_client_id", os.getenv("GOOGLE_CLIENT_ID", ""))
+    google_client_secret = get_setting("google_client_secret", os.getenv("GOOGLE_CLIENT_SECRET", ""))
     return {
         "openai_api_key": api_key,
         "razorpay_key_id": rzp_key,
-        "razorpay_key_secret": rzp_secret
+        "razorpay_key_secret": rzp_secret,
+        "google_client_id": google_client_id,
+        "google_client_secret": google_client_secret
     }
 
 
@@ -1029,6 +1299,10 @@ async def api_save_settings(
         set_setting("razorpay_key_id", data.razorpay_key_id.strip())
     if data.razorpay_key_secret is not None:
         set_setting("razorpay_key_secret", data.razorpay_key_secret.strip())
+    if data.google_client_id is not None:
+        set_setting("google_client_id", data.google_client_id.strip())
+    if data.google_client_secret is not None:
+        set_setting("google_client_secret", data.google_client_secret.strip())
     return {"status": "saved"}
 
 

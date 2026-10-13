@@ -81,6 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSettings) {
         btnSettings.addEventListener('click', async () => {
             openModal('modal-settings');
+            const redirectUriElem = document.getElementById('google-redirect-uri-display');
+            if (redirectUriElem) {
+                redirectUriElem.textContent = `${window.location.origin}/auth/google/callback`;
+            }
             try {
                 const resp = await fetch('/api/admin/settings');
                 if (resp.ok) {
@@ -88,6 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('settings-openai-key').value = data.openai_api_key || '';
                     document.getElementById('settings-razorpay-key').value = data.razorpay_key_id || '';
                     document.getElementById('settings-razorpay-secret').value = data.razorpay_key_secret || '';
+                    if (document.getElementById('settings-google-id')) {
+                        document.getElementById('settings-google-id').value = data.google_client_id || '';
+                    }
+                    if (document.getElementById('settings-google-secret')) {
+                        document.getElementById('settings-google-secret').value = data.google_client_secret || '';
+                    }
                 }
             } catch (e) {}
         });
@@ -172,6 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const openAiKey = document.getElementById('settings-openai-key').value.trim();
             const rzpKey = document.getElementById('settings-razorpay-key').value.trim();
             const rzpSecret = document.getElementById('settings-razorpay-secret').value.trim();
+            const googleIdElem = document.getElementById('settings-google-id');
+            const googleSecretElem = document.getElementById('settings-google-secret');
+            const googleId = googleIdElem ? googleIdElem.value.trim() : '';
+            const googleSecret = googleSecretElem ? googleSecretElem.value.trim() : '';
 
             try {
                 const resp = await fetch('/api/admin/settings', {
@@ -180,7 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({
                         openai_api_key: openAiKey,
                         razorpay_key_id: rzpKey,
-                        razorpay_key_secret: rzpSecret
+                        razorpay_key_secret: rzpSecret,
+                        google_client_id: googleId,
+                        google_client_secret: googleSecret
                     })
                 });
 

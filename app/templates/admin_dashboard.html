@@ -672,6 +672,30 @@
                 </p>
             </div>
 
+            <!-- Google OAuth / Gmail Sign-In Section -->
+            <div class="pb-3 border-b border-slate-800 space-y-2">
+                <label class="block text-xs font-bold text-white flex items-center">
+                    <i class="fa-brands fa-google text-rose-400 mr-1.5"></i>
+                    Google OAuth (Sign In & Sign Up with Gmail)
+                </label>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-0.5">Google Client ID</label>
+                    <input type="text" id="settings-google-id" placeholder="...apps.googleusercontent.com"
+                           class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-0.5">Google Client Secret</label>
+                    <input type="password" id="settings-google-secret" placeholder="Client Secret"
+                           class="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono">
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] space-y-1">
+                    <span class="text-slate-400 font-semibold block">Authorized Redirect URI (Set in Google Cloud Console):</span>
+                    <div class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-700 font-mono text-brand-300 select-all text-[11px]">
+                        <span id="google-redirect-uri-display">https://ai-google-review-generator-iota.vercel.app/auth/google/callback</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-end space-x-2 pt-2">
                 <button type="button" onclick="closeModal('modal-settings')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
                 <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white shadow-md transition">Save Settings</button>
