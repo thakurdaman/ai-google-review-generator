@@ -4,7 +4,7 @@ import re
 import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Request, Response, Form, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Response, Form, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -169,7 +169,7 @@ async def signup_submit(
     google_review_url: str = Form(...),
     accent_color: Optional[str] = Form("#2563EB"),
     accent_hex: Optional[str] = Form("#2563EB"),
-    logo_url: Optional[str] = Form(None),
+    logo_file: Optional[UploadFile] = File(None),
     tags: Optional[str] = Form("Friendly Staff, Quick Service, Great Quality")
 ):
     email_clean = email.strip().lower()
@@ -183,6 +183,28 @@ async def signup_submit(
             context={"error": "All required fields must be filled out."},
             status_code=400
         )
+
+    # Handle logo file upload
+    logo_url = None
+    if logo_file and logo_file.filename:
+        import base64
+        contents = await logo_file.read()
+        if len(contents) > 2 * 1024 * 1024:  # 2MB limit
+            return templates.TemplateResponse(
+                request=request,
+                name="signup.html",
+                context={"error": "Logo file is too large. Please use an image under 2MB."},
+                status_code=400
+            )
+        # Save to static/uploads for local use
+        uploads_dir = os.path.join(BASE_DIR, "static", "uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+        ext = os.path.splitext(logo_file.filename)[1] or ".png"
+        safe_name = f"{uuid.uuid4().hex[:12]}{ext}"
+        file_path = os.path.join(uploads_dir, safe_name)
+        with open(file_path, "wb") as fp:
+            fp.write(contents)
+        logo_url = f"/static/uploads/{safe_name}"
 
     conn = get_db()
     cursor = conn.cursor()
@@ -212,7 +234,7 @@ async def signup_submit(
         bname_clean,
         category,
         gov_url,
-        logo_url.strip() if logo_url else None,
+        logo_url,
         brand_color,
         json.dumps(tag_list),
         now_str

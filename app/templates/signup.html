@@ -79,7 +79,7 @@
             </div>
             {% endif %}
 
-            <form method="POST" action="/signup" class="space-y-4">
+            <form method="POST" action="/signup" enctype="multipart/form-data" class="space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Business Name <span class="text-rose-400">*</span></label>
@@ -88,15 +88,8 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Business Category</label>
-                        <select name="category" class="w-full px-3 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
-                            <option value="Restaurant & Café">Restaurant & Café</option>
-                            <option value="Healthcare & Dental">Healthcare & Dental</option>
-                            <option value="Automotive Repair">Automotive Repair</option>
-                            <option value="Salon & Spa">Salon & Spa</option>
-                            <option value="Retail & Boutique">Retail & Boutique</option>
-                            <option value="Home & Contractor Services">Home & Contractor Services</option>
-                            <option value="Professional Services">Professional Services</option>
-                        </select>
+                        <input type="text" name="category" placeholder="e.g. Italian Restaurant, Dental Clinic, Auto Repair"
+                               class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
                     </div>
                 </div>
 
@@ -129,9 +122,19 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Logo URL <span class="text-slate-400 font-normal">(optional)</span></label>
-                        <input type="text" name="logo_url" placeholder="/static/uploads/artisan_logo.svg"
-                               class="w-full px-3 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Business Logo <span class="text-slate-400 font-normal">(optional)</span></label>
+                        <div class="relative">
+                            <input type="file" name="logo_file" accept="image/*" id="logoFileInput"
+                                   class="hidden">
+                            <label for="logoFileInput"
+                                   class="w-full px-3.5 py-2.5 bg-slate-900/70 border border-slate-700 border-dashed rounded-xl text-xs sm:text-sm text-slate-400 cursor-pointer hover:border-brand-500 hover:text-brand-400 transition flex items-center space-x-2">
+                                <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                                <span id="logoFileName">Choose logo from device...</span>
+                            </label>
+                            <div id="logoPreview" class="mt-2 hidden">
+                                <img id="logoPreviewImg" src="" alt="Logo preview" class="h-10 w-10 rounded-lg object-cover border border-slate-700">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -159,6 +162,29 @@
     if (colorPicker && colorHex) {
         colorPicker.addEventListener('input', () => {
             colorHex.value = colorPicker.value;
+        });
+    }
+
+    // Logo file upload preview
+    const logoInput = document.getElementById('logoFileInput');
+    const logoFileName = document.getElementById('logoFileName');
+    const logoPreview = document.getElementById('logoPreview');
+    const logoPreviewImg = document.getElementById('logoPreviewImg');
+    if (logoInput) {
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                logoFileName.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    logoPreviewImg.src = ev.target.result;
+                    logoPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                logoFileName.textContent = 'Choose logo from device...';
+                logoPreview.classList.add('hidden');
+            }
         });
     }
 </script>

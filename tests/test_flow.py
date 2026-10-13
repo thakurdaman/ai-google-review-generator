@@ -110,10 +110,9 @@ def run_all_tests():
         "google_review_url": "https://g.page/r/bellanapoli/review",
         "accent_color": "#DC2626",
         "accent_hex": "#DC2626",
-        "logo_url": "/static/uploads/artisan_logo.svg",
         "tags": "Wood-Fired Pizza, Handmade Pasta, Friendly Waiters"
     }
-    res_signup = client.post("/signup", data=signup_data, follow_redirects=False)
+    res_signup = client.post("/signup", data=signup_data, files={"logo_file": ("", b"", "application/octet-stream")}, follow_redirects=False)
     assert res_signup.status_code == 303, f"Expected 303 redirect to /pricing, got {res_signup.status_code}"
     assert res_signup.headers["location"] == "/pricing"
     assert "owner_session" in res_signup.cookies
