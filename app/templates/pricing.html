@@ -299,17 +299,32 @@
             if (data.mode === 'live' && data.key_id && window.Razorpay) {
                 const options = {
                     key: data.key_id,
-                    amount: data.plan.amount_paise,
-                    currency: "INR",
                     name: "ReviewBoost",
                     description: `${data.plan.name} (${selectedMode === 'upi_autopay' ? 'UPI Autopay' : 'One-Time'})`,
-                    order_id: data.order_id,
-                    subscription_id: data.subscription_id,
-                    handler: async function (response) {
-                        await finalizeVerification(planType, selectedMode, response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_subscription_id);
+                    prefill: {
+                        name: "{{ owner.business_name if owner else '' }}",
+                        email: "{{ owner.email if owner else '' }}"
                     },
-                    theme: { color: "#2563EB" }
+                    theme: { color: "#2563EB" },
+                    handler: async function (response) {
+                        await finalizeVerification(
+                            planType, 
+                            selectedMode, 
+                            response.razorpay_payment_id || response.razorpay_subscription_id, 
+                            response.razorpay_order_id, 
+                            response.razorpay_subscription_id
+                        );
+                    }
                 };
+
+                if (selectedMode === 'upi_autopay' && data.subscription_id) {
+                    options.subscription_id = data.subscription_id;
+                } else if (data.order_id) {
+                    options.order_id = data.order_id;
+                    options.amount = data.plan.amount_paise;
+                    options.currency = "INR";
+                }
+
                 const rzp = new Razorpay(options);
                 modal.classList.add('hidden');
                 rzp.open();
