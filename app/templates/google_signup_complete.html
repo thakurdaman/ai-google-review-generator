@@ -93,19 +93,22 @@
                 </div>
             </div>
 
-            <!-- Google Review Link -->
+            <!-- Google Business Profile Link -->
             <div>
-                <div class="flex items-center justify-between mb-1">
-                    <label class="block text-xs font-semibold text-slate-700">
-                        Google Review Link <span class="text-rose-500">*</span>
-                    </label>
-                    <a href="https://support.google.com/business/answer/7035772" target="_blank" class="text-[11px] text-brand-600 hover:underline font-medium">
-                        Where to get link?
-                    </a>
-                </div>
-                <input type="url" name="google_review_url" required 
-                       placeholder="https://g.page/r/.../review or https://search.google.com/local/writereview?placeid=..." 
+                <label class="block text-xs font-semibold text-slate-700 mb-1">
+                    Google Business Profile Link <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="google_business_profile_url" id="google-profile-url" required 
+                       value="{{ google_business_profile_url or '' }}"
+                       placeholder="https://maps.google.com/?place_id=ChIJ... or Google Maps store link" 
                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none font-mono text-slate-800 text-[11px]">
+                <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                    Paste your Google Business Profile URL or Google Maps link. We automatically extract your Place ID and construct the direct review link for your customers.
+                </p>
+                <div id="google-place-id-status" class="mt-2 text-[11px] p-2.5 rounded-xl border hidden transition"></div>
+                <p class="text-[10px] text-slate-400 mt-1 font-mono">
+                    Valid link example: https://maps.google.com/?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4 or https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4
+                </p>
             </div>
 
             <!-- Tags -->
@@ -162,6 +165,53 @@
                 colorPicker.value = e.target.value;
             }
         });
+    }
+
+    // Live Place ID extraction feedback
+    const profileInput = document.getElementById('google-profile-url');
+    const statusBox = document.getElementById('google-place-id-status');
+    const placeRegex = /(ChIJ[a-zA-Z0-9_-]{10,45}|GhIJ[a-zA-Z0-9_-]{10,45})/;
+
+    function evaluatePlaceIdInput() {
+        if (!profileInput || !statusBox) return;
+        const val = profileInput.value.trim();
+        if (!val) {
+            statusBox.classList.add('hidden');
+            return;
+        }
+        const match = val.match(placeRegex);
+        if (match) {
+            const placeId = match[1];
+            statusBox.className = 'mt-2 text-[11px] p-2.5 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800 font-medium block';
+            statusBox.innerHTML = `
+                <div class="flex items-center space-x-1.5 font-bold text-emerald-700">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Valid Place ID extracted: <span class="font-mono text-emerald-900">${placeId}</span></span>
+                </div>
+                <div class="mt-0.5 text-slate-600 text-[10px]">
+                    Direct Google review link: <span class="font-mono text-brand-700">https://search.google.com/local/writereview?placeid=${placeId}</span>
+                </div>
+            `;
+        } else if (val.length > 12) {
+            statusBox.className = 'mt-2 text-[11px] p-2.5 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 block';
+            statusBox.innerHTML = `
+                <div class="flex items-center space-x-1.5 font-bold text-amber-700">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>No Place ID detected yet</span>
+                </div>
+                <p class="text-[10px] text-amber-900 mt-0.5">
+                    Please paste a Google Maps business link containing your Place ID. Example: <span class="font-mono">https://maps.google.com/?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4</span>
+                </p>
+            `;
+        } else {
+            statusBox.classList.add('hidden');
+        }
+    }
+
+    if (profileInput) {
+        profileInput.addEventListener('input', evaluatePlaceIdInput);
+        profileInput.addEventListener('change', evaluatePlaceIdInput);
+        if (profileInput.value) evaluatePlaceIdInput();
     }
 </script>
 {% endblock %}

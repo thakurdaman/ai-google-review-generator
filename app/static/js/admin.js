@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: document.getElementById('add-name').value.trim(),
                 slug: document.getElementById('add-slug').value.trim(),
                 category: document.getElementById('add-category').value,
+                google_business_profile_url: document.getElementById('add-google-url').value.trim(),
                 google_review_url: document.getElementById('add-google-url').value.trim(),
                 logo_url: document.getElementById('add-logo-url').value.trim(),
                 accent_color: document.getElementById('add-accent-hex').value.trim() || '#2563EB',
@@ -152,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: document.getElementById('edit-name').value.trim(),
                 slug: document.getElementById('edit-slug').value.trim(),
                 category: document.getElementById('edit-category').value.trim(),
+                google_business_profile_url: document.getElementById('edit-google-url').value.trim(),
                 google_review_url: document.getElementById('edit-google-url').value.trim(),
                 logo_url: document.getElementById('edit-logo-url').value.trim(),
                 accent_color: document.getElementById('edit-accent-color').value.trim(),
@@ -393,7 +395,7 @@ async function inspectBusiness(id) {
             <!-- Read-Only Google Review Link Settings -->
             <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/60 space-y-2 text-xs">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-300">Google Review Link (Read-Only):</span>
+                    <span class="font-bold text-slate-300">Google Business Profile Link (Direct Review URL):</span>
                     <span class="text-[10px] text-slate-400">Last updated: ${b.last_google_url_update || 'Initial setup'}</span>
                 </div>
                 <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 font-mono text-[11px] text-brand-300 break-all flex items-center justify-between">
@@ -402,7 +404,7 @@ async function inspectBusiness(id) {
                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                     </a>
                 </div>
-                <p class="text-[10px] text-slate-500 italic">Owner retains autonomous control over this link from their own dashboard.</p>
+                <p class="text-[10px] text-slate-500 italic">Direct review link auto-generated from Place ID. Owner can update from settings.</p>
             </div>
 
             <!-- Activity Audit Logs Timeline -->

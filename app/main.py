@@ -33,6 +33,13 @@ from .billing_service import (
     PLANS, create_checkout_session, verify_and_activate_subscription,
     is_subscription_active, cancel_autopay_mandate, is_payments_enabled
 )
+from .google_places import (
+    extract_google_place_id,
+    construct_direct_review_url,
+    process_google_profile_link,
+    PLACE_ID_ERROR_MESSAGE,
+    VALID_EXAMPLE_URL
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -72,27 +79,45 @@ class BusinessCreateRequest(BaseModel):
     name: str
     slug: str
     category: str = "General"
-    google_review_url: str
+    google_business_profile_url: Optional[str] = None
+    google_review_url: Optional[str] = None
     logo_url: Optional[str] = None
     accent_color: str = "#2563EB"
     tags_preset: List[str] = []
+
+    def get_review_url(self) -> str:
+        raw = (self.google_business_profile_url or self.google_review_url or "").strip()
+        _, direct_url = process_google_profile_link(raw)
+        return direct_url
 
 class BusinessUpdateRequest(BaseModel):
     name: str
     slug: str
     category: str
-    google_review_url: str
+    google_business_profile_url: Optional[str] = None
+    google_review_url: Optional[str] = None
     logo_url: Optional[str] = None
     accent_color: str = "#2563EB"
     tags_preset: List[str] = []
 
+    def get_review_url(self) -> str:
+        raw = (self.google_business_profile_url or self.google_review_url or "").strip()
+        _, direct_url = process_google_profile_link(raw)
+        return direct_url
+
 class OwnerProfileUpdateRequest(BaseModel):
     name: str
-    google_review_url: str
+    google_business_profile_url: Optional[str] = None
+    google_review_url: Optional[str] = None
     category: Optional[str] = "General"
     accent_color: Optional[str] = "#2563EB"
     logo_url: Optional[str] = None
     tags_preset: List[str] = []
+
+    def get_review_url(self) -> str:
+        raw = (self.google_business_profile_url or self.google_review_url or "").strip()
+        _, direct_url = process_google_profile_link(raw)
+        return direct_url
 
 class CreateCheckoutRequest(BaseModel):
     plan_type: str
@@ -187,7 +212,8 @@ async def signup_submit(
     email: str = Form(...),
     password: str = Form(...),
     category: str = Form("General"),
-    google_review_url: str = Form(...),
+    google_business_profile_url: Optional[str] = Form(None),
+    google_review_url: Optional[str] = Form(None),
     accent_color: Optional[str] = Form("#2563EB"),
     accent_hex: Optional[str] = Form("#2563EB"),
     logo_file: Optional[UploadFile] = File(None),
@@ -195,13 +221,37 @@ async def signup_submit(
 ):
     email_clean = email.strip().lower()
     bname_clean = business_name.strip()
-    gov_url = google_review_url.strip()
+    raw_google_url = (google_business_profile_url or google_review_url or "").strip()
 
-    if not bname_clean or not email_clean or not password or not gov_url:
+    if not bname_clean or not email_clean or not password or not raw_google_url:
         return templates.TemplateResponse(
             request=request,
             name="signup.html",
-            context={"error": "All required fields must be filled out."},
+            context={
+                "error": "All required fields must be filled out.",
+                "business_name": bname_clean,
+                "email": email_clean,
+                "category": category,
+                "google_business_profile_url": raw_google_url,
+                "tags": tags
+            },
+            status_code=400
+        )
+
+    try:
+        place_id, direct_review_url = process_google_profile_link(raw_google_url)
+    except ValueError as ve:
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "error": str(ve),
+                "business_name": bname_clean,
+                "email": email_clean,
+                "category": category,
+                "google_business_profile_url": raw_google_url,
+                "tags": tags
+            },
             status_code=400
         )
 
@@ -258,7 +308,7 @@ async def signup_submit(
         slug,
         bname_clean,
         category,
-        gov_url,
+        direct_review_url,
         logo_url,
         brand_color,
         json.dumps(tag_list),
@@ -282,7 +332,7 @@ async def signup_submit(
 
     # 3. Log Activity
     log_activity(business_id, "signup", f"Owner {email_clean} self-registered business '{bname_clean}'")
-    log_activity(business_id, "google_url_updated", f"Configured Google review link during signup: {gov_url}")
+    log_activity(business_id, "google_url_updated", f"Configured Google Business Profile direct review link for Place ID {place_id}: {direct_review_url}")
 
     # 4. Set session cookie and redirect (to /dashboard if free launch, else /pricing)
     token = create_owner_token(owner_id, email_clean, business_id)
@@ -520,7 +570,8 @@ async def google_signup_complete_submit(
     token: str = Form(...),
     business_name: str = Form(...),
     category: str = Form("General"),
-    google_review_url: str = Form(...),
+    google_business_profile_url: Optional[str] = Form(None),
+    google_review_url: Optional[str] = Form(None),
     accent_color: Optional[str] = Form("#2563EB"),
     accent_hex: Optional[str] = Form("#2563EB"),
     logo_file: Optional[UploadFile] = File(None),
@@ -533,16 +584,34 @@ async def google_signup_complete_submit(
     email_clean = profile["email"].strip().lower()
     full_name = profile.get("name") or business_name.strip()
     bname_clean = business_name.strip()
-    gov_url = google_review_url.strip()
+    raw_google_url = (google_business_profile_url or google_review_url or "").strip()
 
-    if not bname_clean or not gov_url:
+    if not bname_clean or not raw_google_url:
         return templates.TemplateResponse(
             request=request,
             name="google_signup_complete.html",
             context={
                 "profile": profile,
                 "token": token,
-                "error": "Business Name and Google Review Link are required."
+                "error": "Business Name and Google Business Profile Link are required."
+            },
+            status_code=400
+        )
+
+    try:
+        place_id, direct_review_url = process_google_profile_link(raw_google_url)
+    except ValueError as ve:
+        return templates.TemplateResponse(
+            request=request,
+            name="google_signup_complete.html",
+            context={
+                "profile": profile,
+                "token": token,
+                "error": str(ve),
+                "business_name": bname_clean,
+                "category": category,
+                "google_business_profile_url": raw_google_url,
+                "tags": tags
             },
             status_code=400
         )
@@ -584,7 +653,7 @@ async def google_signup_complete_submit(
         slug,
         bname_clean,
         category,
-        gov_url,
+        direct_review_url,
         logo_url,
         brand_color,
         json.dumps(tag_list),
@@ -605,7 +674,7 @@ async def google_signup_complete_submit(
     conn.close()
 
     log_activity(business_id, "signup", f"Owner {email_clean} registered business '{bname_clean}' via Google")
-    log_activity(business_id, "google_url_updated", f"Configured Google review link: {gov_url}")
+    log_activity(business_id, "google_url_updated", f"Configured Google Business Profile direct review link for Place ID {place_id}: {direct_review_url}")
 
     token_str = create_owner_token(owner_id, email_clean, business_id)
     target_url = "/dashboard" if not payments_on else "/pricing"
@@ -753,6 +822,12 @@ async def api_owner_update_profile(req: OwnerProfileUpdateRequest, request: Requ
     owner = require_owner(request)
     business_id = owner["business_id"]
 
+    try:
+        direct_review_url = req.get_review_url()
+        place_id = extract_google_place_id(direct_review_url)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
     conn = get_db()
     cursor = conn.cursor()
 
@@ -760,7 +835,7 @@ async def api_owner_update_profile(req: OwnerProfileUpdateRequest, request: Requ
     cursor.execute("SELECT google_review_url FROM businesses WHERE id = ?", (business_id,))
     old_row = cursor.fetchone()
     old_url = old_row["google_review_url"] if old_row else ""
-    url_changed = old_url != req.google_review_url.strip()
+    url_changed = old_url != direct_review_url
 
     now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -771,8 +846,8 @@ async def api_owner_update_profile(req: OwnerProfileUpdateRequest, request: Requ
         WHERE id = ?
     """, (
         req.name.strip(),
-        req.category.strip(),
-        req.google_review_url.strip(),
+        (req.category or "General").strip(),
+        direct_review_url,
         req.logo_url.strip() if req.logo_url else None,
         req.accent_color.strip() if req.accent_color else "#2563EB",
         json.dumps(req.tags_preset),
@@ -787,12 +862,12 @@ async def api_owner_update_profile(req: OwnerProfileUpdateRequest, request: Requ
         log_activity(
             business_id=business_id,
             action="google_url_updated",
-            details=f"Owner updated Google review destination: {req.google_review_url.strip()}"
+            details=f"Owner updated Google Business Profile destination: Place ID {place_id} -> {direct_review_url}"
         )
     else:
         log_activity(business_id, "profile_updated", "Owner updated business profile and branding options")
 
-    return {"status": "updated"}
+    return {"status": "updated", "direct_review_url": direct_review_url, "place_id": place_id}
 
 @app.post("/api/owner/cancel-autopay")
 async def api_owner_cancel_autopay(request: Request):
@@ -1197,6 +1272,11 @@ async def api_create_business(
     data: BusinessCreateRequest,
     current_user: str = Depends(require_reseller)
 ):
+    try:
+        direct_review_url = data.get_review_url()
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
     conn = get_db()
     cursor = conn.cursor()
     try:
@@ -1207,14 +1287,14 @@ async def api_create_business(
             data.name,
             data.slug,
             data.category,
-            data.google_review_url,
+            direct_review_url,
             data.logo_url,
             data.accent_color,
             json.dumps(data.tags_preset)
         ))
         conn.commit()
         new_id = cursor.lastrowid
-        return {"status": "created", "id": new_id}
+        return {"status": "created", "id": new_id, "direct_review_url": direct_review_url}
     except Exception as e:
         if "UNIQUE constraint failed" in str(e):
             raise HTTPException(status_code=400, detail=f"Slug '{data.slug}' already exists. Please choose a different unique short link.")
@@ -1251,6 +1331,11 @@ async def api_update_business(
     data: BusinessUpdateRequest,
     current_user: str = Depends(require_reseller)
 ):
+    try:
+        direct_review_url = data.get_review_url()
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
     conn = get_db()
     cursor = conn.cursor()
     try:
@@ -1262,14 +1347,14 @@ async def api_update_business(
             data.name,
             data.slug,
             data.category,
-            data.google_review_url,
+            direct_review_url,
             data.logo_url,
             data.accent_color,
             json.dumps(data.tags_preset),
             business_id
         ))
         conn.commit()
-        return {"status": "updated"}
+        return {"status": "updated", "direct_review_url": direct_review_url}
     except Exception as e:
         if "UNIQUE constraint failed" in str(e):
             raise HTTPException(status_code=400, detail=f"Slug '{data.slug}' is already in use by another business.")

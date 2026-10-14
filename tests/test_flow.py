@@ -104,12 +104,27 @@ def run_all_tests():
     conn.commit()
     conn.close()
 
+    # Test 7A: Verify clear error on invalid Google Business Profile link without Place ID
+    invalid_signup = {
+        "business_name": "Trattoria Bella Napoli",
+        "email": "mario@bellanapoli.com",
+        "password": "napoliPassword123",
+        "category": "Restaurant & Café",
+        "google_business_profile_url": "https://invalid-website.com/no-place-id"
+    }
+    res_invalid = client.post("/signup", data=invalid_signup, follow_redirects=False)
+    assert res_invalid.status_code == 400
+    assert "Could not extract a usable Google Place ID" in res_invalid.text
+    assert "Example valid link" in res_invalid.text
+    print("  ✅ Invalid link correctly rejected with clear error and valid example.")
+
+    # Test 7B: Valid Google Business Profile Link with Place ID extraction
     signup_data = {
         "business_name": "Trattoria Bella Napoli",
         "email": "mario@bellanapoli.com",
         "password": "napoliPassword123",
         "category": "Restaurant & Café",
-        "google_review_url": "https://g.page/r/bellanapoli/review",
+        "google_business_profile_url": "https://maps.google.com/?place_id=ChIJBellaNapoli123",
         "accent_color": "#DC2626",
         "accent_hex": "#DC2626",
         "tags": "Wood-Fired Pizza, Handmade Pasta, Friendly Waiters"
@@ -121,13 +136,15 @@ def run_all_tests():
     owner_cookie = res_signup.cookies["owner_session"]
     print("  ✅ Owner signed up! In free launch mode, immediately activated and redirected straight to /dashboard.")
 
-    # Find slug for Trattoria Bella Napoli
+    # Find slug for Trattoria Bella Napoli and verify auto-constructed review URL
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, slug, subscription_status FROM businesses WHERE name = 'Trattoria Bella Napoli'")
+    cursor.execute("SELECT id, slug, subscription_status, google_review_url FROM businesses WHERE name = 'Trattoria Bella Napoli'")
     new_biz = cursor.fetchone()
     conn.close()
     assert new_biz is not None
+    assert new_biz["google_review_url"] == "https://search.google.com/local/writereview?placeid=ChIJBellaNapoli123"
+    print("  ✅ Direct Google review link automatically constructed: " + new_biz["google_review_url"])
     new_biz_id = new_biz["id"]
     new_slug = new_biz["slug"]
 
@@ -174,24 +191,36 @@ def run_all_tests():
     print("  ✅ Re-disabled payment gateway (default state maintained).")
 
     # 11. Test Business Owner Dashboard & Profile Update (with Audit Logging)
-    print("\n[TEST 10] Testing Owner Dashboard and Google Review Link Update...")
+    print("\n[TEST 10] Testing Owner Dashboard and Google Business Profile Link Update...")
     res_owner_dash = client.get("/dashboard", cookies={"owner_session": owner_cookie})
     assert res_owner_dash.status_code == 200
     assert "Trattoria Bella Napoli" in res_owner_dash.text
     assert "Active Portal" in res_owner_dash.text
     print("  ✅ Owner dashboard loads with live stats, QR code, and billing details.")
 
-    # Update Google Review Link (Must update last_google_url_update and log activity)
+    # Test 10A: Invalid link rejection on /api/owner/profile
+    res_invalid_profile = client.put("/api/owner/profile", json={
+        "name": "Trattoria Bella Napoli",
+        "google_business_profile_url": "https://invalid-store.com/not-maps",
+        "category": "Italian Restaurant"
+    }, cookies={"owner_session": owner_cookie})
+    assert res_invalid_profile.status_code == 400
+    assert "Could not extract a usable Google Place ID" in res_invalid_profile.json()["detail"]
+    print("  ✅ Owner profile update correctly rejected invalid link without Place ID.")
+
+    # Test 10B: Update Google Business Profile Link with Google Maps Place URL
+    pasted_maps_url = "https://www.google.com/maps/place/Trattoria/@40.8518,14.2681,17z/data=!3m1!4b1!4m6!3m5!1sChIJUpdatedPlace123!8m2!3d40.8518!4d14.2681"
     updated_url = "https://search.google.com/local/writereview?placeid=ChIJUpdatedPlace123"
     res_profile_update = client.put("/api/owner/profile", json={
         "name": "Trattoria Bella Napoli",
-        "google_review_url": updated_url,
+        "google_business_profile_url": pasted_maps_url,
         "category": "Italian Restaurant",
         "accent_color": "#B91C1C",
         "tags_preset": ["Fresh Pasta", "Warm Welcome"]
     }, cookies={"owner_session": owner_cookie})
     assert res_profile_update.status_code == 200
-    print("  ✅ Google review destination link updated by owner.")
+    assert res_profile_update.json()["direct_review_url"] == updated_url
+    print("  ✅ Google Business Profile link auto-extracted Place ID and updated destination.")
 
     # 12. Test Reseller Admin Full Visibility & Read-Only Inspection
     print("\n[TEST 11] Testing Reseller Admin Visibility and Read-Only Inspection...")
