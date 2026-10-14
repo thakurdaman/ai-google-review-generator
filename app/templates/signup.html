@@ -141,9 +141,11 @@
                         <label class="block text-xs font-semibold text-slate-700 mb-1">
                             Owner Email Address <span class="text-rose-500">*</span>
                         </label>
-                        <input type="email" name="email" required 
+                        <input type="email" id="signup-email-input" name="email" required 
+                               value="{{ email or '' }}"
                                placeholder="owner@yourstore.com" 
                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-900">
+                        <div id="signup-email-status" class="mt-1 text-[11px] hidden"></div>
                     </div>
 
                     <div>
@@ -279,6 +281,103 @@
         profileInput.addEventListener('input', evaluatePlaceIdInput);
         profileInput.addEventListener('change', evaluatePlaceIdInput);
         if (profileInput.value) evaluatePlaceIdInput();
+    }
+
+    // Live Email Legitimacy & Typo Validation
+    const emailInput = document.getElementById('signup-email-input');
+    const emailStatus = document.getElementById('signup-email-status');
+    const disposableDomains = new Set([
+        'mailinator.com', 'tempmail.com', '10minutemail.com', 'throwawaymail.com',
+        'guerrillamail.com', 'sharklasers.com', 'yopmail.com', 'getnada.com',
+        'trashmail.com', 'temp-mail.org', 'temp-mail.io', 'fakemailgenerator.com'
+    ]);
+    const commonTypos = {
+        'gmai.com': 'gmail.com',
+        'gamil.com': 'gmail.com',
+        'gmial.com': 'gmail.com',
+        'gmaill.com': 'gmail.com',
+        'yaho.com': 'yahoo.com',
+        'yahooo.com': 'yahoo.com',
+        'hotmial.com': 'hotmail.com',
+        'outlok.com': 'outlook.com',
+        'redifmail.com': 'rediffmail.com'
+    };
+
+    function evaluateEmailInput() {
+        if (!emailInput || !emailStatus) return;
+        const val = emailInput.value.trim().toLowerCase();
+        if (!val) {
+            emailStatus.classList.add('hidden');
+            emailInput.classList.remove('border-rose-400', 'border-emerald-400', 'border-amber-400');
+            return;
+        }
+
+        if (!val.includes('@')) {
+            if (val.length > 5) {
+                showEmailError(`The email address '${val}' is not valid (missing '@' symbol).`);
+            } else {
+                emailStatus.classList.add('hidden');
+            }
+            return;
+        }
+
+        const parts = val.split('@');
+        if (parts.length !== 2 || !parts[1]) {
+            showEmailError(`The email address '${val}' is not valid.`);
+            return;
+        }
+
+        const domain = parts[1];
+        if (!domain.includes('.')) {
+            if (domain.length > 3) {
+                showEmailError(`The email address '${val}' is not valid (missing domain extension like .com).`);
+            } else {
+                emailStatus.classList.add('hidden');
+            }
+            return;
+        }
+
+        if (disposableDomains.has(domain)) {
+            showEmailError(`The email address '${val}' is not valid. Temporary or disposable emails are not allowed.`);
+            return;
+        }
+
+        if (commonTypos[domain]) {
+            const suggestion = `${parts[0]}@${commonTypos[domain]}`;
+            showEmailWarning(`The email address '${val}' is not valid. Did you mean <strong>${suggestion}</strong>?`);
+            return;
+        }
+
+        const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+        if (!emailRegex.test(val)) {
+            showEmailError(`The email address '${val}' is not valid.`);
+            return;
+        }
+
+        emailInput.classList.remove('border-rose-400', 'border-amber-400');
+        emailInput.classList.add('border-emerald-400');
+        emailStatus.className = 'mt-1 text-[11px] text-emerald-600 font-medium flex items-center space-x-1 block';
+        emailStatus.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> <span>Valid email address</span>';
+    }
+
+    function showEmailError(msg) {
+        emailInput.classList.remove('border-emerald-400', 'border-amber-400');
+        emailInput.classList.add('border-rose-400');
+        emailStatus.className = 'mt-1 text-[11px] text-rose-600 font-medium flex items-center space-x-1 block';
+        emailStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation text-xs shrink-0"></i> <span>${msg}</span>`;
+    }
+
+    function showEmailWarning(msg) {
+        emailInput.classList.remove('border-emerald-400', 'border-rose-400');
+        emailInput.classList.add('border-amber-400');
+        emailStatus.className = 'mt-1 text-[11px] text-amber-700 font-medium flex items-center space-x-1 block';
+        emailStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs shrink-0"></i> <span>${msg}</span>`;
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', evaluateEmailInput);
+        emailInput.addEventListener('blur', evaluateEmailInput);
+        if (emailInput.value) evaluateEmailInput();
     }
 </script>
 {% endblock %}

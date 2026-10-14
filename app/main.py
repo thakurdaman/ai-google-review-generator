@@ -40,6 +40,10 @@ from .google_places import (
     PLACE_ID_ERROR_MESSAGE,
     VALID_EXAMPLE_URL
 )
+from .email_validator import (
+    validate_email_address,
+    clean_and_verify_email
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -238,6 +242,23 @@ async def signup_submit(
             status_code=400
         )
 
+    # Validate email legitimacy
+    is_valid_email, email_err = validate_email_address(email_clean)
+    if not is_valid_email:
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "error": email_err or f"The email address '{email_clean}' is not valid.",
+                "business_name": bname_clean,
+                "email": email_clean,
+                "category": category,
+                "google_business_profile_url": raw_google_url,
+                "tags": tags
+            },
+            status_code=400
+        )
+
     try:
         place_id, direct_review_url = process_google_profile_link(raw_google_url)
     except ValueError as ve:
@@ -368,7 +389,17 @@ async def owner_login_submit(
     email: str = Form(...),
     password: str = Form(...)
 ):
-    owner = authenticate_owner(email.strip(), password)
+    email_clean = email.strip()
+    is_valid_email, email_err = validate_email_address(email_clean)
+    if not is_valid_email:
+        return templates.TemplateResponse(
+            request=request,
+            name="owner_login.html",
+            context={"error": email_err or f"The email address '{email_clean}' is not valid."},
+            status_code=400
+        )
+
+    owner = authenticate_owner(email_clean, password)
     if not owner:
         return templates.TemplateResponse(
             request=request,

@@ -104,6 +104,31 @@ def run_all_tests():
     conn.commit()
     conn.close()
 
+    # Test 7A0: Email Legitimacy Checks on /signup
+    invalid_emails_to_test = [
+        ("not-an-email", "The email address &#39;not-an-email&#39; is not valid (missing &#39;@&#39; symbol)"),
+        ("user@gmai.com", "The email address &#39;user@gmai.com&#39; is not valid. Did you mean &#39;user@gmail.com&#39;?"),
+        ("test@tempmail.com", "The email address &#39;test@tempmail.com&#39; is not valid. Temporary or disposable email addresses are not allowed.")
+    ]
+    for bad_email, expected_snip in invalid_emails_to_test:
+        bad_signup = {
+            "business_name": "Trattoria Bella Napoli",
+            "email": bad_email,
+            "password": "napoliPassword123",
+            "category": "Restaurant & Café",
+            "google_business_profile_url": "https://maps.google.com/?place_id=ChIJBellaNapoli123"
+        }
+        res_bad_email = client.post("/signup", data=bad_signup, follow_redirects=False)
+        assert res_bad_email.status_code == 400, f"Expected 400 for bad email {bad_email}, got {res_bad_email.status_code}"
+        assert "is not valid" in res_bad_email.text
+        print(f"  ✅ Correctly rejected invalid/fake email: {bad_email}")
+
+    # Test login with invalid email
+    res_bad_login = client.post("/login", data={"email": "not-a-valid-email", "password": "any"}, follow_redirects=False)
+    assert res_bad_login.status_code == 400
+    assert "is not valid" in res_bad_login.text
+    print("  ✅ Invalid email format on login correctly rejected with 400.")
+
     # Test 7A: Verify clear error on invalid Google Business Profile link without Place ID
     invalid_signup = {
         "business_name": "Trattoria Bella Napoli",
