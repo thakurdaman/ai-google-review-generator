@@ -115,8 +115,7 @@ def run_all_tests():
     res_invalid = client.post("/signup", data=invalid_signup, follow_redirects=False)
     assert res_invalid.status_code == 400
     assert "Could not extract a usable Google Place ID" in res_invalid.text
-    assert "Example valid link" in res_invalid.text
-    print("  ✅ Invalid link correctly rejected with clear error and valid example.")
+    print("  ✅ Invalid link correctly rejected with clear error.")
 
     # Test 7B: Valid Google Business Profile Link with Place ID extraction
     signup_data = {

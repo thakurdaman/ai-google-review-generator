@@ -15,8 +15,7 @@ VALID_WRITEREVIEW_EXAMPLE = "https://search.google.com/local/writereview?placeid
 
 PLACE_ID_ERROR_MESSAGE = (
     "Could not extract a usable Google Place ID from the link provided. "
-    "Please paste your official Google Business Profile or Google Maps link containing your Place ID. "
-    f"Example valid link: {VALID_EXAMPLE_URL} or {VALID_WRITEREVIEW_EXAMPLE}"
+    "Please paste your official Google Business Profile or Google Maps link containing your Place ID."
 )
 
 # Standard Google Place IDs start with ChIJ or GhIJ, followed by base64-like chars
