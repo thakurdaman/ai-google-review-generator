@@ -186,8 +186,12 @@ def verify_and_activate_subscription(
 def is_subscription_active(business: Dict[str, Any]) -> bool:
     """
     Checks if business has an active subscription.
-    When payment gateway is temporarily disabled, all businesses have active access.
+    Accounts pending email confirmation are blocked until verified.
+    When payment gateway is temporarily disabled, all verified businesses have active access.
     """
+    if business.get("subscription_status") == "pending_verification":
+        return False
+
     if not is_payments_enabled():
         return True
 

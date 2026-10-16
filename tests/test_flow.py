@@ -16,6 +16,7 @@ if root_dir not in sys.path:
 from starlette.testclient import TestClient
 from app.main import app
 from app.database import init_db, get_db, set_setting
+from app.email_confirmation import create_email_confirmation_token
 
 def run_all_tests():
     print("=" * 60)
@@ -104,7 +105,17 @@ def run_all_tests():
     conn.commit()
     conn.close()
 
-    # Test 7A0: Email Legitimacy Checks on /signup
+    # Test 7A0: Real-Time Email Deliverability & Legitimacy API checks
+    res_verify_fake = client.get("/api/verify-email?email=test@tempmail.com")
+    assert res_verify_fake.status_code == 200
+    assert res_verify_fake.json()["deliverable"] is False
+    print("  ✅ /api/verify-email correctly reported disposable email as undeliverable.")
+
+    res_verify_real = client.get("/api/verify-email?email=mario@bellanapoli.com")
+    assert res_verify_real.status_code == 200
+    assert res_verify_real.json()["deliverable"] is True
+    print("  ✅ /api/verify-email correctly validated active domain.")
+
     invalid_emails_to_test = [
         ("not-an-email", "The email address &#39;not-an-email&#39; is not valid (missing &#39;@&#39; symbol)"),
         ("user@gmai.com", "The email address &#39;user@gmai.com&#39; is not valid. Did you mean &#39;user@gmail.com&#39;?"),
@@ -120,8 +131,8 @@ def run_all_tests():
         }
         res_bad_email = client.post("/signup", data=bad_signup, follow_redirects=False)
         assert res_bad_email.status_code == 400, f"Expected 400 for bad email {bad_email}, got {res_bad_email.status_code}"
-        assert "is not valid" in res_bad_email.text
-        print(f"  ✅ Correctly rejected invalid/fake email: {bad_email}")
+        assert "is not valid" in res_bad_email.text or "cannot receive mail" in res_bad_email.text
+        print(f"  ✅ Correctly rejected invalid/fake email on signup: {bad_email}")
 
     # Test login with invalid email
     res_bad_login = client.post("/login", data={"email": "not-a-valid-email", "password": "any"}, follow_redirects=False)
@@ -142,7 +153,7 @@ def run_all_tests():
     assert "Could not extract a usable Google Place ID" in res_invalid.text
     print("  ✅ Invalid link correctly rejected with clear error.")
 
-    # Test 7B: Valid Google Business Profile Link with Place ID extraction
+    # Test 7B: Valid Google Business Profile Link with Place ID extraction & Email Confirmation Link Flow
     signup_data = {
         "business_name": "Trattoria Bella Napoli",
         "email": "mario@bellanapoli.com",
@@ -154,23 +165,42 @@ def run_all_tests():
         "tags": "Wood-Fired Pizza, Handmade Pasta, Friendly Waiters"
     }
     res_signup = client.post("/signup", data=signup_data, files={"logo_file": ("", b"", "application/octet-stream")}, follow_redirects=False)
-    assert res_signup.status_code == 303, f"Expected 303 redirect to /dashboard, got {res_signup.status_code}"
-    assert res_signup.headers["location"] == "/dashboard", f"Expected /dashboard, got {res_signup.headers['location']}"
-    assert "owner_session" in res_signup.cookies
-    owner_cookie = res_signup.cookies["owner_session"]
-    print("  ✅ Owner signed up! In free launch mode, immediately activated and redirected straight to /dashboard.")
+    assert res_signup.status_code == 303, f"Expected 303 redirect, got {res_signup.status_code}"
+    assert "/verify-email-pending" in res_signup.headers["location"]
+    print("  ✅ Owner signed up! Account created in pending_verification status, confirmation link dispatched.")
 
-    # Find slug for Trattoria Bella Napoli and verify auto-constructed review URL
+    # Find slug and owner ID for Trattoria Bella Napoli
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT id, slug, subscription_status, google_review_url FROM businesses WHERE name = 'Trattoria Bella Napoli'")
     new_biz = cursor.fetchone()
+    cursor.execute("SELECT id FROM business_owners WHERE email = 'mario@bellanapoli.com'")
+    new_owner = cursor.fetchone()
     conn.close()
+
     assert new_biz is not None
-    assert new_biz["google_review_url"] == "https://search.google.com/local/writereview?placeid=ChIJBellaNapoli123"
-    print("  ✅ Direct Google review link automatically constructed: " + new_biz["google_review_url"])
+    assert new_biz["subscription_status"] == "pending_verification"
+    assert new_owner is not None
     new_biz_id = new_biz["id"]
     new_slug = new_biz["slug"]
+    new_owner_id = new_owner["id"]
+    assert new_biz["google_review_url"] == "https://search.google.com/local/writereview?placeid=ChIJBellaNapoli123"
+    print("  ✅ Direct Google review link automatically constructed: " + new_biz["google_review_url"])
+
+    # Test login before verification is blocked
+    res_unverified_login = client.post("/login", data={"email": "mario@bellanapoli.com", "password": "napoliPassword123"}, follow_redirects=False)
+    assert res_unverified_login.status_code == 400
+    assert "verify your email" in res_unverified_login.text.lower()
+    print("  ✅ Login blocked before email confirmation.")
+
+    # Test clicking email confirmation link activates account
+    confirm_tok = create_email_confirmation_token(new_owner_id, "mario@bellanapoli.com", new_biz_id)
+    res_confirm = client.get(f"/verify-email?token={confirm_tok}", follow_redirects=False)
+    assert res_confirm.status_code == 200
+    assert "Email confirmed" in res_confirm.text
+    assert "owner_session" in res_confirm.cookies
+    owner_cookie = res_confirm.cookies["owner_session"]
+    print("  ✅ Confirmation link verified! Account activated and session cookie granted.")
 
     # 9. Test Portal Gating When Payments Disabled (Must be accessible!)
     print("\n[TEST 8] Testing Portal Access When Payments Disabled...")

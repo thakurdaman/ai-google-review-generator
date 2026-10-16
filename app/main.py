@@ -6,7 +6,7 @@ import requests
 import urllib.parse
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Request, Response, Form, Depends, HTTPException, status, UploadFile, File
+from fastapi import FastAPI, Request, Response, Form, Query, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -42,7 +42,16 @@ from .google_places import (
 )
 from .email_validator import (
     validate_email_address,
+    verify_email_deliverability,
     clean_and_verify_email
+)
+from .email_confirmation import (
+    create_email_confirmation_token,
+    verify_email_confirmation_token,
+    is_owner_email_verified,
+    mark_owner_email_verified,
+    send_confirmation_email,
+    get_last_verify_link
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -242,14 +251,14 @@ async def signup_submit(
             status_code=400
         )
 
-    # Validate email legitimacy
-    is_valid_email, email_err = validate_email_address(email_clean)
-    if not is_valid_email:
+    # Validate email deliverability & active status
+    is_deliverable, deliverability_err, _ = verify_email_deliverability(email_clean)
+    if not is_deliverable:
         return templates.TemplateResponse(
             request=request,
             name="signup.html",
             context={
-                "error": email_err or f"The email address '{email_clean}' is not valid.",
+                "error": deliverability_err or f"The email address '{email_clean}' could not be verified. Please enter a valid, active email address that can receive mail.",
                 "business_name": bname_clean,
                 "email": email_clean,
                 "category": category,
@@ -312,15 +321,15 @@ async def signup_submit(
             status_code=400
         )
 
-    # 1. Create Business Record
+    # 1. Create Business Record (inactive pending email verification)
     slug = generate_slug(bname_clean)
     brand_color = accent_hex or accent_color or "#2563EB"
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else ["Friendly Staff", "Quick Service"]
     now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     payments_on = is_payments_enabled()
-    init_active = 0 if payments_on else 1
-    init_status = "pending_payment" if payments_on else "active"
+    init_active = 0
+    init_status = "pending_verification"
 
     cursor.execute("""
         INSERT INTO businesses (slug, name, category, google_review_url, logo_url, accent_color, tags_preset, active, subscription_status, plan_tier, payment_method, last_google_url_update)
@@ -352,21 +361,148 @@ async def signup_submit(
     conn.close()
 
     # 3. Log Activity
-    log_activity(business_id, "signup", f"Owner {email_clean} self-registered business '{bname_clean}'")
+    log_activity(business_id, "signup", f"Owner {email_clean} self-registered business '{bname_clean}'. Pending email confirmation.")
     log_activity(business_id, "google_url_updated", f"Configured Google Business Profile direct review link for Place ID {place_id}: {direct_review_url}")
 
-    # 4. Set session cookie and redirect (to /dashboard if free launch, else /pricing)
-    token = create_owner_token(owner_id, email_clean, business_id)
-    target_url = "/dashboard" if not payments_on else "/pricing"
-    resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
+    # 4. Generate confirmation token and dispatch verification email
+    base_url = get_base_url(request)
+    verify_token = create_email_confirmation_token(owner_id, email_clean, business_id)
+    send_confirmation_email(email_clean, bname_clean, verify_token, base_url, owner_id)
+    log_activity(business_id, "verification_email_sent", f"Sent account confirmation link to {email_clean}")
+
+    # 5. Redirect to /verify-email-pending
+    target_url = f"/verify-email-pending?email={urllib.parse.quote(email_clean)}"
+    return RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
+
+
+# ==========================================
+# REAL-TIME EMAIL VERIFICATION & CONFIRMATION
+# ==========================================
+
+@app.get("/api/verify-email")
+async def api_verify_email(email: str = Query(...)):
+    """
+    Real-time email deliverability API for signup form typing/blur validation.
+    Checks MX records and verification provider APIs.
+    """
+    clean = email.strip().lower()
+    is_deliverable, error_msg, details = verify_email_deliverability(clean)
+    return {
+        "email": clean,
+        "valid": is_deliverable,
+        "deliverable": is_deliverable,
+        "message": error_msg or "Active email address verified and ready to receive mail.",
+        "details": details
+    }
+
+
+@app.get("/verify-email-pending", response_class=HTMLResponse)
+async def verify_email_pending_page(request: Request, email: str = "", message: Optional[str] = None, error: Optional[str] = None):
+    dev_link = None
+    if email:
+        clean = email.strip().lower()
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM business_owners WHERE email = ?", (clean,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            dev_link = get_last_verify_link(row["id"])
+    return templates.TemplateResponse(
+        request=request,
+        name="verify_email_pending.html",
+        context={
+            "email": email,
+            "message": message,
+            "error": error,
+            "dev_verify_link": dev_link
+        }
+    )
+
+
+@app.post("/api/resend-verification")
+async def api_resend_verification(request: Request, email: str = Form(...)):
+    clean = email.strip().lower()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT bo.*, b.name as business_name 
+        FROM business_owners bo 
+        LEFT JOIN businesses b ON bo.business_id = b.id 
+        WHERE bo.email = ?
+    """, (clean,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return RedirectResponse(
+            url=f"/verify-email-pending?email={urllib.parse.quote(clean)}&error=No+account+found+with+this+email.+Please+sign+up.",
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    owner_id = row["id"]
+    business_id = row.get("business_id") or 0
+    biz_name = row.get("business_name") or "Your Store"
+    token = create_email_confirmation_token(owner_id, clean, business_id)
+    send_confirmation_email(clean, biz_name, token, get_base_url(request), owner_id)
+
+    return RedirectResponse(
+        url=f"/verify-email-pending?email={urllib.parse.quote(clean)}&message=A+new+activation+link+has+been+dispatched+to+your+inbox.",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@app.get("/verify-email", response_class=HTMLResponse)
+async def verify_email_action(request: Request, token: str = Query(...)):
+    """
+    Handles confirmation link click from owner's email inbox.
+    Activates the account and signs the owner in.
+    """
+    data = verify_email_confirmation_token(token)
+    if not data:
+        return templates.TemplateResponse(
+            request=request,
+            name="verify_email_status.html",
+            context={
+                "success": False,
+                "error": "This activation link is invalid, has already expired after 48 hours, or has been tampered with."
+            },
+            status_code=400
+        )
+
+    owner_id = data["owner_id"]
+    email = data["email"]
+    business_id = data["business_id"]
+
+    # Mark verified in database
+    mark_owner_email_verified(owner_id, business_id)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM businesses WHERE id = ?", (business_id,))
+    biz = cursor.fetchone()
+    biz_name = biz["name"] if biz else "Your Store"
+    conn.close()
+
+    session_token = create_owner_token(owner_id, email, business_id)
+    resp = templates.TemplateResponse(
+        request=request,
+        name="verify_email_status.html",
+        context={
+            "success": True,
+            "email": email,
+            "business_name": biz_name
+        }
+    )
     resp.set_cookie(
         key="owner_session",
-        value=token,
+        value=session_token,
         httponly=True,
         max_age=86400 * 14,
         samesite="lax"
     )
     return resp
+
 
 
 # ==========================================
@@ -405,6 +541,17 @@ async def owner_login_submit(
             request=request,
             name="owner_login.html",
             context={"error": "Invalid email or password"},
+            status_code=400
+        )
+
+    # Check if owner's email has been verified
+    if not is_owner_email_verified(owner["id"]):
+        return templates.TemplateResponse(
+            request=request,
+            name="owner_login.html",
+            context={
+                "error": f"Please verify your email address before logging in. We sent an activation link to {email_clean}."
+            },
             status_code=400
         )
 

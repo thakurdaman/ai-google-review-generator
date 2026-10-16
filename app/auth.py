@@ -137,6 +137,14 @@ def require_owner(request: Request) -> Dict[str, Any]:
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             headers={"Location": "/login"}
         )
+    from .email_confirmation import is_owner_email_verified
+    if not is_owner_email_verified(owner["id"]):
+        import urllib.parse
+        clean_email = urllib.parse.quote(owner.get("email", ""))
+        raise HTTPException(
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+            headers={"Location": f"/verify-email-pending?email={clean_email}"}
+        )
     return owner
 
 

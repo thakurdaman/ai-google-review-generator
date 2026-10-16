@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Your Email - ReviewBoost{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col justify-between p-4 sm:p-8">
+
+    <!-- Top Simple Nav -->
+    <header class="max-w-md w-full mx-auto flex items-center justify-between pb-6">
+        <a href="/" class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 font-extrabold text-xs">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <div>
+                <span class="text-base font-bold font-heading text-slate-900">ReviewBoost</span>
+            </div>
+        </a>
+        <div class="text-xs text-slate-600">
+            <a href="/login" class="font-bold text-slate-900 hover:underline">Sign In</a>
+        </div>
+    </header>
+
+    <!-- Main Verification Box -->
+    <main class="max-w-md w-full mx-auto my-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+        
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-envelope-circle-check"></i>
+            </div>
+            <h1 class="text-xl font-bold font-heading text-slate-900">
+                Confirm your email address
+            </h1>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                We've sent an account activation link to:<br>
+                <strong class="text-slate-900 font-semibold">{{ email }}</strong>
+            </p>
+        </div>
+
+        {% if message %}
+        <div class="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center space-x-2">
+            <i class="fa-solid fa-circle-check text-sm shrink-0"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
+            <i class="fa-solid fa-circle-exclamation text-sm shrink-0"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-2.5 mb-6">
+            <div class="flex items-start space-x-2.5">
+                <i class="fa-solid fa-1 text-slate-400 mt-0.5 text-[11px] font-bold"></i>
+                <span>Open your email client or browser tab.</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+                <i class="fa-solid fa-2 text-slate-400 mt-0.5 text-[11px] font-bold"></i>
+                <span>Click the <strong>"Confirm & Activate My Account"</strong> button in the email.</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+                <i class="fa-solid fa-3 text-slate-400 mt-0.5 text-[11px] font-bold"></i>
+                <span>Your dashboard, Place ID review link, and QR stands will instantly unlock.</span>
+            </div>
+        </div>
+
+        <!-- Resend Form -->
+        <form method="POST" action="/api/resend-verification" class="space-y-3">
+            <input type="hidden" name="email" value="{{ email }}">
+            <button type="submit" 
+                    class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+                <span>Resend Confirmation Email</span>
+            </button>
+        </form>
+
+        {% if dev_verify_link %}
+        <!-- Demo / Test Helper Badge -->
+        <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+            <span class="text-[10px] text-amber-700 font-bold uppercase tracking-wider block mb-1">
+                <i class="fa-solid fa-flask text-xs mr-1"></i> Testing & Demo Mode Shortcut
+            </span>
+            <p class="text-[11px] text-slate-500 mb-2">
+                Direct activation link (available in development):
+            </p>
+            <a href="{{ dev_verify_link }}" 
+               class="inline-block py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition">
+                Activate Account Now &rarr;
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-center space-y-2 text-xs">
+            <p class="text-slate-500">
+                Wrong email address? <a href="/signup" class="text-brand-600 font-bold hover:underline">Register again</a>
+            </p>
+            <p class="text-slate-500">
+                Already confirmed? <a href="/login" class="text-slate-800 font-bold hover:underline">Sign In</a>
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Simple footer -->
+    <footer class="max-w-md w-full mx-auto text-center text-xs text-slate-400 pt-6">
+        ReviewBoost • Automated Google Review Management
+    </footer>
+
+</div>
+{% endblock %}

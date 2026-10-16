@@ -107,7 +107,7 @@
             </div>
 
             <!-- Standard Registration Form -->
-            <form action="/signup" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form id="signup-form" action="/signup" method="POST" enctype="multipart/form-data" class="space-y-4">
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -283,9 +283,15 @@
         if (profileInput.value) evaluatePlaceIdInput();
     }
 
-    // Live Email Legitimacy & Typo Validation
+    // Live Email Legitimacy & Real-Time Deliverability Verification
     const emailInput = document.getElementById('signup-email-input');
     const emailStatus = document.getElementById('signup-email-status');
+    const signupForm = document.getElementById('signup-form');
+
+    let emailDebounceTimer = null;
+    let isEmailDeliverable = null;
+    let lastCheckedEmail = '';
+
     const disposableDomains = new Set([
         'mailinator.com', 'tempmail.com', '10minutemail.com', 'throwawaymail.com',
         'guerrillamail.com', 'sharklasers.com', 'yopmail.com', 'getnada.com',
@@ -303,81 +309,139 @@
         'redifmail.com': 'rediffmail.com'
     };
 
-    function evaluateEmailInput() {
-        if (!emailInput || !emailStatus) return;
-        const val = emailInput.value.trim().toLowerCase();
-        if (!val) {
-            emailStatus.classList.add('hidden');
-            emailInput.classList.remove('border-rose-400', 'border-emerald-400', 'border-amber-400');
-            return;
-        }
-
+    function validateEmailClientFast(val) {
         if (!val.includes('@')) {
-            if (val.length > 5) {
-                showEmailError(`The email address '${val}' is not valid (missing '@' symbol).`);
-            } else {
-                emailStatus.classList.add('hidden');
-            }
-            return;
+            return { valid: false, message: `The email address '${val}' is not valid (missing '@' symbol).` };
         }
-
         const parts = val.split('@');
         if (parts.length !== 2 || !parts[1]) {
-            showEmailError(`The email address '${val}' is not valid.`);
+            return { valid: false, message: `The email address '${val}' is not valid.` };
+        }
+        const domain = parts[1];
+        if (!domain.includes('.')) {
+            return { valid: false, message: `The email address '${val}' is not valid (missing domain extension like .com).` };
+        }
+        if (disposableDomains.has(domain)) {
+            return { valid: false, message: `The email address '${val}' is not valid. Temporary or disposable email addresses are not allowed.` };
+        }
+        if (commonTypos[domain]) {
+            const suggestion = `${parts[0]}@${commonTypos[domain]}`;
+            return { valid: false, warning: true, message: `The email address '${val}' is not valid. Did you mean <strong>${suggestion}</strong>?` };
+        }
+        const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+        if (!emailRegex.test(val)) {
+            return { valid: false, message: `The email address '${val}' is not valid.` };
+        }
+        return { valid: true };
+    }
+
+    async function checkEmailDeliverabilityLive(email) {
+        if (!emailInput || !emailStatus) return;
+        const val = email.trim().toLowerCase();
+        if (!val) {
+            emailStatus.classList.add('hidden');
+            emailInput.classList.remove('border-rose-400', 'border-emerald-400', 'border-amber-400', 'border-blue-300');
+            isEmailDeliverable = null;
             return;
         }
 
-        const domain = parts[1];
-        if (!domain.includes('.')) {
-            if (domain.length > 3) {
-                showEmailError(`The email address '${val}' is not valid (missing domain extension like .com).`);
+        const fastCheck = validateEmailClientFast(val);
+        if (!fastCheck.valid) {
+            isEmailDeliverable = false;
+            if (fastCheck.warning) {
+                showEmailWarning(fastCheck.message);
             } else {
-                emailStatus.classList.add('hidden');
+                showEmailError(fastCheck.message);
             }
             return;
         }
 
-        if (disposableDomains.has(domain)) {
-            showEmailError(`The email address '${val}' is not valid. Temporary or disposable emails are not allowed.`);
-            return;
-        }
+        // Show live checking status
+        showEmailChecking('Verifying that this email address exists and can receive mail...');
+        lastCheckedEmail = val;
 
-        if (commonTypos[domain]) {
-            const suggestion = `${parts[0]}@${commonTypos[domain]}`;
-            showEmailWarning(`The email address '${val}' is not valid. Did you mean <strong>${suggestion}</strong>?`);
-            return;
-        }
+        try {
+            const resp = await fetch(`/api/verify-email?email=${encodeURIComponent(val)}`);
+            const data = await resp.json();
 
-        const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
-        if (!emailRegex.test(val)) {
-            showEmailError(`The email address '${val}' is not valid.`);
-            return;
-        }
+            // Check if input changed during fetch
+            if (emailInput.value.trim().toLowerCase() !== val) return;
 
-        emailInput.classList.remove('border-rose-400', 'border-amber-400');
-        emailInput.classList.add('border-emerald-400');
-        emailStatus.className = 'mt-1 text-[11px] text-emerald-600 font-medium flex items-center space-x-1 block';
-        emailStatus.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> <span>Valid email address</span>';
+            if (data.deliverable) {
+                isEmailDeliverable = true;
+                emailInput.classList.remove('border-rose-400', 'border-amber-400', 'border-blue-300');
+                emailInput.classList.add('border-emerald-400');
+                emailStatus.className = 'mt-1 text-[11px] text-emerald-600 font-medium flex items-center space-x-1 block';
+                emailStatus.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> <span>✓ Active, deliverable email address confirmed</span>';
+            } else {
+                isEmailDeliverable = false;
+                showEmailError(data.message || 'Please enter a valid, active email address that can receive mail.');
+            }
+        } catch (err) {
+            isEmailDeliverable = true;
+            emailInput.classList.remove('border-rose-400', 'border-amber-400', 'border-blue-300');
+            emailInput.classList.add('border-emerald-400');
+            emailStatus.className = 'mt-1 text-[11px] text-emerald-600 font-medium flex items-center space-x-1 block';
+            emailStatus.innerHTML = '<i class="fa-solid fa-circle-check text-xs"></i> <span>Valid email address</span>';
+        }
+    }
+
+    function showEmailChecking(msg) {
+        emailInput.classList.remove('border-rose-400', 'border-emerald-400', 'border-amber-400');
+        emailInput.classList.add('border-blue-300');
+        emailStatus.className = 'mt-1 text-[11px] text-blue-600 font-medium flex items-center space-x-1.5 block';
+        emailStatus.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> <span>${msg}</span>`;
     }
 
     function showEmailError(msg) {
-        emailInput.classList.remove('border-emerald-400', 'border-amber-400');
+        emailInput.classList.remove('border-emerald-400', 'border-amber-400', 'border-blue-300');
         emailInput.classList.add('border-rose-400');
         emailStatus.className = 'mt-1 text-[11px] text-rose-600 font-medium flex items-center space-x-1 block';
         emailStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation text-xs shrink-0"></i> <span>${msg}</span>`;
     }
 
     function showEmailWarning(msg) {
-        emailInput.classList.remove('border-emerald-400', 'border-rose-400');
+        emailInput.classList.remove('border-emerald-400', 'border-rose-400', 'border-blue-300');
         emailInput.classList.add('border-amber-400');
         emailStatus.className = 'mt-1 text-[11px] text-amber-700 font-medium flex items-center space-x-1 block';
         emailStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs shrink-0"></i> <span>${msg}</span>`;
     }
 
     if (emailInput) {
-        emailInput.addEventListener('input', evaluateEmailInput);
-        emailInput.addEventListener('blur', evaluateEmailInput);
-        if (emailInput.value) evaluateEmailInput();
+        emailInput.addEventListener('input', () => {
+            clearTimeout(emailDebounceTimer);
+            const val = emailInput.value.trim().toLowerCase();
+            if (!val) {
+                emailStatus.classList.add('hidden');
+                isEmailDeliverable = null;
+                return;
+            }
+            emailDebounceTimer = setTimeout(() => {
+                checkEmailDeliverabilityLive(val);
+            }, 600);
+        });
+
+        emailInput.addEventListener('blur', () => {
+            clearTimeout(emailDebounceTimer);
+            const val = emailInput.value.trim().toLowerCase();
+            if (val && val !== lastCheckedEmail) {
+                checkEmailDeliverabilityLive(val);
+            }
+        });
+
+        if (emailInput.value) {
+            checkEmailDeliverabilityLive(emailInput.value);
+        }
+    }
+
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            if (isEmailDeliverable === false) {
+                e.preventDefault();
+                showEmailError('Please enter a valid, active email address that can receive mail before continuing.');
+                emailInput.focus();
+            }
+        });
     }
 </script>
 {% endblock %}
