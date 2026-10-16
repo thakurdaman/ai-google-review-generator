@@ -117,7 +117,7 @@ async def security_middleware(request: Request, call_next):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(self)"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://checkout.razorpay.com; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://checkout.razorpay.com; "
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
         "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
         "img-src 'self' data: https: blob:; "
