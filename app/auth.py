@@ -6,8 +6,7 @@ from typing import Optional, Dict, Any
 from fastapi import Request, HTTPException, status
 from fastapi.responses import RedirectResponse
 from .database import get_db, hash_password
-
-SECRET_KEY = os.getenv("SECRET_KEY", "google-review-saas-secret-key-2026-secure-jwt")
+from .security import SECRET_KEY, verify_and_migrate_password
 
 # --- Reseller Admin Auth ---
 
@@ -17,7 +16,7 @@ def create_session_token(username: str) -> str:
     signature = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}:{signature}"
 
-def verify_session_token(token: str, max_age: int = 86400 * 7) -> Optional[str]:
+def verify_session_token(token: str, max_age: int = 86400) -> Optional[str]:
     if not token:
         return None
     try:
@@ -40,10 +39,20 @@ def authenticate_reseller(username: str, password: str) -> bool:
     cursor = conn.cursor()
     cursor.execute("SELECT password_hash FROM resellers WHERE username = ?", (username,))
     row = cursor.fetchone()
-    conn.close()
     if not row:
+        conn.close()
         return False
-    return hmac.compare_digest(row["password_hash"], hash_password(password))
+    stored_hash = row["password_hash"]
+    is_valid, needs_rehash, new_hash = verify_and_migrate_password(password, stored_hash)
+    if is_valid and needs_rehash and new_hash:
+        try:
+            cursor.execute("UPDATE resellers SET password_hash = ? WHERE username = ?", (new_hash, username))
+            conn.commit()
+        except Exception:
+            pass
+    conn.close()
+    return is_valid
+
 
 def get_current_reseller(request: Request) -> Optional[str]:
     token = request.cookies.get("reseller_session")
@@ -69,7 +78,7 @@ def create_owner_token(owner_id: int, email: str, business_id: int) -> str:
     signature = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}:{signature}"
 
-def verify_owner_token(token: str, max_age: int = 86400 * 14) -> Optional[Dict[str, Any]]:
+def verify_owner_token(token: str, max_age: int = 86400) -> Optional[Dict[str, Any]]:
     if not token:
         return None
     try:
@@ -102,12 +111,23 @@ def authenticate_owner(email: str, password: str) -> Optional[Dict[str, Any]]:
         WHERE bo.email = ?
     """, (email.strip().lower(),))
     row = cursor.fetchone()
-    conn.close()
     if not row:
+        conn.close()
         return None
-    if not hmac.compare_digest(row["password_hash"], hash_password(password)):
+    stored_hash = row["password_hash"]
+    is_valid, needs_rehash, new_hash = verify_and_migrate_password(password, stored_hash)
+    if not is_valid:
+        conn.close()
         return None
+    if needs_rehash and new_hash:
+        try:
+            cursor.execute("UPDATE business_owners SET password_hash = ? WHERE id = ?", (new_hash, row["id"]))
+            conn.commit()
+        except Exception:
+            pass
+    conn.close()
     return dict(row)
+
 
 def get_current_owner(request: Request) -> Optional[Dict[str, Any]]:
     token = request.cookies.get("owner_session")

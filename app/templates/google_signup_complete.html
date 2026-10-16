@@ -64,7 +64,9 @@
         {% endif %}
 
         <form method="POST" action="/signup/google-complete" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ get_csrf_token() if get_csrf_token is defined else '' }}">
             <input type="hidden" name="token" value="{{ token }}">
+
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

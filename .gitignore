@@ -9,6 +9,13 @@ reviews.db
 
 # Environment variables & keys
 .env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key
+
+
 
 # Virtual environments
 venv/

@@ -15,8 +15,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional, Dict, Any
 from .database import get_db, get_setting, set_setting, log_activity
+from .security import SECRET_KEY
 
-SECRET_KEY = os.getenv("SECRET_KEY", "google-review-saas-secret-key-2026-secure-jwt")
 
 
 def create_email_confirmation_token(owner_id: int, email: str, business_id: int) -> str:

@@ -53,6 +53,23 @@ from .email_confirmation import (
     send_confirmation_email,
     get_last_verify_link
 )
+from .security import (
+    validate_password_strength,
+    validate_uploaded_image_bytes,
+    generate_csrf_token,
+    verify_csrf_token,
+    check_rate_limit,
+    get_client_ip,
+    is_account_locked,
+    record_failed_login,
+    reset_failed_logins,
+    verify_razorpay_webhook_signature,
+    is_webhook_event_processed,
+    mark_webhook_event_processed,
+    CSRF_COOKIE_NAME,
+    CSRF_HEADER_NAME,
+    SECRET_KEY
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -63,11 +80,78 @@ app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), na
 
 # Templates
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+templates.env.globals["get_csrf_token"] = generate_csrf_token
+
+# Security Middleware: HTTPS Enforcing, HSTS, Security Headers, and CSRF
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    # 1. Transport Security: Force HTTPS in production behind reverse proxies
+    proto = request.headers.get("x-forwarded-proto", "")
+    host = request.url.hostname or ""
+    is_local = host in ("localhost", "127.0.0.1", "testserver")
+    if proto == "http" and not is_local:
+        https_url = str(request.url).replace("http://", "https://", 1)
+        return RedirectResponse(url=https_url, status_code=status.HTTP_301_MOVED_PERMANENTLY)
+
+    # 2. CSRF Verification for state-changing browser requests
+    if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        path = request.url.path
+        if path != "/api/payments/webhook":
+            csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+            csrf_header = request.headers.get(CSRF_HEADER_NAME)
+            if csrf_cookie or csrf_header:
+                token_to_verify = csrf_header or csrf_cookie
+                if not verify_csrf_token(token_to_verify):
+                    return JSONResponse(
+                        status_code=403,
+                        content={"detail": "CSRF validation failed. Please refresh the page and try again."}
+                    )
+
+    response: Response = await call_next(request)
+
+    # 3. Security Headers (Section 1 & 3)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(self)"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://checkout.razorpay.com; "
+        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "img-src 'self' data: https: blob:; "
+        "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com; "
+        "frame-src 'self' https://api.razorpay.com; "
+        "object-src 'none'; "
+        "base-uri 'self';"
+    )
+    if "x-powered-by" in response.headers:
+        del response.headers["x-powered-by"]
+    if "server" in response.headers:
+        del response.headers["server"]
+
+
+    # 4. Set / Refresh Double-Submit CSRF Cookie on GET requests
+    if request.method == "GET" and not request.cookies.get(CSRF_COOKIE_NAME):
+        csrf_tok = generate_csrf_token()
+        is_secure = (request.url.scheme == "https" or proto == "https") and not is_local
+        response.set_cookie(
+            key=CSRF_COOKIE_NAME,
+            value=csrf_tok,
+            httponly=False,
+            secure=is_secure,
+            samesite="Strict",
+            max_age=86400
+        )
+
+    return response
 
 # Startup event to initialize DB schema and seed data
 @app.on_event("startup")
 def on_startup():
     init_db()
+
 
 # --- Pydantic Request Models ---
 class ReviewGenerateRequest(BaseModel):
@@ -285,26 +369,58 @@ async def signup_submit(
             status_code=400
         )
 
-    # Handle logo file upload
+    # Rate limiting on signup
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"signup_{client_ip}", max_requests=15, window_seconds=60):
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={"error": "Too many signup attempts. Please wait a moment and try again."},
+            status_code=429
+        )
+
+    # Validate password complexity (>= 10 chars, not easily breached)
+    is_strong_pw, pw_err = validate_password_strength(password)
+    if not is_strong_pw:
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "error": pw_err,
+                "business_name": bname_clean,
+                "email": email_clean,
+                "category": category,
+                "google_business_profile_url": raw_google_url,
+                "tags": tags
+            },
+            status_code=400
+        )
+
+    # Handle logo file upload with magic byte verification and raster re-encoding
     logo_url = None
     if logo_file and logo_file.filename:
-        import base64
         contents = await logo_file.read()
-        if len(contents) > 2 * 1024 * 1024:  # 2MB limit
+        is_valid_img, img_err, safe_bytes, safe_ext = validate_uploaded_image_bytes(contents, logo_file.filename)
+        if not is_valid_img:
             return templates.TemplateResponse(
                 request=request,
                 name="signup.html",
-                context={"error": "Logo file is too large. Please use an image under 2MB."},
+                context={
+                    "error": img_err or "Invalid logo image format. Allowed formats: PNG, JPEG, WEBP, SVG.",
+                    "business_name": bname_clean,
+                    "email": email_clean,
+                    "category": category,
+                    "google_business_profile_url": raw_google_url,
+                    "tags": tags
+                },
                 status_code=400
             )
-        # Save to static/uploads for local use
         uploads_dir = os.path.join(BASE_DIR, "static", "uploads")
         os.makedirs(uploads_dir, exist_ok=True)
-        ext = os.path.splitext(logo_file.filename)[1] or ".png"
-        safe_name = f"{uuid.uuid4().hex[:12]}{ext}"
+        safe_name = f"{uuid.uuid4().hex[:16]}{safe_ext}"
         file_path = os.path.join(uploads_dir, safe_name)
         with open(file_path, "wb") as fp:
-            fp.write(contents)
+            fp.write(safe_bytes)
         logo_url = f"/static/uploads/{safe_name}"
 
     conn = get_db()
@@ -380,11 +496,23 @@ async def signup_submit(
 # ==========================================
 
 @app.get("/api/verify-email")
-async def api_verify_email(email: str = Query(...)):
+async def api_verify_email(request: Request, email: str = Query(...)):
     """
     Real-time email deliverability API for signup form typing/blur validation.
-    Checks MX records and verification provider APIs.
+    Checks MX records and verification provider APIs with IP rate limiting.
     """
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"verify_email_{client_ip}", max_requests=60, window_seconds=60):
+        return JSONResponse(
+            status_code=429,
+            content={
+                "email": email,
+                "valid": False,
+                "deliverable": False,
+                "message": "Rate limit exceeded. Please wait a moment."
+            }
+        )
+
     clean = email.strip().lower()
     is_deliverable, error_msg, details = verify_email_deliverability(clean)
     return {
@@ -394,6 +522,7 @@ async def api_verify_email(email: str = Query(...)):
         "message": error_msg or "Active email address verified and ready to receive mail.",
         "details": details
     }
+
 
 
 @app.get("/verify-email-pending", response_class=HTMLResponse)
@@ -494,12 +623,14 @@ async def verify_email_action(request: Request, token: str = Query(...)):
             "business_name": biz_name
         }
     )
+    is_secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
     resp.set_cookie(
         key="owner_session",
         value=session_token,
         httponly=True,
-        max_age=86400 * 14,
-        samesite="lax"
+        secure=is_secure,
+        max_age=86400,
+        samesite="Strict"
     )
     return resp
 
@@ -535,14 +666,38 @@ async def owner_login_submit(
             status_code=400
         )
 
+    # Rate limiting per IP
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"login_{client_ip}", max_requests=30, window_seconds=60):
+        return templates.TemplateResponse(
+            request=request,
+            name="owner_login.html",
+            context={"error": "Too many login attempts. Please wait a moment and try again."},
+            status_code=429
+        )
+
+    # Account Lockout / Slowdown check per account
+    is_locked, remaining_sec = is_account_locked(email_clean)
+    if is_locked:
+        return templates.TemplateResponse(
+            request=request,
+            name="owner_login.html",
+            context={"error": f"Account temporarily locked due to repeated failed login attempts. Please try again in {remaining_sec} seconds."},
+            status_code=400
+        )
+
     owner = authenticate_owner(email_clean, password)
     if not owner:
+        record_failed_login(email_clean)
         return templates.TemplateResponse(
             request=request,
             name="owner_login.html",
             context={"error": "Invalid email or password"},
             status_code=400
         )
+
+    # Login succeeded - reset lockout tracker
+    reset_failed_logins(email_clean)
 
     # Check if owner's email has been verified
     if not is_owner_email_verified(owner["id"]):
@@ -566,18 +721,21 @@ async def owner_login_submit(
     if owner.get("business_id"):
         log_activity(owner["business_id"], "login", f"Owner logged in ({owner['email']})")
 
+    # Rotate session token upon successful login
     token = create_owner_token(owner["id"], owner["email"], owner["business_id"])
     target_url = "/dashboard"
     if is_payments_enabled() and owner.get("subscription_status") not in ["active", "trialing"]:
         target_url = "/pricing"
 
     resp = RedirectResponse(url=target_url, status_code=status.HTTP_303_SEE_OTHER)
+    is_secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
     resp.set_cookie(
         key="owner_session",
         value=token,
         httponly=True,
-        max_age=86400 * 14,
-        samesite="lax"
+        secure=is_secure,
+        max_age=86400,
+        samesite="Strict"
     )
     return resp
 
@@ -585,6 +743,7 @@ async def owner_login_submit(
 async def owner_logout():
     resp = RedirectResponse(url="/login")
     resp.delete_cookie("owner_session")
+    resp.delete_cookie(CSRF_COOKIE_NAME)
     return resp
 
 
@@ -798,19 +957,20 @@ async def google_signup_complete_submit(
     if get_owner_by_email(email_clean):
         return RedirectResponse(url="/login?error=An+account+with+this+Google+email+already+exists.+Please+sign+in.")
 
-    # Handle logo upload
+    # Handle logo upload with magic byte verification and raster re-encoding
     logo_url = None
     if logo_file and logo_file.filename:
         contents = await logo_file.read()
-        if len(contents) <= 2 * 1024 * 1024:
+        is_valid_img, img_err, safe_bytes, safe_ext = validate_uploaded_image_bytes(contents, logo_file.filename)
+        if is_valid_img and safe_bytes:
             uploads_dir = os.path.join(BASE_DIR, "static", "uploads")
             os.makedirs(uploads_dir, exist_ok=True)
-            ext = os.path.splitext(logo_file.filename)[1] or ".png"
-            safe_name = f"{uuid.uuid4().hex[:12]}{ext}"
+            safe_name = f"{uuid.uuid4().hex[:16]}{safe_ext}"
             file_path = os.path.join(uploads_dir, safe_name)
             with open(file_path, "wb") as fp:
-                fp.write(contents)
+                fp.write(safe_bytes)
             logo_url = f"/static/uploads/{safe_name}"
+
 
     slug = generate_slug(bname_clean)
     brand_color = accent_hex or accent_color or "#2563EB"
@@ -906,6 +1066,11 @@ async def api_verify_payment(req: VerifyPaymentRequest, request: Request):
         raise HTTPException(status_code=401, detail="Please log in to continue")
 
     business_id = owner["business_id"]
+
+    # Server-side validation of plan
+    if req.plan_type not in PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan selected")
+
     res = verify_and_activate_subscription(
         business_id=business_id,
         plan_type=req.plan_type,
@@ -920,14 +1085,34 @@ async def api_verify_payment(req: VerifyPaymentRequest, request: Request):
 async def api_payment_webhook(request: Request):
     """
     Razorpay Webhook endpoint for recurring UPI Autopay renewals, mandate events, and captures.
+    Verifies HMAC-SHA256 signature and guarantees idempotency.
     """
+    webhook_secret = get_setting("razorpay_webhook_secret", os.getenv("RAZORPAY_WEBHOOK_SECRET", "")).strip()
+    body_bytes = await request.body()
+    signature = request.headers.get("X-Razorpay-Signature", "")
+
+    # If webhook secret is configured, enforce strict HMAC signature verification
+    if webhook_secret:
+        if not signature or not verify_razorpay_webhook_signature(body_bytes, signature, webhook_secret):
+            raise HTTPException(status_code=400, detail="Invalid webhook signature")
+
     try:
-        body = await request.json()
+        body = json.loads(body_bytes.decode("utf-8")) if body_bytes else {}
         event = body.get("event", "")
-        # Process recurring charge or cancellation if sent by gateway
+        event_id = body.get("id") or body.get("event_id") or ""
+        
+        # Enforce webhook idempotency
+        if event_id and is_webhook_event_processed(event_id):
+            return {"status": "ok", "message": "Duplicate event ignored"}
+
+        if event_id:
+            mark_webhook_event_processed(event_id)
+
+        # Process webhook payload safely
         return {"status": "ok", "event_received": event}
     except Exception:
         return {"status": "ok"}
+
 
 
 # ==========================================
@@ -1130,11 +1315,19 @@ async def customer_review_landing(slug: str, request: Request):
 
 
 @app.post("/api/reviews/generate")
-async def api_generate_reviews(req: ReviewGenerateRequest):
+async def api_generate_reviews(req: ReviewGenerateRequest, request: Request):
     """
     Generates 3 natural review drafts using OpenAI GPT-4o mini or smart fallback.
     Crucial guardrail: Strictly restricted to positive ratings (4 or 5 stars).
     """
+    # Abuse prevention: Rate limit per IP to protect AI credit usage
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"ai_gen_{client_ip}", max_requests=30, window_seconds=60):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded. Please wait a moment before generating more review drafts."
+        )
+
     if req.rating < 4:
         raise HTTPException(
             status_code=400,
@@ -1357,18 +1550,44 @@ async def admin_login_submit(
     username: str = Form(...),
     password: str = Form(...)
 ):
-    if authenticate_reseller(username.strip(), password):
-        token = create_session_token(username.strip())
+    u_clean = username.strip()
+    client_ip = get_client_ip(request)
+
+    # Rate limiting on admin login
+    if not check_rate_limit(f"admin_login_{client_ip}", max_requests=20, window_seconds=60):
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={"error": "Too many login attempts. Please wait a moment and try again."},
+            status_code=429
+        )
+
+    # Account Lockout / Slowdown check
+    is_locked, rem_sec = is_account_locked(u_clean)
+    if is_locked:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_login.html",
+            context={"error": f"Account temporarily locked due to repeated failed attempts. Please try again in {rem_sec} seconds."},
+            status_code=400
+        )
+
+    if authenticate_reseller(u_clean, password):
+        reset_failed_logins(u_clean)
+        token = create_session_token(u_clean)
         resp = RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+        is_secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
         resp.set_cookie(
             key="reseller_session",
             value=token,
             httponly=True,
-            max_age=86400 * 7,
-            samesite="lax"
+            secure=is_secure,
+            max_age=86400,
+            samesite="Strict"
         )
         return resp
-    
+
+    record_failed_login(u_clean)
     return templates.TemplateResponse(
         request=request,
         name="admin_login.html",
@@ -1381,6 +1600,7 @@ async def admin_login_submit(
 async def admin_logout():
     resp = RedirectResponse(url="/admin/login")
     resp.delete_cookie("reseller_session")
+    resp.delete_cookie(CSRF_COOKIE_NAME)
     return resp
 
 

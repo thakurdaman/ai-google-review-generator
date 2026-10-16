@@ -67,7 +67,9 @@
 
         <!-- Resend Form -->
         <form method="POST" action="/api/resend-verification" class="space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ get_csrf_token() if get_csrf_token is defined else '' }}">
             <input type="hidden" name="email" value="{{ email }}">
+
             <button type="submit" 
                     class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-paper-plane text-xs"></i>

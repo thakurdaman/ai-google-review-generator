@@ -8,18 +8,23 @@ import re
 import json
 import hashlib
 import requests
+import urllib.parse
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
+
+try:
+    import dotenv
+    dotenv.load_dotenv()
+except Exception:
+    pass
 
 # ── Supabase Configuration ────────────────────────────────────────────────────
 SUPABASE_URL = os.environ.get(
     "SUPABASE_URL",
     "https://jaggkwijjpsoobcfppnp.supabase.co"
 )
-SUPABASE_KEY = os.environ.get(
-    "SUPABASE_SERVICE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZ2drd2lqanBzb29iY2ZwcG5wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTkxMjQ5NCwiZXhwIjoyMTA3NDg4NDk0fQ.nzCe8fliv8VFwxmCZI5tG4MCiN9SDQvC8sneuUbn9OA"
-)
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
+
 
 REST_BASE = f"{SUPABASE_URL}/rest/v1"
 
@@ -408,7 +413,7 @@ class SupabaseCursor:
                 if val == "NULL":
                     filters.append(f"{col}=is.null")
                 else:
-                    filters.append(f"{col}=eq.{val}")
+                    filters.append(f"{col}=eq.{urllib.parse.quote(val)}")
         return filters
 
     def _split_sql_tokens(self, clause: str) -> List[str]:
@@ -624,8 +629,13 @@ class SupabaseConnection:
 # ── Public API (same signatures as before) ────────────────────────────────────
 
 def hash_password(password: str) -> str:
-    """Hash password with SHA-256."""
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    """Hash password with Argon2id (or bcrypt fallback)."""
+    try:
+        from .security import hash_password_secure
+        return hash_password_secure(password)
+    except Exception:
+        return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
 
 
 def get_db():

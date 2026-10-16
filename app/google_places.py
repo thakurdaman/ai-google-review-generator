@@ -9,6 +9,8 @@ import re
 import urllib.parse
 import urllib.request
 from typing import Optional, Tuple
+from .security import is_safe_external_url
+
 
 VALID_EXAMPLE_URL = "https://maps.google.com/?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4"
 VALID_WRITEREVIEW_EXAMPLE = "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4"
@@ -61,9 +63,8 @@ def extract_google_place_id(input_str: Optional[str]) -> Optional[str]:
     if match:
         return match.group(1)
 
-    # 4. Handle shortened Google share links by following redirects
-    lower_clean = clean.lower()
-    if any(domain in lower_clean for domain in ['maps.app.goo.gl', 'goo.gl/maps', 'g.page']):
+    # 4. Handle shortened Google share links by following redirects (SSRF-protected)
+    if is_safe_external_url(clean) and any(domain in clean.lower() for domain in ['maps.app.goo.gl', 'goo.gl/maps', 'g.page']):
         try:
             req = urllib.request.Request(
                 clean,

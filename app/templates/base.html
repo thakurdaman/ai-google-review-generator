@@ -73,7 +73,7 @@
             background: #CBD5E1;
             border-radius: 4px;
         }
-    </style>
+    <meta name="csrf-token" content="{{ get_csrf_token() if get_csrf_token is defined else '' }}">
     {% block head %}{% endblock %}
 </head>
 <body class="bg-[#F8FAFC] text-slate-900 antialiased min-h-screen flex flex-col font-sans">
@@ -83,6 +83,36 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
     <script>
+        function getCsrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta && meta.content) return meta.content;
+            const match = document.cookie.match(new RegExp('(^| )rb_csrf_token=([^;]+)'));
+            return match ? match[2] : '';
+        }
+
+        // Automatic CSRF protection for client-side API requests
+        const _nativeFetch = window.fetch;
+        window.fetch = function(url, init) {
+            init = init || {};
+            const method = (init.method || 'GET').toUpperCase();
+            if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+                init.headers = init.headers || {};
+                const tok = getCsrfToken();
+                if (tok) {
+                    if (init.headers instanceof Headers) {
+                        if (!init.headers.has('x-csrf-token')) init.headers.set('x-csrf-token', tok);
+                    } else if (Array.isArray(init.headers)) {
+                        init.headers.push(['x-csrf-token', tok]);
+                    } else {
+                        if (!init.headers['x-csrf-token'] && !init.headers['X-CSRF-Token']) {
+                            init.headers['X-CSRF-Token'] = tok;
+                        }
+                    }
+                }
+            }
+            return _nativeFetch(url, init);
+        };
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');

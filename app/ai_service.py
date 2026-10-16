@@ -4,6 +4,7 @@ import random
 import requests
 from typing import List, Dict, Any, Optional
 from .database import get_setting
+from .security import sanitize_ai_customer_note
 
 def generate_review_drafts(
     business_name: str,
@@ -19,11 +20,16 @@ def generate_review_drafts(
     if rating < 4:
         raise ValueError("AI review generation is strictly restricted to positive ratings (4-5 stars).")
 
+    # Sanitize inputs and enforce prompt injection protection & length limits
+    sanitized_note = sanitize_ai_customer_note(custom_note)
+    safe_tags = [str(t).strip()[:50] for t in (selected_tags or []) if t][:8]
+
     # Retrieve API key from settings or environment
     api_key = get_setting("openai_api_key", os.getenv("OPENAI_API_KEY", "")).strip()
 
-    tags_str = ", ".join(selected_tags) if selected_tags else "great experience and friendly service"
-    extra_context = f" Extra detail from customer: '{custom_note}'." if custom_note and custom_note.strip() else ""
+    tags_str = ", ".join(safe_tags) if safe_tags else "great experience and friendly service"
+    extra_context = f" Extra detail from customer: '{sanitized_note}'." if sanitized_note else ""
+
 
     if api_key:
         try:
