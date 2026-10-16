@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}System Error (500) - ReviewBoost{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col justify-center items-center py-12 px-4 text-slate-900 text-center">
+    <div class="max-w-md w-full bg-white p-8 sm:p-10 rounded-2xl shadow-sm border border-slate-200">
+        <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold font-heading text-slate-900 mb-2">
+            Something Went Wrong
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed">
+            Our systems experienced an unexpected glitch. Our engineering team has been notified and is working to resolve it.
+        </p>
+
+        <div class="space-y-3">
+            <a href="/" class="block w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition">
+                Return to Homepage
+            </a>
+            <button onclick="window.location.reload()" class="block w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition">
+                Try Reloading Page
+            </button>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+            For urgent assistance: <a href="https://wa.me/919876543210" class="text-brand-600 underline">WhatsApp Support</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

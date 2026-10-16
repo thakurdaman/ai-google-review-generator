@@ -15,13 +15,14 @@ from pydantic import BaseModel
 from .database import (
     init_db, get_db, get_setting, set_setting, hash_password,
     log_activity, get_business_activity_logs, get_business_payments,
-    get_all_platform_payments, get_business_metrics
+    get_all_platform_payments, get_business_metrics, update_owner_password
 )
 from .auth import (
     authenticate_reseller, create_session_token, get_current_reseller, require_reseller,
     authenticate_owner, create_owner_token, get_current_owner, require_owner,
     get_owner_by_email, create_oauth_state_token, verify_oauth_state_token,
-    create_google_signup_token, verify_google_signup_token
+    create_google_signup_token, verify_google_signup_token,
+    create_password_reset_token, verify_password_reset_token
 )
 from .ai_service import (
     generate_review_drafts, test_openai_connection
@@ -117,11 +118,11 @@ async def security_middleware(request: Request, call_next):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(self)"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://checkout.razorpay.com; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://checkout.razorpay.com https://www.googletagmanager.com; "
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
         "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
-        "img-src 'self' data: https: blob:; "
-        "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com; "
+        "img-src 'self' data: https: blob: https://www.google-analytics.com https://www.googletagmanager.com; "
+        "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://www.google-analytics.com https://analytics.google.com; "
         "frame-src 'self' https://api.razorpay.com; "
         "object-src 'none'; "
         "base-uri 'self';"
@@ -748,6 +749,181 @@ async def owner_logout():
 
 
 # ==========================================
+# PASSWORD RESET & RECOVERY FLOW
+# ==========================================
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request, error: Optional[str] = None):
+    if get_current_owner(request):
+        return RedirectResponse(url="/dashboard")
+    return templates.TemplateResponse(
+        request=request,
+        name="forgot_password.html",
+        context={"error": error}
+    )
+
+@app.post("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_submit(request: Request, email: str = Form(...)):
+    clean_email = email.strip().lower()
+    is_valid, _ = validate_email_address(clean_email)
+    if not is_valid:
+        return templates.TemplateResponse(
+            request=request,
+            name="forgot_password.html",
+            context={"error": "Please enter a valid email address."}
+        )
+
+    # Rate limiting per IP
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"pwd_reset_{client_ip}", max_requests=10, window_seconds=60):
+        return templates.TemplateResponse(
+            request=request,
+            name="forgot_password.html",
+            context={"error": "Too many requests. Please wait a minute and try again."},
+            status_code=429
+        )
+
+    token = create_password_reset_token(clean_email)
+    base_url = get_base_url(request)
+    dev_reset_link = f"{base_url}/reset-password?token={token}"
+
+    print(f"[AUTH] Password reset requested for {clean_email}: {dev_reset_link}")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="forgot_password.html",
+        context={
+            "success_message": f"If an account is registered with {clean_email}, we've sent password reset instructions.",
+            "dev_reset_link": dev_reset_link
+        }
+    )
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request, token: str = Query(...)):
+    email = verify_password_reset_token(token)
+    if not email:
+        return templates.TemplateResponse(
+            request=request,
+            name="forgot_password.html",
+            context={"error": "This password reset link is invalid or has expired (valid for 1 hour). Please request a new one."}
+        )
+    return templates.TemplateResponse(
+        request=request,
+        name="reset_password.html",
+        context={"token": token}
+    )
+
+@app.post("/reset-password", response_class=HTMLResponse)
+async def reset_password_submit(
+    request: Request,
+    token: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...)
+):
+    email = verify_password_reset_token(token)
+    if not email:
+        return templates.TemplateResponse(
+            request=request,
+            name="forgot_password.html",
+            context={"error": "Password reset token has expired or is invalid. Please request a new link."}
+        )
+    if new_password != confirm_password:
+        return templates.TemplateResponse(
+            request=request,
+            name="reset_password.html",
+            context={"token": token, "error": "Passwords do not match. Please re-enter."}
+        )
+    is_complex, err_msg = validate_password_strength(new_password)
+    if not is_complex:
+        return templates.TemplateResponse(
+            request=request,
+            name="reset_password.html",
+            context={"token": token, "error": err_msg}
+        )
+
+    # Hash new password with Argon2id and update database
+    new_hash = hash_password(new_password)
+    update_owner_password(email, new_hash)
+    reset_failed_logins(email)
+
+    return RedirectResponse(
+        url="/login?error=Password+successfully+updated.+Please+sign+in+with+your+new+password.",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+# ==========================================
+# MANDATORY LEGAL & COMPLIANCE PAGES (RAZORPAY)
+# ==========================================
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_page(request: Request):
+    return templates.TemplateResponse(request=request, name="privacy.html")
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_page(request: Request):
+    return templates.TemplateResponse(request=request, name="terms.html")
+
+@app.get("/refund", response_class=HTMLResponse)
+async def refund_page(request: Request):
+    return templates.TemplateResponse(request=request, name="refund.html")
+
+@app.get("/contact", response_class=HTMLResponse)
+async def contact_page(request: Request):
+    return templates.TemplateResponse(request=request, name="contact.html", context={"success": False})
+
+@app.post("/contact", response_class=HTMLResponse)
+async def contact_submit(
+    request: Request,
+    name: str = Form(...),
+    contact: str = Form(...),
+    message: str = Form(...),
+    website_hp: Optional[str] = Form(None)
+):
+    # Spam honeypot trap: if bot filled hidden field, quietly accept without processing
+    if website_hp:
+        return templates.TemplateResponse(request=request, name="contact.html", context={"success": True})
+
+    clean_name = name.strip()[:100]
+    clean_contact = contact.strip()[:100]
+    clean_message = message.strip()[:1000]
+
+    print(f"[CONTACT INQUIRY] From: {clean_name} ({clean_contact}) - Message: {clean_message}")
+
+    return templates.TemplateResponse(request=request, name="contact.html", context={"success": True})
+
+
+# ==========================================
+# SEO & WEB STANDARDS (SITEMAP, ROBOTS, FAVICON)
+# ==========================================
+
+@app.get("/robots.txt", response_class=Response)
+async def robots_txt():
+    content = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /dashboard\nSitemap: https://ai-google-review-generator-jarvis-def9.vercel.app/sitemap.xml\n"
+    return Response(content=content, media_type="text/plain")
+
+@app.get("/sitemap.xml", response_class=Response)
+async def sitemap_xml():
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/pricing</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/login</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/signup</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/privacy</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/terms</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/refund</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://ai-google-review-generator-jarvis-def9.vercel.app/contact</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+</urlset>"""
+    return Response(content=xml, media_type="application/xml")
+
+@app.get("/favicon.ico", response_class=Response)
+async def favicon_ico():
+    svg = """<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='#F59E0B'><path d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/></svg>"""
+    return Response(content=svg, media_type="image/svg+xml")
+
+
+# ==========================================
 # GOOGLE / GMAIL OAUTH (SIGN IN & SIGN UP)
 # ==========================================
 
@@ -1109,8 +1285,61 @@ async def api_payment_webhook(request: Request):
             mark_webhook_event_processed(event_id)
 
         # Process webhook payload safely
+        payload_entity = body.get("payload", {})
+
+        # 1. Payment Captured / Order Paid (One-Time or Initial Autopay)
+        if event in ("payment.captured", "order.paid"):
+            payment_obj = payload_entity.get("payment", {}).get("entity", {})
+            notes = payment_obj.get("notes", {})
+            biz_id_str = notes.get("business_id")
+            if biz_id_str and str(biz_id_str).isdigit():
+                biz_id = int(biz_id_str)
+                plan = notes.get("plan", "monthly")
+                mode = notes.get("mode", "one_time")
+                verify_and_activate_subscription(
+                    business_id=biz_id,
+                    plan_type=plan,
+                    payment_mode=mode,
+                    payment_id=payment_obj.get("id", ""),
+                    order_id=payment_obj.get("order_id", "")
+                )
+                print(f"[WEBHOOK] Activated subscription for business {biz_id} via {event}")
+
+        # 2. Recurring Subscription Charged / Activated (UPI Autopay Mandates)
+        elif event in ("subscription.charged", "subscription.activated"):
+            sub_obj = payload_entity.get("subscription", {}).get("entity", {})
+            notes = sub_obj.get("notes", {})
+            biz_id_str = notes.get("business_id")
+            if biz_id_str and str(biz_id_str).isdigit():
+                biz_id = int(biz_id_str)
+                verify_and_activate_subscription(
+                    business_id=biz_id,
+                    plan_type="monthly",
+                    payment_mode="upi_autopay",
+                    payment_id=sub_obj.get("id", ""),
+                    subscription_id=sub_obj.get("id", "")
+                )
+                print(f"[WEBHOOK] Renewed/Activated UPI Autopay mandate for business {biz_id} via {event}")
+
+        # 3. Recurring Subscription Cancelled / Halted
+        elif event in ("subscription.cancelled", "subscription.halted"):
+            sub_obj = payload_entity.get("subscription", {}).get("entity", {})
+            notes = sub_obj.get("notes", {})
+            biz_id_str = notes.get("business_id")
+            if biz_id_str and str(biz_id_str).isdigit():
+                biz_id = int(biz_id_str)
+                cancel_autopay_mandate(biz_id)
+                print(f"[WEBHOOK] Cancelled recurring mandate for business {biz_id} via {event}")
+
+        # 4. Refund Processed
+        elif event == "refund.processed":
+            refund_obj = payload_entity.get("refund", {}).get("entity", {})
+            pay_id = refund_obj.get("payment_id", "")
+            print(f"[WEBHOOK] Refund processed for payment {pay_id}")
+
         return {"status": "ok", "event_received": event}
-    except Exception:
+    except Exception as e:
+        print(f"[WEBHOOK ERROR] {e}")
         return {"status": "ok"}
 
 
@@ -1823,3 +2052,25 @@ async def api_test_ai(
 ):
     res = test_openai_connection(data.api_key.strip())
     return res
+
+
+# ==========================================
+# CUSTOM FRIENDLY ERROR HANDLERS (NO RAW CRASHES)
+# ==========================================
+
+@app.exception_handler(404)
+async def not_found_exception_handler(request: Request, exc: Any):
+    accept_header = request.headers.get("accept", "")
+    if "application/json" in accept_header or request.url.path.startswith("/api/"):
+        detail = getattr(exc, "detail", "Resource not found")
+        return JSONResponse(status_code=404, content={"detail": detail})
+    return templates.TemplateResponse(request=request, name="404.html", status_code=404)
+
+
+@app.exception_handler(500)
+async def server_error_exception_handler(request: Request, exc: Any):
+    accept_header = request.headers.get("accept", "")
+    if "application/json" in accept_header or request.url.path.startswith("/api/"):
+        return JSONResponse(status_code=500, content={"detail": "An internal server error occurred"})
+    return templates.TemplateResponse(request=request, name="500.html", status_code=500)
+

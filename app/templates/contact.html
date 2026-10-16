@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - ReviewBoost Support{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-900">
+
+    <!-- Header -->
+    <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-amber-400 font-extrabold shadow-sm">
+                    <i class="fa-solid fa-star text-sm"></i>
+                </div>
+                <span class="text-base font-bold font-heading text-slate-900 tracking-tight">ReviewBoost</span>
+            </a>
+            <div class="flex items-center space-x-3 text-xs font-semibold">
+                <a href="/login" class="text-slate-700 hover:text-slate-900">Sign In</a>
+                <a href="/signup" class="px-3.5 py-2 bg-slate-900 text-white rounded-xl font-bold">Start Free</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl w-full mx-auto px-4 sm:px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Company Info & Direct Channels -->
+            <div class="space-y-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900">Get in Touch</h1>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
+                        Have a question about NFC stand cards, QR setup, or enterprise onboarding? Our Indian support team is here to help.
+                    </p>
+                </div>
+
+                <div class="space-y-4 text-xs sm:text-sm">
+                    <div class="flex items-start space-x-3 p-4 bg-white rounded-xl border border-slate-200">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-900">WhatsApp & Phone Support</p>
+                            <p class="text-slate-600 mt-0.5">+91 98765 43210</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Mon - Sat: 9:30 AM to 7:00 PM IST</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3 p-4 bg-white rounded-xl border border-slate-200">
+                        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-900">Email Inquiries</p>
+                            <p class="text-slate-600 mt-0.5">support@reviewboost.local</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Typical response within 2 hours</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3 p-4 bg-white rounded-xl border border-slate-200">
+                        <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-900">Registered Office</p>
+                            <p class="text-slate-600 mt-0.5">ReviewBoost Technologies India</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Connaught Place, Central Delhi, New Delhi 110001, India</p>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="https://wa.me/919876543210?text=Hi%20ReviewBoost%20team%2C%20I%20have%20a%20question%20about%20setting%20up%20QR%20reviews" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>Chat Directly on WhatsApp</span>
+                </a>
+            </div>
+
+            <!-- Contact Form with Spam Honeypot Protection -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-base sm:text-lg font-bold font-heading text-slate-900 mb-1">Send a Message</h2>
+                <p class="text-xs text-slate-400 mb-5">We'll get back to you via email or WhatsApp promptly.</p>
+
+                {% if success %}
+                <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 text-center space-y-1">
+                    <i class="fa-solid fa-circle-check text-xl text-emerald-600"></i>
+                    <p class="font-bold">Thank you! Your message has been sent.</p>
+                    <p class="text-emerald-700">Our support team will contact you shortly.</p>
+                </div>
+                {% else %}
+
+                {% if error %}
+                <div class="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation shrink-0"></i>
+                    <span>{{ error }}</span>
+                </div>
+                {% endif %}
+
+                <form action="/contact" method="POST" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ get_csrf_token() if get_csrf_token is defined else '' }}">
+                    
+                    <!-- Honeypot anti-spam field (hidden from real users, bots fill it) -->
+                    <div style="display: none !important;">
+                        <input type="text" name="website_hp" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Your Name</label>
+                        <input type="text" name="name" required placeholder="e.g. Rajesh Kumar"
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-slate-900">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Email or Phone Number</label>
+                        <input type="text" name="contact" required placeholder="e.g. rajesh@gmail.com or 9876543210"
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-slate-900">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Message / Query</label>
+                        <textarea name="message" required rows="4" placeholder="How can we assist your business today?"
+                                  class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-slate-900"></textarea>
+                    </div>
+
+                    <button type="submit"
+                            class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                        <span>Submit Inquiry</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 bg-white border-t border-slate-200 text-center text-xs text-slate-500 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 flex flex-wrap justify-center gap-4">
+            <a href="/" class="hover:underline">Home</a>
+            <a href="/pricing" class="hover:underline">Pricing</a>
+            <a href="/privacy" class="hover:underline">Privacy Policy</a>
+            <a href="/terms" class="hover:underline">Terms of Service</a>
+            <a href="/refund" class="hover:underline">Refund Policy</a>
+        </div>
+    </footer>
+
+</div>
+{% endblock %}

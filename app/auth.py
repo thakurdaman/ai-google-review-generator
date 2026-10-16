@@ -249,3 +249,35 @@ def verify_google_signup_token(token: str, max_age: int = 3600) -> Optional[Dict
         }
     except Exception:
         return None
+
+
+def create_password_reset_token(email: str) -> str:
+    """Create a tamper-proof HMAC password reset token valid for 1 hour."""
+    import base64
+    timestamp = str(int(time.time()))
+    payload = f"reset:{email.strip().lower()}:{timestamp}"
+    encoded = base64.urlsafe_b64encode(payload.encode()).decode()
+    signature = hmac.new(SECRET_KEY.encode(), encoded.encode(), hashlib.sha256).hexdigest()
+    return f"{encoded}.{signature}"
+
+
+def verify_password_reset_token(token: str, max_age: int = 3600) -> Optional[str]:
+    """Verify password reset token and return the email if valid and unexpired."""
+    import base64
+    if not token or "." not in token:
+        return None
+    try:
+        encoded, signature = token.split(".", 1)
+        expected_sig = hmac.new(SECRET_KEY.encode(), encoded.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(signature, expected_sig):
+            return None
+        decoded = base64.urlsafe_b64decode(encoded.encode()).decode()
+        parts = decoded.split(":")
+        if len(parts) != 3 or parts[0] != "reset":
+            return None
+        email, timestamp_str = parts[1], parts[2]
+        if time.time() - int(timestamp_str) > max_age:
+            return None
+        return email
+    except Exception:
+        return None

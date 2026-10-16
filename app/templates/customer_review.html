@@ -135,6 +135,21 @@
                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-slate-800 placeholder-slate-400 transition">
                 </div>
 
+                <!-- Slow Network / AI Error Retry Banner -->
+                <div id="ai-error-box" class="hidden mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left">
+                    <div class="flex items-start space-x-2.5">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5 text-sm"></i>
+                        <div class="flex-1">
+                            <p class="font-bold" id="ai-error-title">Network taking too long</p>
+                            <p class="text-[11px] text-rose-600 mt-0.5" id="ai-error-desc">Slow connection detected. Tap below to retry.</p>
+                            <button type="button" id="btn-retry-ai" class="mt-2.5 px-3 py-1.5 bg-rose-600 text-white rounded-lg font-bold text-xs hover:bg-rose-700 active:scale-[0.98] transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-rotate-right"></i>
+                                <span>Retry AI Drafts</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Generate Drafts Button -->
                 <button type="button" id="btn-generate-ai" 
                         class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.99] shadow-sm transition flex items-center justify-center space-x-2">
@@ -298,6 +313,13 @@
             Opening Google Reviews for {{ business.name }} in 1 second.
         </p>
 
+        <!-- Manual / Fallback Copy Button (Guaranteed iOS / Android compatibility) -->
+        <button type="button" id="btn-manual-copy" 
+                class="w-full mb-3 py-2.5 px-3 bg-amber-50 hover:bg-amber-100 active:scale-[0.98] border border-amber-300 text-amber-900 font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 transition">
+            <i class="fa-solid fa-copy text-amber-600"></i>
+            <span id="manual-copy-label">Tap to Copy Review Text</span>
+        </button>
+
         <!-- Practical 3-step guide for non-technical customers -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-left text-xs text-slate-700 mb-5 space-y-2">
             <div class="flex items-start space-x-2">
@@ -314,7 +336,7 @@
             </div>
         </div>
 
-        <a id="modal-google-link" href="{{ business.google_review_url }}" target="_blank"
+        <a id="modal-google-link" href="{{ business.google_review_url }}" target="_blank" rel="noopener noreferrer"
            class="block w-full py-3 bg-[#1A73E8] hover:bg-[#1557B0] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition">
             Continue to Google <i class="fa-solid fa-arrow-right ml-1"></i>
         </a>

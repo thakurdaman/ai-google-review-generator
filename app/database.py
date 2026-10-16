@@ -768,6 +768,19 @@ def get_business_metrics(business_id: int) -> Dict[str, Any]:
     }
 
 
+def update_owner_password(email: str, new_password_hash: str) -> bool:
+    """Updates the owner's password hash in the database."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE businesses SET owner_password_hash = ? WHERE owner_email = ?",
+        (new_password_hash, email.strip().lower())
+    )
+    conn.commit()
+    conn.close()
+    return True
+
+
 # ── Database Initialization & Seeding ─────────────────────────────────────────
 
 def init_db():

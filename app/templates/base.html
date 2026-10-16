@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}ReviewBoost - Google Review Platform{% endblock %}</title>
+    <meta name="description" content="Turn your daily footfall into verified 5-star Google reviews. QR code and NFC counter stands for Indian retailers, clinics, cafes, and services.">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F59E0B'><path d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/></svg>">
+    <!-- Social Open Graph & Twitter Cards -->
+    <meta property="og:title" content="ReviewBoost - Automated 5-Star Google Reviews for Indian Businesses">
+    <meta property="og:description" content="Turn counter footfall into genuine 5-star Google reviews in 15 seconds. Unhappy customers reach management privately.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://ai-google-review-generator-jarvis-def9.vercel.app/static/uploads/artisan_logo.svg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ReviewBoost - Automated 5-Star Google Reviews for Indian Businesses">
+    <meta name="twitter:description" content="Turn counter footfall into genuine 5-star Google reviews in 15 seconds.">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -135,6 +146,16 @@
             }, 3500);
         }
     </script>
+
+    <!-- Floating WhatsApp Support Button (Mobile & Desktop Responsive) -->
+    <a href="https://wa.me/919876543210?text=Hi%20ReviewBoost%20team%2C%20I%20have%20a%20question%20about%20setting%20up%20QR%20reviews%20for%20my%20business" 
+       target="_blank" rel="noopener noreferrer"
+       class="fixed bottom-5 left-5 z-40 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs px-3.5 py-2.5 rounded-full shadow-lg flex items-center space-x-2 transition-transform hover:scale-105 active:scale-95 border border-white/20" 
+       aria-label="Chat with support on WhatsApp">
+        <i class="fa-brands fa-whatsapp text-lg"></i>
+        <span class="hidden sm:inline">WhatsApp Support</span>
+    </a>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

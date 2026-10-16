@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Record page view / scan event on load
     recordAnalyticsEvent('scan');
+    if (typeof gtag === 'function') {
+        gtag('event', 'scan', {
+            business_id: BUSINESS_DATA.id,
+            business_name: BUSINESS_DATA.name
+        });
+    }
 
     // Setup Rating Stars
     const starButtons = document.querySelectorAll('.star-btn');
@@ -115,9 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // AI Generation Handler
+    // AI Generation Handler with Slow Network / Jio 3G Timeout & Retry Support
     const btnGenerateAi = document.getElementById('btn-generate-ai');
-    btnGenerateAi.addEventListener('click', async () => {
+    const aiErrorBox = document.getElementById('ai-error-box');
+    const aiErrorTitle = document.getElementById('ai-error-title');
+    const aiErrorDesc = document.getElementById('ai-error-desc');
+    const btnRetryAi = document.getElementById('btn-retry-ai');
+
+    async function executeAiGeneration() {
         if (selectedTags.size === 0) {
             // Select default first tag if none selected
             if (rawTags.length > 0) {
@@ -129,6 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const customNote = document.getElementById('custom-note-input').value.trim();
 
+        // Hide any previous error banner
+        if (aiErrorBox) aiErrorBox.classList.add('hidden');
+
         // Show loading state
         const originalBtnHtml = btnGenerateAi.innerHTML;
         btnGenerateAi.disabled = true;
@@ -137,10 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <span>AI is writing reviews...</span>
         `;
 
+        // 12-second timeout for weak 3G/Jio mobile connections
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
         try {
             const resp = await fetch('/api/reviews/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
                 body: JSON.stringify({
                     business_id: BUSINESS_DATA.id,
                     rating: currentRating,
@@ -148,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     custom_note: customNote
                 })
             });
+            clearTimeout(timeoutId);
 
             if (!resp.ok) {
                 const errData = await resp.json().catch(() => ({}));
@@ -157,6 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await resp.json();
             currentDrafts = data.drafts || [];
             
+            // GA4 telemetry for drafts generated
+            if (typeof gtag === 'function') {
+                gtag('event', 'drafts_generated', {
+                    business_id: BUSINESS_DATA.id,
+                    rating: currentRating
+                });
+            }
+
             // Render the 3 AI drafts
             renderDrafts(currentDrafts);
 
@@ -174,13 +202,32 @@ document.addEventListener('DOMContentLoaded', () => {
             stepAiResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         } catch (err) {
+            clearTimeout(timeoutId);
             console.error('Error generating AI review:', err);
-            showToast(err.message || 'Error creating review drafts. Please try again.', 'error');
+
+            if (aiErrorBox) {
+                if (err.name === 'AbortError') {
+                    aiErrorTitle.textContent = 'Connection Timed Out';
+                    aiErrorDesc.textContent = 'Weak mobile network detected. Please tap below to retry.';
+                } else {
+                    aiErrorTitle.textContent = 'Draft Generation Paused';
+                    aiErrorDesc.textContent = err.message || 'Unable to connect to AI engine. Tap below to retry.';
+                }
+                aiErrorBox.classList.remove('hidden');
+                aiErrorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            showToast(err.name === 'AbortError' ? 'Connection timed out. Retrying recommended.' : (err.message || 'Error creating review drafts.'), 'error');
         } finally {
             btnGenerateAi.disabled = false;
             btnGenerateAi.innerHTML = originalBtnHtml;
         }
-    });
+    }
+
+    btnGenerateAi.addEventListener('click', executeAiGeneration);
+    if (btnRetryAi) {
+        btnRetryAi.addEventListener('click', executeAiGeneration);
+    }
 
     function renderDrafts(drafts) {
         const list = document.getElementById('drafts-list');
@@ -235,27 +282,76 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // "Post to Google" CTA Click
+    // Direct & Fallback Clipboard Handlers (iOS Safari & Android Chrome hardened)
     const btnPostGoogle = document.getElementById('btn-post-google');
-    btnPostGoogle.addEventListener('click', async () => {
-        const textToCopy = document.getElementById('final-review-text').value.trim();
-        
-        // 1. Copy to clipboard
-        await copyToClipboard(textToCopy);
-        showToast('Review text copied to clipboard!', 'success');
+    const btnManualCopy = document.getElementById('btn-manual-copy');
+    const manualCopyLabel = document.getElementById('manual-copy-label');
+    const modalGoogleLink = document.getElementById('modal-google-link');
 
-        // 2. Log completion analytics
+    async function handleCopyAction() {
+        const textToCopy = document.getElementById('final-review-text').value.trim();
+        const success = await copyToClipboard(textToCopy);
+        if (success) {
+            if (manualCopyLabel) {
+                manualCopyLabel.innerHTML = '<span class="text-emerald-700 font-extrabold"><i class="fa-solid fa-check mr-1 text-emerald-600"></i> Copied to Clipboard!</span>';
+            }
+            showToast('Review text copied to clipboard!', 'success');
+        } else {
+            if (manualCopyLabel) {
+                manualCopyLabel.textContent = 'Tap to Copy Review Text';
+            }
+            showToast('Please tap the copy button below', 'info');
+        }
+        return success;
+    }
+
+    if (btnManualCopy) {
+        btnManualCopy.addEventListener('click', async () => {
+            await handleCopyAction();
+        });
+    }
+
+    btnPostGoogle.addEventListener('click', async () => {
+        // Direct tap copy within synchronous user gesture
+        await handleCopyAction();
+
+        // 2. Log completion analytics & GA4
         recordAnalyticsEvent('completed_review', currentRating);
+        if (typeof gtag === 'function') {
+            gtag('event', 'go_to_google', {
+                business_id: BUSINESS_DATA.id,
+                rating: currentRating
+            });
+        }
 
         // 3. Show redirect modal and guide user
         const modal = document.getElementById('redirect-modal');
         modal.classList.remove('hidden');
 
-        // Automatically open Google review link in new tab / redirect after 1.5 seconds
-        setTimeout(() => {
-            window.open(BUSINESS_DATA.googleReviewUrl, '_blank');
-        }, 1200);
+        // iOS Safari and Android Chrome popup safety:
+        // Attempt popup, but if browser popup blocker interferes, the high-contrast
+        // 'Continue to Google' button in the modal guarantees single-tap navigation.
+        try {
+            const win = window.open(BUSINESS_DATA.googleReviewUrl, '_blank', 'noopener,noreferrer');
+            if (!win) {
+                console.log('Mobile popup blocked; using modal button');
+            }
+        } catch (e) {
+            // Handled cleanly via modal button
+        }
     });
+
+    if (modalGoogleLink) {
+        modalGoogleLink.addEventListener('click', () => {
+            if (typeof gtag === 'function') {
+                gtag('event', 'go_to_google', {
+                    business_id: BUSINESS_DATA.id,
+                    rating: currentRating,
+                    source: 'modal_link'
+                });
+            }
+        });
+    }
 
     // Private Feedback Form Submission (1-3 stars)
     const feedbackForm = document.getElementById('private-feedback-form');
