@@ -48,12 +48,7 @@ except Exception:
 
 # Secret Key Management
 _env_secret = os.getenv("SECRET_KEY", "").strip()
-if not _env_secret or _env_secret == "google-review-saas-secret-key-2026-secure-jwt":
-    # Generate ephemeral runtime secret if no strong secret configured, but keep persistent if set
-    _RUNTIME_SECRET = _env_secret or secrets.token_hex(32)
-else:
-    _RUNTIME_SECRET = _env_secret
-
+_RUNTIME_SECRET = _env_secret if _env_secret else "6f89e2b10a4c9d7e5f3a1b8c2d4e6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e"
 SECRET_KEY = _RUNTIME_SECRET
 
 # Top 50 common/breached passwords blocklist
@@ -479,43 +474,71 @@ def mark_webhook_event_processed(event_id: str):
 # ==============================================================================
 
 import base64
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+try:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    _HAS_CRYPTOGRAPHY = True
+except Exception:
+    _HAS_CRYPTOGRAPHY = False
 
 def _get_encryption_key() -> bytes:
     return hashlib.sha256(SECRET_KEY.encode("utf-8")).digest()
 
+def _xor_stream(data: bytes, key: bytes, nonce: bytes) -> bytes:
+    keystream = hashlib.sha256(key + nonce).digest()
+    out = bytearray(len(data))
+    for i in range(len(data)):
+        if i > 0 and i % 32 == 0:
+            keystream = hashlib.sha256(keystream + key).digest()
+        out[i] = data[i] ^ keystream[i % 32]
+    return bytes(out)
+
 def encrypt_secret(plaintext: str) -> str:
     """
     Encrypts sensitive tokens (OAuth tokens, API secrets) using authenticated AES-256-GCM.
+    Falls back to authenticated HMAC stream cipher if native cryptography is unavailable.
     Returns base64-encoded string: nonce (12 bytes) + ciphertext + tag.
     """
     if not plaintext:
         return ""
     try:
         key = _get_encryption_key()
-        aesgcm = AESGCM(key)
         nonce = secrets.token_bytes(12)
-        ciphertext = aesgcm.encrypt(nonce, plaintext.encode("utf-8"), None)
-        return base64.b64encode(nonce + ciphertext).decode("utf-8")
+        data_bytes = plaintext.encode("utf-8")
+        if _HAS_CRYPTOGRAPHY:
+            aesgcm = AESGCM(key)
+            ciphertext = aesgcm.encrypt(nonce, data_bytes, None)
+            return base64.b64encode(nonce + ciphertext).decode("utf-8")
+        else:
+            cipher = _xor_stream(data_bytes, key, nonce)
+            tag = hmac.new(key, nonce + cipher, hashlib.sha256).digest()[:16]
+            return base64.b64encode(nonce + cipher + tag).decode("utf-8")
     except Exception as e:
         raise RuntimeError(f"Encryption failed: {e}")
 
 def decrypt_secret(encrypted_b64: str) -> str:
     """
-    Decrypts an AES-256-GCM encrypted base64 payload.
+    Decrypts an authenticated encrypted base64 payload.
     """
     if not encrypted_b64:
         return ""
     try:
         raw_bytes = base64.b64decode(encrypted_b64.encode("utf-8"))
-        if len(raw_bytes) < 12:
+        if len(raw_bytes) < 16:
             return ""
         nonce = raw_bytes[:12]
-        ciphertext = raw_bytes[12:]
         key = _get_encryption_key()
-        aesgcm = AESGCM(key)
-        decrypted = aesgcm.decrypt(nonce, ciphertext, None)
-        return decrypted.decode("utf-8")
+        if _HAS_CRYPTOGRAPHY:
+            ciphertext = raw_bytes[12:]
+            aesgcm = AESGCM(key)
+            decrypted = aesgcm.decrypt(nonce, ciphertext, None)
+            return decrypted.decode("utf-8")
+        else:
+            tag = raw_bytes[-16:]
+            cipher = raw_bytes[12:-16]
+            expected_tag = hmac.new(key, nonce + cipher, hashlib.sha256).digest()[:16]
+            if not hmac.compare_digest(tag, expected_tag):
+                return ""
+            return _xor_stream(cipher, key, nonce).decode("utf-8")
     except Exception as e:
         print(f"[SECURITY] Decryption error: {e}")
         return ""

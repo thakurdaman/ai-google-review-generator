@@ -9,3 +9,4 @@ pillow>=10.2.0
 argon2-cffi>=23.1.0
 bcrypt>=4.2.0
 python-dotenv>=1.0.1
+cryptography>=42.0.0
