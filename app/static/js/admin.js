@@ -1,7 +1,7 @@
 // admin.js - Reseller Dashboard Interactions
 document.addEventListener('DOMContentLoaded', () => {
     // Tab switching
-    const tabs = ['businesses', 'owners', 'feedback', 'payments'];
+    const tabs = ['businesses', 'owners', 'payments'];
     tabs.forEach(tabName => {
         const btn = document.getElementById(`tab-btn-${tabName}`);
         if (btn) {
@@ -387,8 +387,8 @@ async function inspectBusiness(id) {
                     <span class="text-base font-bold text-emerald-400">${m.conversion_rate}%</span>
                 </div>
                 <div class="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60">
-                    <span class="text-[10px] text-slate-400 block">Complaints</span>
-                    <span class="text-base font-bold text-rose-300">${m.feedback_count}</span>
+                    <span class="text-[10px] text-slate-400 block">AI Replies</span>
+                    <span class="text-base font-bold text-brand-400">${m.replies_posted_count || 0}</span>
                 </div>
             </div>
 

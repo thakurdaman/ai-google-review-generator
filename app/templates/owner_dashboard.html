@@ -1,52 +1,51 @@
 {% extends "base.html" %}
 
-{% block title %}Store Dashboard - {{ owner.business_name }}{% endblock %}
+{% block title %}Dashboard • {{ owner.business_name }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col">
+<div class="min-h-screen bg-slate-50 flex flex-col">
 
     <!-- Top Navigation Bar -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 p-1 flex items-center justify-center shadow-xs">
-                {% if owner.logo_url %}
-                <img src="{{ owner.logo_url }}" alt="{{ owner.business_name }}" class="w-full h-full object-contain rounded-lg" onerror="this.src='/static/uploads/artisan_logo.svg'">
-                {% else %}
-                <span class="text-slate-800 font-extrabold text-base font-heading">{{ owner.business_name[:1] }}</span>
-                {% endif %}
-            </div>
-            <div>
-                <div class="flex items-center space-x-2">
-                    <span class="text-base font-bold font-heading text-slate-900 leading-tight">{{ owner.business_name }}</span>
-                    {% if is_active %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1">
-                        <i class="fa-solid fa-circle text-[5px] mr-1 text-emerald-500"></i>Active Portal
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-6xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <span class="font-extrabold text-base tracking-tight font-heading text-slate-900 hidden sm:inline">ReviewBoost</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-xs sm:text-sm font-bold text-slate-800 truncate max-w-[160px] sm:max-w-xs flex items-center">
+                    {{ owner.business_name }}
+                    {% if owner.subscription_status in ['active', 'trialing'] %}
+                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {{ owner.plan_tier|capitalize }}
                     </span>
                     {% else %}
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center space-x-1">
-                        <i class="fa-solid fa-circle-exclamation mr-1 text-rose-500"></i>Renewal Required
+                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                        Inactive
                     </span>
                     {% endif %}
-                </div>
-                <span class="text-xs text-slate-500 font-medium">{{ owner.category }} • {{ owner.email }}</span>
+                </span>
             </div>
-        </div>
 
-        <div class="flex items-center space-x-2 sm:space-x-3">
-            <a href="/r/{{ owner.business_slug }}" target="_blank"
-               class="px-3.5 py-1.5 bg-white hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 border border-slate-200 flex items-center space-x-1.5 shadow-xs transition">
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
-                <span class="hidden sm:inline">Open Review Page</span>
-            </a>
-            <a href="/dashboard/flyer" target="_blank"
-               class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-xl text-xs font-bold text-white shadow-xs flex items-center space-x-1.5 transition">
-                <i class="fa-solid fa-print text-xs"></i>
-                <span class="hidden sm:inline">Print Counter Stand</span>
-            </a>
-            <div class="h-4 w-px bg-slate-200"></div>
-            <a href="/logout" class="text-slate-400 hover:text-rose-600 text-xs font-medium transition p-1" title="Logout">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </a>
+            <!-- Header Right Actions -->
+            <div class="flex items-center space-x-3">
+                <a href="/r/{{ owner.business_slug }}" target="_blank" rel="noopener noreferrer" 
+                   class="hidden md:inline-flex items-center space-x-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-200 transition">
+                    <span>View Live Customer Portal</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-slate-600 hidden sm:inline">{{ owner.email }}</span>
+                    <a href="/logout" class="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+                        <span>Log Out</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -66,18 +65,18 @@
     <!-- Main Content Area -->
     <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8 space-y-6">
 
-        <!-- Top 3 Primary Metrics that Matter to Indian Shopkeepers -->
+        <!-- Top 3 Primary Metrics -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             <!-- Metric 1: Reviews -->
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
                 <div class="flex items-center justify-between text-slate-500 mb-1">
-                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Google 5★ Reviews</span>
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Google Reviews Generated</span>
                     <i class="fa-solid fa-star text-amber-500 text-sm"></i>
                 </div>
                 <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ metrics.reviews_count }}</div>
                 <span class="text-xs text-emerald-700 font-semibold mt-1 inline-block">
-                    <i class="fa-solid fa-arrow-trend-up mr-0.5"></i> Posted to Google Maps
+                    <i class="fa-solid fa-arrow-trend-up mr-0.5"></i> Customer review conversions
                 </span>
             </div>
 
@@ -89,20 +88,27 @@
                 </div>
                 <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ metrics.scans_count }}</div>
                 <span class="text-xs text-slate-500 mt-1 inline-block">
-                    {{ metrics.conversion_rate }}% completed review rate
+                    {{ metrics.conversion_rate }}% conversion rate
                 </span>
             </div>
 
-            <!-- Metric 3: Shielded Complaints -->
+            <!-- Metric 3: AI Google Auto-Replies -->
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
                 <div class="flex items-center justify-between text-slate-500 mb-1">
-                    <span class="text-xs font-bold uppercase tracking-wider font-heading">Shielded Complaints</span>
-                    <i class="fa-solid fa-shield-halved text-rose-500 text-sm"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider font-heading">AI Replies Posted</span>
+                    <i class="fa-solid fa-robot text-brand-600 text-sm"></i>
                 </div>
-                <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ metrics.feedback_count }}</div>
-                <span class="text-xs text-rose-700 font-semibold mt-1 inline-block">
-                    1–3★ kept off Google public rating
-                </span>
+                <div class="text-3xl font-extrabold font-heading text-slate-900 mt-1">{{ reply_usage.total_posted }}</div>
+                <div class="flex items-center justify-between text-xs mt-1">
+                    <span class="text-slate-500">{{ reply_usage.month_count }} / {{ reply_limit }} this month</span>
+                    {% if google_status.connected %}
+                    <span class="text-emerald-700 font-bold flex items-center">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span>Connected
+                    </span>
+                    {% else %}
+                    <span class="text-slate-400 font-medium">Not Connected</span>
+                    {% endif %}
+                </div>
             </div>
 
         </div>
@@ -113,13 +119,17 @@
                 <i class="fa-solid fa-qrcode"></i>
                 <span>Counter Stands & QR</span>
             </button>
-            <button id="owner-tab-feedback" onclick="switchOwnerTab('feedback')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
-                <i class="fa-solid fa-envelope-open-text text-amber-500"></i>
-                <span>Private Feedback ({{ feedbacks|length }})</span>
+            <button id="owner-tab-reviews" onclick="switchOwnerTab('reviews')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-solid fa-comments text-brand-500"></i>
+                <span>Reviews & AI Replies ({{ google_reviews|length }})</span>
+            </button>
+            <button id="owner-tab-whatsapp" onclick="switchOwnerTab('whatsapp')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
+                <i class="fa-brands fa-whatsapp text-emerald-500"></i>
+                <span>WhatsApp Alerts</span>
             </button>
             <button id="owner-tab-settings" onclick="switchOwnerTab('settings')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
                 <i class="fa-solid fa-sliders"></i>
-                <span>Google Business Profile & Store</span>
+                <span>Store Profile</span>
             </button>
             <button id="owner-tab-billing" onclick="switchOwnerTab('billing')" class="owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition">
                 <i class="fa-solid fa-credit-card text-emerald-600"></i>
@@ -127,7 +137,9 @@
             </button>
         </div>
 
-        <!-- SECTION 1: QR & Counter Stand Material -->
+        <!-- ============================================================== -->
+        <!-- SECTION 1: QR & Counter Stand Material                         -->
+        <!-- ============================================================== -->
         <div id="section-owner-qr" class="grid grid-cols-1 md:grid-cols-12 gap-6">
             
             <!-- QR Display Card -->
@@ -140,58 +152,54 @@
                         <img src="/api/qr/{{ owner.business_slug }}.png" alt="QR Code" class="w-48 h-48 object-contain">
                     </div>
 
-                    <div class="mt-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-                        <span class="font-mono text-slate-700 truncate mr-2 select-all">/r/{{ owner.business_slug }}</span>
-                        <button onclick="copyLandingLink('{{ owner.business_slug }}')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition" title="Copy short URL">
-                            <i class="fa-solid fa-copy mr-1"></i>Copy
-                        </button>
+                    <div class="mt-4 p-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-600 break-all select-all">
+                        https://{{ request.url.netloc }}/r/{{ owner.business_slug }}
                     </div>
                 </div>
 
-                <div class="w-full space-y-2.5 mt-6">
-                    <a href="/dashboard/flyer" target="_blank"
-                       class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition shadow-xs">
-                        <i class="fa-solid fa-print"></i>
-                        <span>Print Ready 4x6 Counter Stand Flyer</span>
+                <!-- Print & Download Actions -->
+                <div class="w-full space-y-2 mt-6">
+                    <a href="/api/qr/{{ owner.business_slug }}.png?download=true" download 
+                       class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-download text-xs"></i>
+                        <span>Download High-Res PNG (Print Ready)</span>
                     </a>
-                    <a href="/api/qr/{{ owner.business_slug }}.png?download=true" download
-                       class="w-full py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 border border-slate-200 transition">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Download QR Code Image (PNG)</span>
+                    <a href="/dashboard/flyer" target="_blank" 
+                       class="w-full py-2.5 px-4 bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-700 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-print text-xs"></i>
+                        <span>Print Ready Table-Top Stand Flyer</span>
                     </a>
                 </div>
             </div>
 
-            <!-- Practical Counter Setup Guide -->
-            <div class="md:col-span-7 space-y-4">
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-                    <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
-                        <i class="fa-solid fa-lightbulb text-amber-500 mr-2 text-sm"></i>
-                        How to get 10+ Google reviews every week
-                    </h3>
+            <!-- How it Works Guide -->
+            <div class="md:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold font-heading text-slate-900 mb-1">How ReviewBoost Multiplies Your Reviews</h3>
+                    <p class="text-xs text-slate-500 mb-6">Designed specifically for fast Indian billing counters and NFC stands.</p>
 
-                    <div class="space-y-3 text-xs text-slate-600">
+                    <div class="space-y-4 text-xs">
                         <div class="flex items-start space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                             <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 font-heading">1</span>
                             <div>
-                                <strong class="text-slate-900">Place Flyer Near the Cash Counter:</strong>
-                                <p class="text-slate-500 mt-0.5">Click "Print Ready Counter Stand" on the left. Put the printout in an acrylic 4x6 T-stand on your checkout counter where customers wait for billing.</p>
+                                <strong class="text-slate-900">Zero Review Gating:</strong>
+                                <p class="text-slate-500 mt-0.5">Every customer, whatever their star rating, is routed to your Google Review page. Compliant with Google policies.</p>
                             </div>
                         </div>
 
                         <div class="flex items-start space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                             <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 font-heading">2</span>
                             <div>
-                                <strong class="text-slate-900">Use Cheap NFC Cards or Stickers:</strong>
-                                <p class="text-slate-500 mt-0.5">Write your short link <code>/r/{{ owner.business_slug }}</code> to inexpensive NFC stickers or tags. Customers can simply tap their phone against the stand.</p>
+                                <strong class="text-slate-900">WhatsApp Alert for 1 & 2 Star Ratings:</strong>
+                                <p class="text-slate-500 mt-0.5">When an unhappy customer picks 1 or 2 stars, an optional private note box lets them message you directly on WhatsApp so you can resolve it immediately.</p>
                             </div>
                         </div>
 
                         <div class="flex items-start space-x-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                             <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 font-heading">3</span>
                             <div>
-                                <strong class="text-slate-900">Let the AI Assistant Do the Work:</strong>
-                                <p class="text-slate-500 mt-0.5">Customers choose 2 highlights; the assistant generates 3 authentic drafts. With 1 tap, the text is copied directly into Google Reviews!</p>
+                                <strong class="text-slate-900">AI Auto-Reply to Every Google Review:</strong>
+                                <p class="text-slate-500 mt-0.5">Connect your Google Business Profile to auto-post or draft warm, professional replies in English, Hindi, or Hinglish.</p>
                             </div>
                         </div>
                     </div>
@@ -200,211 +208,395 @@
 
         </div>
 
-        <!-- SECTION 2: Shielded Negative Feedback (1-3 Stars) -->
-        <div id="section-owner-feedback" class="hidden space-y-4">
+        <!-- ============================================================== -->
+        <!-- SECTION 2: Google Reviews & AI Auto-Replies                    -->
+        <!-- ============================================================== -->
+        <div id="section-owner-reviews" class="hidden space-y-6">
+
+            <!-- Google Business Profile Connection Card -->
             <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-                <div class="mb-4">
-                    <h3 class="text-base font-bold font-heading text-slate-900 flex items-center">
-                        <i class="fa-solid fa-shield-halved text-rose-500 mr-2"></i>
-                        Private Customer Complaints Inbox
-                    </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">
-                        These ratings were caught privately on your landing page. They were <strong>never sent to Google</strong>, protecting your public rating while giving you an opportunity to resolve customer concerns!
-                    </p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-start space-x-3.5">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-xl shrink-0">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold font-heading text-slate-900">Google Business Profile Connection</h3>
+                            {% if google_status.connected %}
+                            <p class="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i> Connected to {{ google_status.location_name or 'Google Business Profile' }}
+                            </p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Tokens encrypted securely with AES-256-GCM.</p>
+                            {% else %}
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Connect via official Google OAuth with <code>business.manage</code> scope to read reviews and auto-reply.
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        {% if google_status.connected %}
+                        <button type="button" onclick="syncGoogleReviews()" id="btn-sync-reviews"
+                                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Sync Reviews Now</span>
+                        </button>
+                        <button type="button" onclick="disconnectGoogleAccount()"
+                                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition">
+                            Disconnect
+                        </button>
+                        {% else %}
+                        <a href="/auth/google/business/connect"
+                           class="px-4 py-2.5 bg-[#1A73E8] hover:bg-[#1557B0] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center space-x-2">
+                            <i class="fa-brands fa-google"></i>
+                            <span>Connect Google Business Profile</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-Reply Preferences Form -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <div class="mb-5">
+                    <h3 class="text-base font-bold font-heading text-slate-900">Auto-Reply Configuration</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Configure how AI responds to reviews across different star ratings, languages, and tones.</p>
                 </div>
 
-                {% if feedbacks|length == 0 %}
+                <form id="form-autoreply-settings" class="space-y-4">
+                    <!-- Rating Modes -->
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">5 Stars ⭐⭐⭐⭐⭐</label>
+                            <select id="mode_5_star" class="w-full text-xs p-2 bg-white border border-slate-300 rounded-lg outline-none font-semibold">
+                                <option value="Auto-post" {% if autoreply_settings.mode_5_star == 'Auto-post' %}selected{% endif %}>Auto-post</option>
+                                <option value="Draft for my approval" {% if autoreply_settings.mode_5_star == 'Draft for my approval' %}selected{% endif %}>Draft for my approval</option>
+                                <option value="Off" {% if autoreply_settings.mode_5_star == 'Off' %}selected{% endif %}>Off</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">4 Stars ⭐⭐⭐⭐</label>
+                            <select id="mode_4_star" class="w-full text-xs p-2 bg-white border border-slate-300 rounded-lg outline-none font-semibold">
+                                <option value="Auto-post" {% if autoreply_settings.mode_4_star == 'Auto-post' %}selected{% endif %}>Auto-post</option>
+                                <option value="Draft for my approval" {% if autoreply_settings.mode_4_star == 'Draft for my approval' %}selected{% endif %}>Draft for my approval</option>
+                                <option value="Off" {% if autoreply_settings.mode_4_star == 'Off' %}selected{% endif %}>Off</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">3 Stars ⭐⭐⭐</label>
+                            <select id="mode_3_star" class="w-full text-xs p-2 bg-white border border-slate-300 rounded-lg outline-none font-semibold">
+                                <option value="Draft for my approval" {% if autoreply_settings.mode_3_star == 'Draft for my approval' %}selected{% endif %}>Draft for my approval</option>
+                                <option value="Auto-post" {% if autoreply_settings.mode_3_star == 'Auto-post' %}selected{% endif %}>Auto-post</option>
+                                <option value="Off" {% if autoreply_settings.mode_3_star == 'Off' %}selected{% endif %}>Off</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">2 Stars ⭐⭐</label>
+                            <select id="mode_2_star" class="w-full text-xs p-2 bg-white border border-slate-300 rounded-lg outline-none font-semibold">
+                                <option value="Draft for my approval" {% if autoreply_settings.mode_2_star == 'Draft for my approval' %}selected{% endif %}>Draft for my approval</option>
+                                <option value="Auto-post" {% if autoreply_settings.mode_2_star == 'Auto-post' %}selected{% endif %}>Auto-post</option>
+                                <option value="Off" {% if autoreply_settings.mode_2_star == 'Off' %}selected{% endif %}>Off</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">1 Star ⭐</label>
+                            <select id="mode_1_star" class="w-full text-xs p-2 bg-white border border-slate-300 rounded-lg outline-none font-semibold">
+                                <option value="Draft for my approval" {% if autoreply_settings.mode_1_star == 'Draft for my approval' %}selected{% endif %}>Draft for my approval</option>
+                                <option value="Auto-post" {% if autoreply_settings.mode_1_star == 'Auto-post' %}selected{% endif %}>Auto-post</option>
+                                <option value="Off" {% if autoreply_settings.mode_1_star == 'Off' %}selected{% endif %}>Off</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tone and Signature -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Reply Tone</label>
+                            <select id="autoreply_tone" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
+                                <option value="friendly" {% if autoreply_settings.tone == 'friendly' %}selected{% endif %}>Friendly & Welcoming</option>
+                                <option value="professional" {% if autoreply_settings.tone == 'professional' %}selected{% endif %}>Professional & Courteous</option>
+                                <option value="casual" {% if autoreply_settings.tone == 'casual' %}selected{% endif %}>Casual & Upbeat</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Business Signature</label>
+                            <input type="text" id="autoreply_signature" value="{{ autoreply_settings.signature or '' }}" 
+                                   placeholder="e.g. - Rahul, General Manager" 
+                                   class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Mandatory & Banned Phrases -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                Phrases to Always Include <span class="text-slate-400 font-normal">(comma-separated)</span>
+                            </label>
+                            <input type="text" id="autoreply_required" value="{{ autoreply_settings.required_phrases or '' }}"
+                                   placeholder="e.g. Visit us again, Thank you for supporting our local business" 
+                                   class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">
+                                Phrases to Never Use <span class="text-slate-400 font-normal">(comma-separated)</span>
+                            </label>
+                            <input type="text" id="autoreply_banned" value="{{ autoreply_settings.banned_phrases or '' }}"
+                                   placeholder="e.g. refund, discount, free food, legal fault" 
+                                   class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end pt-2">
+                        <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                            Save Auto-Reply Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Reviews Stream & Draft Approval -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold font-heading text-slate-900">Google Reviews & AI Replies</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Review, edit, approve drafts, or view auto-posted replies.</p>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-500">
+                        {{ google_reviews|length }} Reviews Loaded
+                    </span>
+                </div>
+
+                {% if google_reviews|length == 0 %}
                 <div class="text-center py-12 text-slate-400">
-                    <i class="fa-solid fa-circle-check text-4xl text-emerald-500 mb-2"></i>
-                    <p class="text-sm font-bold text-slate-800">Zero complaints recorded!</p>
-                    <p class="text-xs text-slate-500 mt-1">Your visitors have given 4 and 5-star feedback.</p>
+                    <i class="fa-solid fa-comments text-4xl text-slate-300 mb-2"></i>
+                    <p class="text-sm font-bold text-slate-800">No reviews synced yet</p>
+                    <p class="text-xs text-slate-500 mt-1">Connect your Google Business Profile and click "Sync Reviews Now".</p>
                 </div>
                 {% else %}
-                <div class="space-y-3">
-                    {% for fb in feedbacks %}
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div class="space-y-1.5 flex-1">
+                <div class="space-y-4">
+                    {% for rev in google_reviews %}
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4.5 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div class="flex items-center space-x-2.5">
-                                <span class="px-2 py-0.5 rounded text-xs font-bold {% if fb.rating == 1 %}bg-rose-100 text-rose-700 border border-rose-200{% elif fb.rating == 2 %}bg-amber-100 text-amber-700 border border-amber-200{% else %}bg-slate-200 text-slate-700 border border-slate-300{% endif %}">
-                                    {{ fb.rating }} ★ Rating
+                                <span class="font-bold text-sm text-slate-900">{{ rev.reviewer_name }}</span>
+                                <span class="text-amber-500 text-xs">
+                                    {% for _ in range(rev.star_rating) %}★{% endfor %}
                                 </span>
-                                <span class="text-xs text-slate-400">• {{ fb.created_at }}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider {% if rev.review_language == 'hi' %}bg-orange-100 text-orange-800{% elif rev.review_language == 'hinglish' %}bg-purple-100 text-purple-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ rev.review_language or 'en' }}
+                                </span>
                             </div>
-                            <p class="text-xs sm:text-sm text-slate-800 bg-white p-3 rounded-lg border border-slate-200">
-                                "{{ fb.feedback_text }}"
-                            </p>
-                            <div class="text-xs text-slate-500 flex items-center space-x-4 pt-1">
-                                {% if fb.customer_name %}
-                                <span><i class="fa-solid fa-user text-slate-400 mr-1"></i>{{ fb.customer_name }}</span>
-                                {% endif %}
-                                {% if fb.customer_contact %}
-                                <span><i class="fa-solid fa-phone text-slate-400 mr-1"></i>{{ fb.customer_contact }}</span>
-                                {% endif %}
-                            </div>
+                            <span class="text-xs text-slate-400">{{ rev.created_at }}</span>
                         </div>
+
+                        <!-- Review Text -->
+                        <p class="text-xs sm:text-sm text-slate-700 italic">
+                            {% if rev.review_text %}
+                            "{{ rev.review_text }}"
+                            {% else %}
+                            <span class="text-slate-400">[Rating only, no written text]</span>
+                            {% endif %}
+                        </p>
+
+                        <!-- Reply Box -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-bold text-slate-700 flex items-center">
+                                    <i class="fa-solid fa-reply mr-1.5 text-brand-600"></i>
+                                    {% if rev.reply_status == 'posted' %}
+                                    <span class="text-emerald-700">Posted Reply</span>
+                                    {% else %}
+                                    <span>AI Drafted Reply (Awaiting Approval)</span>
+                                    {% endif %}
+                                </span>
+
+                                {% if rev.reply_status == 'posted' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <i class="fa-solid fa-check mr-1"></i> Posted to Google
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    Draft
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            {% if rev.reply_status == 'posted' %}
+                            <p class="text-xs text-slate-800 leading-relaxed font-sans">{{ rev.posted_reply }}</p>
+                            {% else %}
+                            <textarea id="reply-text-{{ rev.google_review_id }}" rows="3" 
+                                      class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none font-sans leading-relaxed">{{ rev.drafted_reply }}</textarea>
+
+                            <div class="flex items-center justify-between pt-1">
+                                {% if rev.star_rating <= 2 %}
+                                <span class="text-[11px] text-amber-800 font-medium">
+                                    <i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> WhatsApp alert sent to you
+                                </span>
+                                {% else %}
+                                <span></span>
+                                {% endif %}
+
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="regenerateReply('{{ rev.google_review_id }}')" 
+                                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition flex items-center space-x-1">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-[10px]"></i>
+                                        <span>Regenerate</span>
+                                    </button>
+                                    <button type="button" onclick="approveReply('{{ rev.google_review_id }}')" 
+                                            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition flex items-center space-x-1">
+                                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                        <span>Approve & Post</span>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
                     </div>
                     {% endfor %}
                 </div>
                 {% endif %}
             </div>
+
         </div>
 
-        <!-- SECTION 3: Profile & Google Business Profile Link Settings -->
-        <div id="section-owner-settings" class="hidden">
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-xs">
-                <div class="mb-5 pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold font-heading text-slate-900">Store Profile & Google Business Profile Link</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Control where customers are redirected and your store branding.</p>
+        <!-- ============================================================== -->
+        <!-- SECTION 3: WhatsApp Alert Settings & Logs                      -->
+        <!-- ============================================================== -->
+        <div id="section-owner-whatsapp" class="hidden space-y-6">
+
+            <!-- WhatsApp Number Configuration Card -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                <div class="mb-5">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-xl"></i>
+                        <h3 class="text-base font-bold font-heading text-slate-900">WhatsApp Alert Number for Low Ratings</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Receive instant WhatsApp notifications when an unhappy customer submits a 1 or 2 star feedback note, or when a 1-2 star Google review arrives with an AI reply ready for approval.
+                    </p>
                 </div>
 
-                <form id="form-owner-profile" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Business Name</label>
-                        <input type="text" id="owner-setting-name" value="{{ owner.business_name }}" required
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">
-                            Google Business Profile Link <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" id="owner-setting-google-url" value="{{ owner.google_review_url }}" required
-                               placeholder="https://maps.google.com/?place_id=ChIJ... or Google Maps store URL"
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono text-[11px] focus:ring-2 focus:ring-brand-500 outline-none">
-                        <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-                            Paste your Google Business Profile URL or Google Maps link.
-                        </p>
-                        <div id="owner-place-id-status" class="mt-2 text-[11px] p-2.5 rounded-xl border hidden transition"></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Business Category</label>
-                            <input type="text" id="owner-setting-category" value="{{ owner.category }}"
-                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
+                <div class="max-w-xl space-y-4">
+                    <!-- Current Status Banner -->
+                    <div class="p-3.5 rounded-xl border flex items-center justify-between {% if whatsapp_settings.phone_verified %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}">
+                        <div class="flex items-center space-x-2.5">
+                            <i class="fa-solid {% if whatsapp_settings.phone_verified %}fa-circle-check text-emerald-600{% else %}fa-circle-question text-slate-400{% endif %} text-base"></i>
+                            <div>
+                                <span class="text-xs font-bold block">
+                                    {% if whatsapp_settings.phone_verified %}
+                                    Verified Number: {{ whatsapp_settings.phone_number }}
+                                    {% else %}
+                                    No Verified WhatsApp Number
+                                    {% endif %}
+                                </span>
+                                <span class="text-[11px] text-slate-500">
+                                    {% if whatsapp_settings.alerts_enabled %}
+                                    Alerts are currently <strong>ACTIVE</strong>
+                                    {% else %}
+                                    Alerts are currently <strong>DISABLED</strong>
+                                    {% endif %}
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Brand Accent Color</label>
-                            <input type="text" id="owner-setting-color" value="{{ owner.accent_color or '#0F172A' }}"
-                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-mono">
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Logo URL</label>
-                        <input type="text" id="owner-setting-logo" value="{{ owner.logo_url or '' }}"
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Experience Tags (Comma-separated)</label>
-                        <input type="text" id="owner-setting-tags" value="{{ tags_str }}"
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900">
-                    </div>
-
-                    <div class="pt-2">
-                        <button type="submit" 
-                                class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-xs transition flex items-center space-x-1.5">
-                            <i class="fa-solid fa-check"></i>
-                            <span>Save Profile Changes</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- SECTION 4: Plan & Billing Management -->
-        <div id="section-owner-billing" class="hidden space-y-6">
-            
-            <!-- Current Plan Card -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-100 gap-3">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-heading">Current Plan</span>
-                        <div class="flex items-center space-x-3 mt-1">
-                            <h3 class="text-xl font-bold font-heading text-slate-900">
-                                {% if owner.plan_tier == 'yearly' %}Annual Growth Plan{% else %}Monthly Pro Plan{% endif %}
-                            </h3>
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {% if is_active %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
-                                {{ owner.subscription_status|title }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <a href="/pricing" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-xs transition">
-                            Change Plan
-                        </a>
-                        {% if owner.payment_method == 'upi_autopay' %}
-                        <button onclick="cancelAutopay()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
-                            Cancel Autopay
+                        {% if whatsapp_settings.phone_verified %}
+                        <button type="button" onclick="toggleWhatsAppAlerts(!{{ 'true' if whatsapp_settings.alerts_enabled else 'false' }})"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition {% if whatsapp_settings.alerts_enabled %}bg-rose-100 hover:bg-rose-200 text-rose-800{% else %}bg-emerald-600 hover:bg-emerald-700 text-white{% endif %}">
+                            {{ 'Turn OFF Alerts' if whatsapp_settings.alerts_enabled else 'Turn ON Alerts' }}
                         </button>
                         {% endif %}
                     </div>
-                </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs">
-                    <div>
-                        <span class="text-slate-500 block mb-0.5">Billing Method:</span>
-                        <strong class="text-slate-900 flex items-center">
-                            {% if owner.payment_method == 'upi_autopay' %}
-                            <i class="fa-solid fa-rotate text-emerald-600 mr-1.5"></i> UPI Autopay Mandate (Recurring)
-                            {% else %}
-                            <i class="fa-regular fa-credit-card text-slate-700 mr-1.5"></i> One-Time Payment
-                            {% endif %}
-                        </strong>
-                    </div>
+                    <!-- OTP Verification Step -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <label class="block text-xs font-bold text-slate-800">
+                            {% if whatsapp_settings.phone_verified %}Update WhatsApp Alert Number{% else %}Verify Your WhatsApp Number{% endif %}
+                        </label>
+                        <div class="flex items-center space-x-2">
+                            <input type="tel" id="wa-phone-input" 
+                                   value="{{ whatsapp_settings.phone_number or '' }}" 
+                                   placeholder="e.g. 9876543210 or +919876543210"
+                                   class="flex-1 text-xs p-2.5 bg-white border border-slate-300 rounded-xl outline-none font-mono">
+                            <button type="button" onclick="sendWhatsAppOtp()" id="btn-send-otp"
+                                    class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition shrink-0">
+                                Send OTP
+                            </button>
+                        </div>
 
-                    <div>
-                        <span class="text-slate-500 block mb-0.5">Cycle End / Renewal:</span>
-                        <strong class="text-slate-900">{{ owner.subscription_cycle_end or 'Active' }}</strong>
-                    </div>
-
-                    <div>
-                        <span class="text-slate-500 block mb-0.5">Current Rate:</span>
-                        <strong class="text-slate-900">{% if owner.plan_tier == 'yearly' %}₹8,999 / year{% else %}₹999 / month{% endif %}</strong>
+                        <!-- OTP Input Container (Hidden by default) -->
+                        <div id="wa-otp-box" class="hidden pt-2 border-t border-slate-200 space-y-2">
+                            <label class="block text-[11px] font-bold text-slate-700">
+                                Enter 6-digit code received on WhatsApp:
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="wa-otp-input" maxlength="6" placeholder="123456" 
+                                       class="w-32 text-center text-sm p-2 bg-white border border-emerald-400 rounded-xl outline-none font-mono tracking-widest font-bold">
+                                <button type="button" onclick="verifyWhatsAppOtp()" id="btn-verify-otp"
+                                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">
+                                    Verify & Activate
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Invoices & Payment History Table -->
+            <!-- Delivery Status Audit Logs Table (Privacy Compliant) -->
             <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-                <h3 class="text-base font-bold font-heading text-slate-900 mb-4">Payment & Receipt History</h3>
+                <div class="mb-4">
+                    <h3 class="text-base font-bold font-heading text-slate-900">WhatsApp Alert Transmission Logs</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        Audit trail of sent notifications. In accordance with strict privacy compliance, no customer message content is stored in the database.
+                    </p>
+                </div>
 
-                {% if payments|length == 0 %}
-                <p class="text-xs text-slate-500 py-4">No payment transactions recorded yet.</p>
+                {% if whatsapp_logs|length == 0 %}
+                <div class="text-center py-8 text-slate-400">
+                    <p class="text-xs">No alerts dispatched yet.</p>
+                </div>
                 {% else %}
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
-                            <tr class="text-slate-500 border-b border-slate-200 pb-2">
-                                <th class="pb-2 font-semibold">Date</th>
-                                <th class="pb-2 font-semibold">Plan</th>
-                                <th class="pb-2 font-semibold">Payment Mode</th>
-                                <th class="pb-2 font-semibold">Amount</th>
-                                <th class="pb-2 font-semibold">Status</th>
-                                <th class="pb-2 font-semibold">Transaction Reference</th>
+                            <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                                <th class="pb-2">Alert Type</th>
+                                <th class="pb-2">Recipient (Masked)</th>
+                                <th class="pb-2">Status</th>
+                                <th class="pb-2 text-right">Timestamp</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            {% for p in payments %}
-                            <tr class="text-slate-700">
-                                <td class="py-3 text-slate-500">{{ p.created_at }}</td>
-                                <td class="py-3 font-semibold text-slate-900">{{ p.plan_type|title }}</td>
-                                <td class="py-3">
-                                    {% if p.payment_mode == 'upi_autopay' %}
-                                    <span class="text-emerald-700 font-semibold">UPI Autopay</span>
+                            {% for log in whatsapp_logs %}
+                            <tr>
+                                <td class="py-2.5 font-semibold text-slate-800">
+                                    {% if log.alert_type == 'customer_feedback' %}
+                                    🚨 Customer 1-2★ Note
+                                    {% elif log.alert_type == 'low_star_google_review' %}
+                                    ⭐ Google 1-2★ Review
                                     {% else %}
-                                    <span class="text-slate-700">One-Time</span>
+                                    🔐 OTP Verification
                                     {% endif %}
                                 </td>
-                                <td class="py-3 font-bold text-slate-900">₹{{ "%.2f"|format(p.amount) }}</td>
-                                <td class="py-3">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        {{ p.status|title }}
+                                <td class="py-2.5 font-mono text-slate-600">{{ log.recipient_masked }}</td>
+                                <td class="py-2.5">
+                                    {% if log.status in ['sent', 'verified'] %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        Sent
                                     </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        {{ log.status }}
+                                    </span>
+                                    {% endif %}
                                 </td>
-                                <td class="py-3 font-mono text-slate-500 text-[11px]">{{ p.razorpay_payment_id or 'TXN_LOCAL_OK' }}</td>
+                                <td class="py-2.5 text-right text-slate-400 font-mono text-[11px]">{{ log.created_at }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -415,77 +607,381 @@
 
         </div>
 
+        <!-- ============================================================== -->
+        <!-- SECTION 4: Store & Google Place ID Settings                    -->
+        <!-- ============================================================== -->
+        <div id="section-owner-settings" class="hidden">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-xs">
+                <div class="mb-6">
+                    <h3 class="text-base font-bold font-heading text-slate-900">Your Store & Google Settings</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Update your business details and verified Google Maps profile link.</p>
+                </div>
+
+                <form id="form-owner-profile" class="space-y-4">
+                    <div>
+                        <label for="owner-setting-name" class="block text-xs font-semibold text-slate-700 mb-1">Business Name</label>
+                        <input type="text" id="owner-setting-name" value="{{ owner.business_name }}" required
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-800">
+                    </div>
+
+                    <div>
+                        <label for="owner-setting-google-url" class="block text-xs font-semibold text-slate-700 mb-1">
+                            Google Business Profile Link or Maps Link <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="url" id="owner-setting-google-url" value="{{ owner.google_review_url or '' }}" required
+                               placeholder="https://maps.app.goo.gl/... or https://g.page/r/..."
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-800 font-mono">
+                        
+                        <div id="owner-place-id-status" class="mt-2 text-xs hidden p-2.5 rounded-xl border"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="owner-setting-category" class="block text-xs font-semibold text-slate-700 mb-1">Business Category</label>
+                            <input type="text" id="owner-setting-category" value="{{ owner.category }}" 
+                                   class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800">
+                        </div>
+                        <div>
+                            <label for="owner-setting-color" class="block text-xs font-semibold text-slate-700 mb-1">Brand Accent Color</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="color" id="owner-setting-color" value="{{ owner.accent_color }}" 
+                                       class="w-10 h-10 p-1 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer">
+                                <span class="text-xs text-slate-500 font-mono">{{ owner.accent_color }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="owner-setting-logo" class="block text-xs font-semibold text-slate-700 mb-1">Logo URL (Optional)</label>
+                        <input type="url" id="owner-setting-logo" value="{{ owner.logo_url or '' }}" 
+                               placeholder="https://example.com/logo.png"
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800">
+                    </div>
+
+                    <div>
+                        <label for="owner-setting-tags" class="block text-xs font-semibold text-slate-700 mb-1">
+                            Customer Highlight Pills <span class="text-slate-400 font-normal">(comma-separated)</span>
+                        </label>
+                        <input type="text" id="owner-setting-tags" value="{{ tags_str }}" 
+                               placeholder="Fast Service, Delicious Food, Polite Staff, Great Ambiance"
+                               class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800">
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
+                        <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition">
+                            Save Profile Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- SECTION 5: Plan, Subscription & Invoices                       -->
+        <!-- ============================================================== -->
+        <div id="section-owner-billing" class="hidden space-y-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold font-heading text-slate-900">Current Subscription</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Manage your ReviewBoost plan and recurring billing mandate.</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {% if is_active %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                        {{ owner.subscription_status|capitalize }}
+                    </span>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs mb-6">
+                    <div class="flex justify-between text-slate-600">
+                        <span>Plan Tier:</span>
+                        <strong class="text-slate-900 capitalize">{{ owner.plan_tier }}</strong>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span>Billing Mode:</span>
+                        <strong class="text-slate-900 uppercase">{{ owner.payment_method or 'Razorpay UPI' }}</strong>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                        <span>Current Cycle End:</span>
+                        <strong class="text-slate-900">{{ owner.subscription_cycle_end or 'Active' }}</strong>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <a href="/pricing" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition">
+                        Change / Upgrade Plan
+                    </a>
+                    {% if owner.payment_method == 'upi_autopay' %}
+                    <button type="button" onclick="cancelAutopay()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl transition">
+                        Cancel Recurring Autopay
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Invoices List -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-2xl shadow-xs">
+                <h3 class="text-base font-bold font-heading text-slate-900 mb-4">Payment Receipts</h3>
+                {% if payments|length == 0 %}
+                <p class="text-xs text-slate-400">No payment receipts found.</p>
+                {% else %}
+                <div class="divide-y divide-slate-100">
+                    {% for p in payments %}
+                    <div class="py-3 flex items-center justify-between text-xs">
+                        <div>
+                            <strong class="text-slate-900">₹{{ "%.2f"|format(p.amount) }}</strong>
+                            <span class="text-slate-400 ml-2">• {{ p.plan_type|capitalize }} ({{ p.payment_mode|upper }})</span>
+                            <div class="text-[11px] text-slate-400 mt-0.5 font-mono">{{ p.razorpay_payment_id }}</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {{ p.status }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
     </main>
 
 </div>
 
 <script>
+    // Tab switching
     function switchOwnerTab(tabName) {
-        document.querySelectorAll('.owner-tab-btn').forEach(b => {
-            b.className = 'owner-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center space-x-2 shrink-0 transition';
+        document.querySelectorAll('.owner-tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-slate-900', 'text-white', 'shadow-xs');
+            btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
         });
-        document.getElementById(`owner-tab-${tabName}`).className = 'owner-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 text-white shadow-xs flex items-center space-x-2 shrink-0 transition';
+        const activeBtn = document.getElementById('owner-tab-' + tabName);
+        if (activeBtn) {
+            activeBtn.classList.remove('bg-white', 'text-slate-600', 'border');
+            activeBtn.classList.add('active', 'bg-slate-900', 'text-white', 'shadow-xs');
+        }
 
-        ['qr', 'feedback', 'settings', 'billing'].forEach(s => {
-            document.getElementById(`section-owner-${s}`).classList.add('hidden');
+        const sections = ['qr', 'reviews', 'whatsapp', 'settings', 'billing'];
+        sections.forEach(s => {
+            const sec = document.getElementById('section-owner-' + s);
+            if (sec) sec.classList.add('hidden');
         });
-        document.getElementById(`section-owner-${tabName}`).classList.remove('hidden');
+        const targetSec = document.getElementById('section-owner-' + tabName);
+        if (targetSec) targetSec.classList.remove('hidden');
+
+        // Update URL hash/param
+        try {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabName);
+            window.history.replaceState({}, '', url);
+        } catch (e) {}
     }
 
-    function copyLandingLink(slug) {
-        const fullUrl = `${window.location.origin}/r/${slug}`;
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            showToast(`Copied short link: /r/${slug}`, 'success');
-        });
-    }
+    // Check URL tab parameter on load
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+        if (tab && ['qr', 'reviews', 'whatsapp', 'settings', 'billing'].includes(tab)) {
+            switchOwnerTab(tab);
+        }
+        if (params.get('connected') === 'true') {
+            showToast('Google Business Profile connected successfully!', 'success');
+        }
+    });
 
-    // Owner Profile Update Form
-    const ownerGoogleInput = document.getElementById('owner-setting-google-url');
-    const ownerStatusBox = document.getElementById('owner-place-id-status');
-    const ownerPlaceRegex = /(ChIJ[a-zA-Z0-9_-]{10,45}|GhIJ[a-zA-Z0-9_-]{10,45})/;
+    // ── WhatsApp Alerts Handlers ───────────────────────────────────────────────
 
-    function evaluateOwnerPlaceIdInput() {
-        if (!ownerGoogleInput || !ownerStatusBox) return;
-        const val = ownerGoogleInput.value.trim();
-        if (!val) {
-            ownerStatusBox.classList.add('hidden');
+    async function sendWhatsAppOtp() {
+        const phone = document.getElementById('wa-phone-input').value.trim();
+        if (!phone) {
+            showToast('Please enter your WhatsApp phone number', 'error');
             return;
         }
-        const match = val.match(ownerPlaceRegex);
-        if (match) {
-            const placeId = match[1];
-            ownerStatusBox.className = 'mt-2 text-[11px] p-2.5 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-800 font-medium block';
-            ownerStatusBox.innerHTML = `
-                <div class="flex items-center space-x-1.5 font-bold text-emerald-700">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Place ID detected: <span class="font-mono text-emerald-900">${placeId}</span></span>
-                </div>
-                <div class="mt-0.5 text-slate-600 text-[10px]">
-                    Direct Google review link: <span class="font-mono text-brand-700">https://search.google.com/local/writereview?placeid=${placeId}</span>
-                </div>
-            `;
-        } else if (val.length > 12) {
-            ownerStatusBox.className = 'mt-2 text-[11px] p-2.5 rounded-xl border bg-amber-50 border-amber-200 text-amber-800 block';
-            ownerStatusBox.innerHTML = `
-                <div class="flex items-center space-x-1.5 font-bold text-amber-700">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>No Place ID detected yet</span>
-                </div>
-                <p class="text-[10px] text-amber-900 mt-0.5">
-                    Please paste your official Google Business Profile or Google Maps business link containing your Place ID.
-                </p>
-            `;
-        } else {
-            ownerStatusBox.classList.add('hidden');
+
+        const btn = document.getElementById('btn-send-otp');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending...';
+
+        try {
+            const resp = await fetch('/api/owner/whatsapp/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone_number: phone })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || 'Failed to send OTP');
+
+            showToast(data.message, 'success');
+            document.getElementById('wa-otp-box').classList.remove('hidden');
+            btn.innerHTML = 'Resend OTP';
+            btn.disabled = false;
+        } catch (err) {
+            showToast(err.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Send OTP';
         }
     }
 
-    if (ownerGoogleInput) {
-        ownerGoogleInput.addEventListener('input', evaluateOwnerPlaceIdInput);
-        ownerGoogleInput.addEventListener('change', evaluateOwnerPlaceIdInput);
-        if (ownerGoogleInput.value) evaluateOwnerPlaceIdInput();
+    async function verifyWhatsAppOtp() {
+        const phone = document.getElementById('wa-phone-input').value.trim();
+        const code = document.getElementById('wa-otp-input').value.trim();
+        if (!code || code.length !== 6) {
+            showToast('Please enter the 6-digit code', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('btn-verify-otp');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying...';
+
+        try {
+            const resp = await fetch('/api/owner/whatsapp/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone_number: phone, otp_code: code })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || 'Verification failed');
+
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } catch (err) {
+            showToast(err.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Verify & Activate';
+        }
     }
 
+    async function toggleWhatsAppAlerts(enabled) {
+        try {
+            const resp = await fetch('/api/owner/whatsapp/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: enabled })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || 'Could not update alert status');
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    // ── Google Reviews & Auto-Reply Handlers ──────────────────────────────────
+
+    async function syncGoogleReviews() {
+        const btn = document.getElementById('btn-sync-reviews');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...';
+        }
+        try {
+            const resp = await fetch('/api/google/reviews/sync', { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                showToast(`Sync complete! ${data.new_reviews} new reviews processed.`, 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                showToast(data.message || 'Sync failed', 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Sync Reviews Now';
+                }
+            }
+        } catch (e) {
+            showToast(e.message, 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Sync Reviews Now';
+            }
+        }
+    }
+
+    async function disconnectGoogleAccount() {
+        if (!confirm('Are you sure you want to disconnect Google Business Profile? Review monitoring and auto-replies will stop.')) {
+            return;
+        }
+        try {
+            const resp = await fetch('/api/google/disconnect', { method: 'POST' });
+            if (resp.ok) {
+                showToast('Google Business Profile disconnected.', 'info');
+                setTimeout(() => window.location.reload(), 600);
+            }
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    }
+
+    async function approveReply(reviewId) {
+        const textarea = document.getElementById('reply-text-' + reviewId);
+        const replyText = textarea ? textarea.value.trim() : '';
+        if (!replyText) {
+            showToast('Reply text cannot be empty', 'error');
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/api/google/reviews/${reviewId}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reply_text: replyText })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || 'Failed to post reply');
+
+            showToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 600);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    async function regenerateReply(reviewId) {
+        try {
+            const resp = await fetch(`/api/google/reviews/${reviewId}/regenerate`, { method: 'POST' });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || 'Regeneration failed');
+
+            const textarea = document.getElementById('reply-text-' + reviewId);
+            if (textarea && data.drafted_reply) {
+                textarea.value = data.drafted_reply;
+                textarea.classList.add('ring-2', 'ring-brand-400');
+                setTimeout(() => textarea.classList.remove('ring-2', 'ring-brand-400'), 500);
+            }
+            showToast('New AI draft generated!', 'success');
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    document.getElementById('form-autoreply-settings').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            mode_5_star: document.getElementById('mode_5_star').value,
+            mode_4_star: document.getElementById('mode_4_star').value,
+            mode_3_star: document.getElementById('mode_3_star').value,
+            mode_2_star: document.getElementById('mode_2_star').value,
+            mode_1_star: document.getElementById('mode_1_star').value,
+            tone: document.getElementById('autoreply_tone').value,
+            signature: document.getElementById('autoreply_signature').value.trim(),
+            required_phrases: document.getElementById('autoreply_required').value.trim(),
+            banned_phrases: document.getElementById('autoreply_banned').value.trim()
+        };
+
+        try {
+            const resp = await fetch('/api/google/settings/autoreply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || 'Failed to save settings');
+            showToast(data.message, 'success');
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
+
+    // Profile form
     document.getElementById('form-owner-profile').addEventListener('submit', async (e) => {
         e.preventDefault();
         const googleVal = document.getElementById('owner-setting-google-url').value.trim();
@@ -511,8 +1007,7 @@
                 throw new Error(err.detail || 'Could not update profile');
             }
 
-            const data = await resp.json();
-            showToast('Profile and Google Business Profile link saved successfully!', 'success');
+            showToast('Store profile updated successfully!', 'success');
             setTimeout(() => window.location.reload(), 600);
         } catch (err) {
             showToast(err.message, 'error');
@@ -520,10 +1015,9 @@
     });
 
     async function cancelAutopay() {
-        if (!confirm('Are you sure you want to cancel recurring UPI Autopay? Your portal will remain active until the end of your current cycle, after which you can renew manually.')) {
+        if (!confirm('Are you sure you want to cancel recurring UPI Autopay? Your portal will remain active until the end of your current cycle.')) {
             return;
         }
-
         try {
             const resp = await fetch('/api/owner/cancel-autopay', { method: 'POST' });
             if (resp.ok) {

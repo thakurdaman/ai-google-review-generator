@@ -472,3 +472,50 @@ def mark_webhook_event_processed(event_id: str):
     """Marks webhook event ID as processed."""
     if event_id:
         _PROCESSED_WEBHOOK_EVENTS.add(event_id)
+
+
+# ==============================================================================
+# 8. AES-256-GCM TOKEN ENCRYPTION (FOR OAUTH ACCESS/REFRESH TOKENS)
+# ==============================================================================
+
+import base64
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+def _get_encryption_key() -> bytes:
+    return hashlib.sha256(SECRET_KEY.encode("utf-8")).digest()
+
+def encrypt_secret(plaintext: str) -> str:
+    """
+    Encrypts sensitive tokens (OAuth tokens, API secrets) using authenticated AES-256-GCM.
+    Returns base64-encoded string: nonce (12 bytes) + ciphertext + tag.
+    """
+    if not plaintext:
+        return ""
+    try:
+        key = _get_encryption_key()
+        aesgcm = AESGCM(key)
+        nonce = secrets.token_bytes(12)
+        ciphertext = aesgcm.encrypt(nonce, plaintext.encode("utf-8"), None)
+        return base64.b64encode(nonce + ciphertext).decode("utf-8")
+    except Exception as e:
+        raise RuntimeError(f"Encryption failed: {e}")
+
+def decrypt_secret(encrypted_b64: str) -> str:
+    """
+    Decrypts an AES-256-GCM encrypted base64 payload.
+    """
+    if not encrypted_b64:
+        return ""
+    try:
+        raw_bytes = base64.b64decode(encrypted_b64.encode("utf-8"))
+        if len(raw_bytes) < 12:
+            return ""
+        nonce = raw_bytes[:12]
+        ciphertext = raw_bytes[12:]
+        key = _get_encryption_key()
+        aesgcm = AESGCM(key)
+        decrypted = aesgcm.decrypt(nonce, ciphertext, None)
+        return decrypted.decode("utf-8")
+    except Exception as e:
+        print(f"[SECURITY] Decryption error: {e}")
+        return ""

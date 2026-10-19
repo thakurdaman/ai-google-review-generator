@@ -52,29 +52,40 @@ def run_all_tests():
     print(f"  Engine used: {data.get('engine')}")
     print("  ✅ 3 natural review drafts generated successfully.")
 
-    # 4. Test Guardrail: 1-3 Stars AI Generation MUST Be Rejected
-    print("\n[TEST 3] Testing AI Guardrail (1-3 stars MUST NOT call AI)...")
-    payload_bad = {
+    # 4. Test Customer Flow: 1-3 Stars AI Review Generation (No review gating allowed)
+    print("\n[TEST 3] Testing 1-3 Stars AI Review Generation (Unfiltered customer flow)...")
+    payload_low = {
         "business_id": 1,
         "rating": 2,
-        "selected_tags": ["Slow Service"]
+        "selected_tags": ["Slow Service"],
+        "custom_note": "Waited too long for coffee"
     }
-    res_bad = client.post("/api/reviews/generate", json=payload_bad)
-    assert res_bad.status_code == 400, f"Expected 400 rejection, got {res_bad.status_code}"
-    print(f"  ✅ Guardrail confirmed! Rejected with message: {res_bad.json()['detail']}")
+    res_low = client.post("/api/reviews/generate", json=payload_low)
+    assert res_low.status_code == 200, f"Expected 200, got {res_low.status_code}"
+    low_data = res_low.json()
+    assert "drafts" in low_data
+    assert len(low_data["drafts"]) == 3
+    print("  ✅ All ratings 1-5 generate drafts freely without gating.")
 
-    # 5. Test Private Feedback Submission (1-3 Stars Flow)
-    print("\n[TEST 4] Testing Private Feedback Submission...")
-    feedback_payload = {
+    # 5. Test Customer WhatsApp Feedback Alert (Optional 1-2 Stars Private Alert - No DB Storage)
+    print("\n[TEST 4] Testing WhatsApp Feedback Alert for 1-2 Stars...")
+    alert_payload = {
         "business_id": 1,
         "rating": 2,
         "feedback_text": "The espresso took over 15 minutes during the afternoon rush.",
         "customer_name": "Taylor Swift",
-        "customer_contact": "taylor@example.com"
+        "customer_contact": "+919876543210"
     }
-    res_fb = client.post("/api/feedback/submit", json=feedback_payload)
-    assert res_fb.status_code == 200, f"Expected 200, got {res_fb.status_code}"
-    print("  ✅ Private feedback successfully recorded in database without redirecting to Google.")
+    res_alert = client.post("/api/feedback/alert", json=alert_payload)
+    assert res_alert.status_code == 200, f"Expected 200, got {res_alert.status_code}"
+    assert res_alert.json()["success"] is True
+    # Verify zero private feedback table or content stored in DB
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='private_feedback'")
+    assert cursor.fetchone() is None, "private_feedback table must be deleted!"
+    conn.close()
+    print("  ✅ WhatsApp alert dispatched; zero feedback text stored in database.")
 
     # 6. Test Analytics Event Tracking
     print("\n[TEST 5] Testing Analytics Event Tracking...")
@@ -249,7 +260,8 @@ def run_all_tests():
     res_owner_dash = client.get("/dashboard", cookies={"owner_session": owner_cookie})
     assert res_owner_dash.status_code == 200
     assert "Trattoria Bella Napoli" in res_owner_dash.text
-    assert "Active Portal" in res_owner_dash.text
+    assert "Counter Scans & Taps" in res_owner_dash.text
+    assert "AI Replies Posted" in res_owner_dash.text
     print("  ✅ Owner dashboard loads with live stats, QR code, and billing details.")
 
     # Test 10A: Invalid link rejection on /api/owner/profile

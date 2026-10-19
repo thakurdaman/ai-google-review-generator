@@ -63,14 +63,19 @@ def is_owner_email_verified(owner_id: int) -> bool:
     """
     Checks if business owner has clicked their confirmation link and verified email.
     Demo accounts (ID 1) default to verified.
+    If live SMTP is not configured, allows login to prevent locking out owners in test mode.
     """
     if not owner_id:
         return False
-    # Pre-seeded demo account is verified by default
     if owner_id == 1:
         return True
     val = get_setting(f"email_verified:{owner_id}", "")
-    return val.lower() in ("true", "1", "yes")
+    if val.lower() in ("true", "1", "yes"):
+        return True
+    smtp_host = os.getenv("SMTP_HOST") or get_setting("smtp_host", "")
+    if not smtp_host:
+        return True
+    return False
 
 
 def mark_owner_email_verified(owner_id: int, business_id: Optional[int] = None):

@@ -96,28 +96,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleRatingBranch(rating) {
         const stepPositive = document.getElementById('step-positive');
-        const stepNegative = document.getElementById('step-negative');
+        const stepWhatsAppAlert = document.getElementById('step-whatsapp-alert');
         const stepAiResults = document.getElementById('step-ai-results');
         const stepFeedbackThanks = document.getElementById('step-feedback-thanks');
 
         // Hide downstream states
-        stepAiResults.classList.add('hidden');
-        stepFeedbackThanks.classList.add('hidden');
+        if (stepAiResults) stepAiResults.classList.add('hidden');
+        if (stepFeedbackThanks) stepFeedbackThanks.classList.add('hidden');
 
         const stepBadge = document.getElementById('step-badge');
-        if (rating >= 4) {
-            // Positive Flow -> Show quick tap options + AI generation
-            if (stepBadge) stepBadge.textContent = 'Step 2 of 3 • Highlights';
-            stepNegative.classList.add('hidden');
-            stepPositive.classList.remove('hidden');
-            // Auto-scroll slightly to positive container
-            stepPositive.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (rating >= 3) {
+            // Ratings 3 to 5 -> Highlights + AI Review Drafts + Google
+            if (stepBadge) stepBadge.textContent = rating >= 4 ? 'Step 2 of 3 • Highlights' : 'Step 2 of 3 • Thoughts';
+            if (stepWhatsAppAlert) stepWhatsAppAlert.classList.add('hidden');
+            if (stepPositive) {
+                stepPositive.classList.remove('hidden');
+                stepPositive.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         } else {
-            // Negative Flow -> Strictly skip AI, show private feedback
-            if (stepBadge) stepBadge.textContent = 'Step 2 of 3 • Direct Feedback';
-            stepPositive.classList.add('hidden');
-            stepNegative.classList.remove('hidden');
-            stepNegative.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Ratings 1 to 2 -> Optional WhatsApp alert box + clearly visible Continue to Google CTA
+            if (stepBadge) stepBadge.textContent = 'Step 2 of 3 • Feedback & Google';
+            if (stepPositive) stepPositive.classList.add('hidden');
+            if (stepWhatsAppAlert) {
+                stepWhatsAppAlert.classList.remove('hidden');
+                stepWhatsAppAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     }
 
@@ -353,53 +356,78 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Private Feedback Form Submission (1-3 stars)
-    const feedbackForm = document.getElementById('private-feedback-form');
-    feedbackForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    // Optional WhatsApp Feedback Alert Submission (1-2 stars)
+    const whatsappForm = document.getElementById('whatsapp-feedback-form') || document.getElementById('private-feedback-form');
+    if (whatsappForm) {
+        whatsappForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        const message = document.getElementById('feedback-message').value.trim();
-        const name = document.getElementById('feedback-name').value.trim();
-        const contact = document.getElementById('feedback-contact').value.trim();
-
-        if (!message) {
-            showToast('Please provide your feedback', 'error');
-            return;
-        }
-
-        const submitBtn = document.getElementById('btn-submit-feedback');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending...';
-
-        try {
-            const resp = await fetch('/api/feedback/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    business_id: BUSINESS_DATA.id,
-                    rating: currentRating,
-                    feedback_text: message,
-                    customer_name: name,
-                    customer_contact: contact
-                })
-            });
-
-            if (!resp.ok) {
-                throw new Error('Failed to submit feedback');
+            // Honeypot spam trap
+            const hp = document.getElementById('hp-website');
+            if (hp && hp.value.trim() !== '') {
+                showToast('Note submitted.', 'success');
+                return;
             }
 
-            // Hide negative form, show grateful thank you screen
-            document.getElementById('step-negative').classList.add('hidden');
-            document.getElementById('step-feedback-thanks').classList.remove('hidden');
-            showToast('Feedback submitted to management', 'success');
+            const message = document.getElementById('feedback-message').value.trim();
+            const name = document.getElementById('feedback-name').value.trim();
+            const contact = document.getElementById('feedback-contact').value.trim();
 
-        } catch (err) {
-            console.error('Error submitting feedback:', err);
-            showToast('Unable to send feedback. Please try again.', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs mr-1"></i> Send Private Feedback';
-        }
-    });
+            if (!message) {
+                showToast('Please type your note to alert the owner, or tap Continue to Google below.', 'info');
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-submit-feedback');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending Alert...';
+
+            try {
+                const resp = await fetch('/api/feedback/alert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        business_id: BUSINESS_DATA.id,
+                        rating: currentRating,
+                        message: message,
+                        customer_name: name,
+                        customer_phone: contact,
+                        hp_website: hp ? hp.value : ''
+                    })
+                });
+
+                if (!resp.ok) {
+                    throw new Error('Failed to send alert');
+                }
+
+                // Show success banner right inside the card while keeping Continue to Google visible
+                const sentBanner = document.getElementById('wa-alert-sent-banner');
+                if (sentBanner) sentBanner.classList.remove('hidden');
+                showToast('Alert dispatched directly to owner on WhatsApp!', 'success');
+                submitBtn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Alert Sent to Owner';
+
+            } catch (err) {
+                console.error('Error dispatching WhatsApp alert:', err);
+                showToast('Could not deliver alert. You can still continue to Google below.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-brands fa-whatsapp mr-1"></i> Send Private Note to Owner';
+            }
+        });
+    }
+
+    const btnDirectGoogleUnfiltered = document.getElementById('btn-direct-google-unfiltered');
+    if (btnDirectGoogleUnfiltered) {
+        btnDirectGoogleUnfiltered.addEventListener('click', () => {
+            recordAnalyticsEvent('completed_review', currentRating);
+            if (typeof gtag === 'function') {
+                gtag('event', 'go_to_google', {
+                    business_id: BUSINESS_DATA.id,
+                    rating: currentRating,
+                    source: 'unfiltered_button'
+                });
+            }
+        });
+    }
 
     // Helper: Analytics Logger
     async function recordAnalyticsEvent(eventType, rating = null) {

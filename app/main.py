@@ -15,7 +15,13 @@ from pydantic import BaseModel
 from .database import (
     init_db, get_db, get_setting, set_setting, hash_password,
     log_activity, get_business_activity_logs, get_business_payments,
-    get_all_platform_payments, get_business_metrics, update_owner_password
+    get_all_platform_payments, get_business_metrics, update_owner_password,
+    get_business_whatsapp_settings, save_business_whatsapp_settings,
+    get_whatsapp_alert_logs, get_google_business_profile_tokens,
+    save_google_business_profile_tokens, disconnect_google_business_profile,
+    get_business_google_connection_status, get_business_autoreply_settings,
+    save_business_autoreply_settings, get_business_reply_usage,
+    get_business_google_reviews, save_google_review, update_google_review_reply
 )
 from .auth import (
     authenticate_reseller, create_session_token, get_current_reseller, require_reseller,
@@ -25,7 +31,7 @@ from .auth import (
     create_password_reset_token, verify_password_reset_token
 )
 from .ai_service import (
-    generate_review_drafts, test_openai_connection
+    generate_review_drafts, test_openai_connection, generate_google_review_reply, detect_review_language
 )
 from .qr_service import (
     generate_qr_png_bytes, generate_qr_svg_string
@@ -33,6 +39,15 @@ from .qr_service import (
 from .billing_service import (
     PLANS, create_checkout_session, verify_and_activate_subscription,
     is_subscription_active, cancel_autopay_mandate, is_payments_enabled
+)
+from .whatsapp_service import (
+    dispatch_customer_feedback_alert, generate_and_send_owner_otp,
+    verify_owner_otp, toggle_owner_whatsapp_alerts
+)
+from .google_reviews_service import (
+    build_google_oauth_url, exchange_code_for_tokens,
+    sync_and_process_google_reviews, approve_and_post_reply,
+    regenerate_ai_reply, get_plan_reply_limit
 )
 from .google_places import (
     extract_google_place_id,
@@ -167,6 +182,40 @@ class FeedbackSubmitRequest(BaseModel):
     feedback_text: str
     customer_name: Optional[str] = None
     customer_contact: Optional[str] = None
+
+class FeedbackAlertRequest(BaseModel):
+    business_id: int
+    rating: int
+    message: Optional[str] = None
+    feedback_text: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_contact: Optional[str] = None
+    hp_website: Optional[str] = None  # Spam honeypot
+
+class OwnerWhatsAppSendOtpRequest(BaseModel):
+    phone_number: str
+
+class OwnerWhatsAppVerifyOtpRequest(BaseModel):
+    phone_number: str
+    otp_code: str
+
+class OwnerWhatsAppToggleRequest(BaseModel):
+    enabled: bool
+
+class GoogleReviewReplyRequest(BaseModel):
+    reply_text: str
+
+class GoogleAutoReplySettingsRequest(BaseModel):
+    mode_5_star: Optional[str] = "Auto-post"
+    mode_4_star: Optional[str] = "Auto-post"
+    mode_3_star: Optional[str] = "Draft for my approval"
+    mode_2_star: Optional[str] = "Draft for my approval"
+    mode_1_star: Optional[str] = "Draft for my approval"
+    tone: Optional[str] = "friendly"
+    signature: Optional[str] = ""
+    required_phrases: Optional[str] = ""
+    banned_phrases: Optional[str] = ""
 
 class AnalyticsEventRequest(BaseModel):
     business_id: int
@@ -1356,19 +1405,19 @@ async def owner_dashboard(request: Request):
     # Retrieve live metrics for this business
     metrics = get_business_metrics(business_id)
 
-    # Retrieve private feedbacks for this business
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT * FROM private_feedback
-        WHERE business_id = ?
-        ORDER BY created_at DESC
-    """, (business_id,))
-    feedbacks = [dict(r) for r in cursor.fetchall()]
-
     # Retrieve payments history
     payments = get_business_payments(business_id)
-    conn.close()
+
+    # WhatsApp Alert Settings & Audit Logs (No message content stored)
+    whatsapp_settings = get_business_whatsapp_settings(business_id)
+    whatsapp_logs = get_whatsapp_alert_logs(business_id, limit=10)
+
+    # Google Business Profile Connection & Reviews Store
+    google_status = get_business_google_connection_status(business_id)
+    autoreply_settings = get_business_autoreply_settings(business_id)
+    google_reviews = get_business_google_reviews(business_id, limit=50)
+    reply_usage = get_business_reply_usage(business_id)
+    reply_limit = get_plan_reply_limit(owner.get("plan_tier"))
 
     tags_list = []
     try:
@@ -1384,8 +1433,14 @@ async def owner_dashboard(request: Request):
         context={
             "owner": owner,
             "metrics": metrics,
-            "feedbacks": feedbacks,
             "payments": payments,
+            "whatsapp_settings": whatsapp_settings,
+            "whatsapp_logs": whatsapp_logs,
+            "google_status": google_status,
+            "autoreply_settings": autoreply_settings,
+            "google_reviews": google_reviews,
+            "reply_usage": reply_usage,
+            "reply_limit": reply_limit,
             "tags_str": ", ".join(tags_list),
             "is_active": is_active
         }
@@ -1472,6 +1527,14 @@ async def api_owner_cancel_autopay(request: Request):
 # CUSTOMER FACING ROUTES (Mobile First / NFC / QR)
 # ==========================================
 
+@app.get("/demo")
+@app.get("/try")
+@app.get("/try-demo")
+@app.get("/try-review")
+@app.get("/try-remove")
+async def demo_review_redirect():
+    return RedirectResponse(url="/r/artisan-roast", status_code=status.HTTP_302_FOUND)
+
 @app.get("/r/{slug}", response_class=HTMLResponse)
 async def customer_review_landing(slug: str, request: Request):
     """
@@ -1557,12 +1620,6 @@ async def api_generate_reviews(req: ReviewGenerateRequest, request: Request):
             detail="Rate limit exceeded. Please wait a moment before generating more review drafts."
         )
 
-    if req.rating < 4:
-        raise HTTPException(
-            status_code=400,
-            detail="AI review drafts are strictly disabled for 1-3 star ratings to prevent false positives. Please use private feedback."
-        )
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT name, category FROM businesses WHERE id = ?", (req.business_id,))
@@ -1585,31 +1642,250 @@ async def api_generate_reviews(req: ReviewGenerateRequest, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/feedback/submit")
-async def api_submit_feedback(req: FeedbackSubmitRequest):
+# ── Customer Feedback Alert to Owner's WhatsApp (1-2 Stars) ───────────────────
+
+@app.post("/api/feedback/alert")
+async def api_submit_feedback_alert(req: FeedbackAlertRequest, request: Request):
     """
-    Stores unhappy customer feedback (1-3 stars) privately so management can address it directly.
+    Change 2: When a customer picks 1 or 2 stars, sends their optional private message
+    directly to the business owner's verified WhatsApp number.
+    Rate-limited and protected with honeypot spam detection.
+    CRITICAL PRIVACY RULE: DO NOT store the feedback text in any database table.
     """
-    if not req.feedback_text.strip():
-        raise HTTPException(status_code=400, detail="Feedback text is required")
+    # 1. Spam honeypot check
+    if req.hp_website and req.hp_website.strip():
+        # Silent ignore of automated bot submissions
+        return {"status": "success", "success": True, "filtered": True, "alert_sent": False, "message": "Feedback received"}
+
+    # 2. Rate limiting (max 5 submissions per 10 minutes per IP)
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"feedback_alert_{client_ip}", max_requests=5, window_seconds=600):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many feedback submissions. Please wait a few minutes."
+        )
+
+    clean_msg = (req.message or req.feedback_text or "").strip()
+    if not clean_msg:
+        raise HTTPException(status_code=400, detail="Feedback message is required")
 
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO private_feedback (business_id, rating, feedback_text, customer_name, customer_contact)
-        VALUES (?, ?, ?, ?, ?)
-    """, (req.business_id, req.rating, req.feedback_text.strip(), req.customer_name, req.customer_contact))
-    
-    # Also log analytics event
-    cursor.execute("""
-        INSERT INTO analytics_events (business_id, event_type, rating)
-        VALUES (?, 'feedback_submitted', ?)
-    """, (req.business_id, req.rating))
-
-    conn.commit()
+    cursor.execute("SELECT id, name FROM businesses WHERE id = ?", (req.business_id,))
+    bus = cursor.fetchone()
     conn.close()
 
-    return {"status": "success", "message": "Feedback submitted directly to management"}
+    if not bus:
+        raise HTTPException(status_code=404, detail="Business not found")
+
+    cust_phone = (req.customer_phone or req.customer_contact or "").strip()
+
+    # Send straight to owner's WhatsApp without storing message text in database!
+    success, msg = dispatch_customer_feedback_alert(
+        business_id=req.business_id,
+        business_name=bus["name"],
+        rating=req.rating,
+        message=clean_msg,
+        customer_name=req.customer_name,
+        customer_phone=cust_phone
+    )
+
+    return {
+        "status": "success",
+        "success": True,
+        "alert_sent": success,
+        "message": "Alert sent directly to business owner" if success else msg
+    }
+
+
+@app.post("/api/feedback/submit")
+async def api_submit_feedback_legacy(req: FeedbackSubmitRequest, request: Request):
+    """
+    Backwards-compatible endpoint for feedback submissions.
+    Ensures ZERO database writes of customer feedback text, routing alert straight to WhatsApp.
+    """
+    alert_req = FeedbackAlertRequest(
+        business_id=req.business_id,
+        rating=req.rating,
+        message=req.feedback_text,
+        customer_name=req.customer_name,
+        customer_phone=req.customer_contact
+    )
+    return await api_submit_feedback_alert(alert_req, request)
+
+
+# ── Owner WhatsApp Alert Management Endpoints ─────────────────────────────────
+
+@app.post("/api/owner/whatsapp/send-otp")
+async def api_owner_whatsapp_send_otp(req: OwnerWhatsAppSendOtpRequest, request: Request):
+    owner = require_owner(request)
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(f"otp_req_{client_ip}_{owner['id']}", max_requests=4, window_seconds=600):
+        raise HTTPException(status_code=429, detail="Too many OTP requests. Please wait a few minutes.")
+
+    success, msg = generate_and_send_owner_otp(owner["business_id"], req.phone_number)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "ok", "message": msg}
+
+
+@app.post("/api/owner/whatsapp/verify-otp")
+async def api_owner_whatsapp_verify_otp(req: OwnerWhatsAppVerifyOtpRequest, request: Request):
+    owner = require_owner(request)
+    success, msg = verify_owner_otp(owner["business_id"], req.phone_number, req.otp_code)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "ok", "message": msg}
+
+
+@app.post("/api/owner/whatsapp/toggle")
+async def api_owner_whatsapp_toggle(req: OwnerWhatsAppToggleRequest, request: Request):
+    owner = require_owner(request)
+    success, msg = toggle_owner_whatsapp_alerts(owner["business_id"], req.enabled)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "ok", "message": msg}
+
+
+@app.get("/api/owner/whatsapp/status")
+async def api_owner_whatsapp_status(request: Request):
+    owner = require_owner(request)
+    settings = get_business_whatsapp_settings(owner["business_id"])
+    logs = get_whatsapp_alert_logs(owner["business_id"], limit=20)
+    return {"settings": settings, "logs": logs}
+
+
+# ── Google Business Profile OAuth & Auto-Reply Endpoints ──────────────────────
+
+@app.get("/auth/google/business/connect")
+async def auth_google_business_connect(request: Request):
+    owner = require_owner(request)
+    base_url = get_base_url(request)
+    redirect_uri = f"{base_url}/auth/google/business/callback"
+    oauth_url = build_google_oauth_url(owner["business_id"], owner["id"], redirect_uri)
+    return RedirectResponse(url=oauth_url)
+
+
+@app.get("/auth/google/business/callback")
+async def auth_google_business_callback(
+    request: Request,
+    code: Optional[str] = Query(None),
+    mock_connect: Optional[int] = Query(None),
+    business_id: Optional[int] = Query(None)
+):
+    owner = require_owner(request)
+    bid = owner["business_id"]
+    base_url = get_base_url(request)
+    redirect_uri = f"{base_url}/auth/google/business/callback"
+
+    auth_code = code or ("mock_auth_code" if mock_connect else "")
+    if not auth_code:
+        return RedirectResponse(url="/dashboard?tab=reviews&error=no_auth_code")
+
+    success, msg = exchange_code_for_tokens(auth_code, redirect_uri, bid)
+    if success:
+        # Trigger initial sync of reviews in background
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM businesses WHERE id = ?", (bid,))
+            bus = cursor.fetchone()
+            conn.close()
+            bus_name = bus["name"] if bus else "My Business"
+            sync_and_process_google_reviews(bid, bus_name, owner.get("plan_tier", "monthly"), base_url)
+        except Exception as e:
+            print(f"[Initial Review Sync Error] {e}")
+
+        return RedirectResponse(url="/dashboard?tab=reviews&connected=true")
+    else:
+        return RedirectResponse(url=f"/dashboard?tab=reviews&error={requests.utils.quote(msg)}")
+
+
+@app.post("/api/google/disconnect")
+async def api_google_disconnect(request: Request):
+    owner = require_owner(request)
+    disconnect_google_business_profile(owner["business_id"])
+    return {"status": "ok", "message": "Google Business Profile disconnected."}
+
+
+@app.get("/api/google/reviews")
+async def api_get_google_reviews(request: Request):
+    owner = require_owner(request)
+    bid = owner["business_id"]
+    status_data = get_business_google_connection_status(bid)
+    reviews = get_business_google_reviews(bid, limit=100)
+    usage = get_business_reply_usage(bid)
+    limit = get_plan_reply_limit(owner.get("plan_tier"))
+    return {
+        "connected": status_data.get("connected", False),
+        "location_name": status_data.get("location_name", ""),
+        "reviews": reviews,
+        "reply_usage": usage,
+        "reply_limit": limit
+    }
+
+
+@app.post("/api/google/reviews/sync")
+async def api_sync_google_reviews(request: Request):
+    owner = require_owner(request)
+    bid = owner["business_id"]
+    base_url = get_base_url(request)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM businesses WHERE id = ?", (bid,))
+    bus = cursor.fetchone()
+    conn.close()
+    bus_name = bus["name"] if bus else "My Business"
+
+    result = sync_and_process_google_reviews(
+        business_id=bid,
+        business_name=bus_name,
+        plan_tier=owner.get("plan_tier", "monthly"),
+        base_url=base_url
+    )
+    return result
+
+
+@app.post("/api/google/reviews/{review_id}/reply")
+async def api_post_review_reply(review_id: str, req: GoogleReviewReplyRequest, request: Request):
+    owner = require_owner(request)
+    success, msg = approve_and_post_reply(owner["business_id"], review_id, req.reply_text)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "ok", "message": msg}
+
+
+@app.post("/api/google/reviews/{review_id}/regenerate")
+async def api_regenerate_review_reply(review_id: str, request: Request):
+    owner = require_owner(request)
+    bid = owner["business_id"]
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM businesses WHERE id = ?", (bid,))
+    bus = cursor.fetchone()
+    conn.close()
+    bus_name = bus["name"] if bus else "My Business"
+
+    success, msg, new_reply = regenerate_ai_reply(bid, bus_name, review_id)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "ok", "message": msg, "drafted_reply": new_reply}
+
+
+@app.get("/api/google/settings/autoreply")
+async def api_get_autoreply_settings(request: Request):
+    owner = require_owner(request)
+    settings = get_business_autoreply_settings(owner["business_id"])
+    return settings
+
+
+@app.post("/api/google/settings/autoreply")
+async def api_save_autoreply_settings(req: GoogleAutoReplySettingsRequest, request: Request):
+    owner = require_owner(request)
+    data = req.dict()
+    save_business_autoreply_settings(owner["business_id"], data)
+    return {"status": "ok", "message": "Auto-reply preferences saved successfully."}
 
 
 @app.post("/api/analytics/event")
@@ -1676,8 +1952,7 @@ async def admin_dashboard(request: Request):
     cursor.execute("""
         SELECT b.*,
             (SELECT COUNT(*) FROM analytics_events WHERE business_id = b.id AND event_type = 'scan') as scans_count,
-            (SELECT COUNT(*) FROM analytics_events WHERE business_id = b.id AND event_type = 'completed_review') as reviews_count,
-            (SELECT COUNT(*) FROM private_feedback WHERE business_id = b.id) as feedback_count
+            (SELECT COUNT(*) FROM analytics_events WHERE business_id = b.id AND event_type = 'completed_review') as reviews_count
         FROM businesses b
         ORDER BY b.created_at DESC
     """)
@@ -1686,19 +1961,30 @@ async def admin_dashboard(request: Request):
     businesses = []
     total_scans = 0
     total_completed = 0
-    total_feedback = 0
+    total_google_connected = 0
+    total_replies_posted = 0
     active_subscriptions = 0
     platform_mrr = 0.0
 
     for row in raw_businesses:
         b_dict = dict(row)
+        bid = b_dict.get("id")
         scans = b_dict.get("scans_count", 0)
         reviews = b_dict.get("reviews_count", 0)
-        fbacks = b_dict.get("feedback_count", 0)
-        
+
+        # Google Business connection & reply counts (NO review content shown to admin)
+        conn_status = get_business_google_connection_status(bid)
+        is_connected = conn_status.get("connected", False)
+        b_dict["google_connected"] = is_connected
+        usage = get_business_reply_usage(bid)
+        replies_posted = usage.get("total_posted", 0)
+        b_dict["replies_posted_count"] = replies_posted
+
         total_scans += scans
         total_completed += reviews
-        total_feedback += fbacks
+        if is_connected:
+            total_google_connected += 1
+        total_replies_posted += replies_posted
 
         if b_dict.get("subscription_status") in ["active", "trialing"]:
             active_subscriptions += 1
@@ -1717,7 +2003,8 @@ async def admin_dashboard(request: Request):
         "total_scans": total_scans,
         "total_completed": total_completed,
         "conversion_rate": conversion_rate,
-        "total_feedback": total_feedback,
+        "total_google_connected": total_google_connected,
+        "total_replies_posted": total_replies_posted,
         "active_subscriptions": active_subscriptions,
         "platform_mrr": round(platform_mrr, 0)
     }
@@ -1734,16 +2021,7 @@ async def admin_dashboard(request: Request):
     """)
     owners = [dict(r) for r in cursor.fetchall()]
 
-    # 3. Fetch private feedback list
-    cursor.execute("""
-        SELECT pf.*, b.name as business_name, b.slug as business_slug
-        FROM private_feedback pf
-        JOIN businesses b ON pf.business_id = b.id
-        ORDER BY pf.created_at DESC
-    """)
-    feedbacks = [dict(row) for row in cursor.fetchall()]
-
-    # 4. Fetch platform payments history
+    # 3. Fetch platform payments history
     payments = get_all_platform_payments(100)
 
     conn.close()
@@ -1756,7 +2034,6 @@ async def admin_dashboard(request: Request):
             "businesses": businesses,
             "owners": owners,
             "stats": stats,
-            "feedbacks": feedbacks,
             "payments": payments
         }
     )
@@ -2000,7 +2277,6 @@ async def api_delete_business(
     cursor.execute("DELETE FROM businesses WHERE id = ?", (business_id,))
     cursor.execute("DELETE FROM business_owners WHERE business_id = ?", (business_id,))
     cursor.execute("DELETE FROM analytics_events WHERE business_id = ?", (business_id,))
-    cursor.execute("DELETE FROM private_feedback WHERE business_id = ?", (business_id,))
     cursor.execute("DELETE FROM payments WHERE business_id = ?", (business_id,))
     cursor.execute("DELETE FROM activity_logs WHERE business_id = ?", (business_id,))
     conn.commit()

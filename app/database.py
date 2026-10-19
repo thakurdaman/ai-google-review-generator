@@ -273,9 +273,6 @@ class SupabaseCursor:
             "payments": {
                 "businesses": "businesses!payments_business_id_fkey",
             },
-            "private_feedback": {
-                "businesses": "businesses!private_feedback_business_id_fkey",
-            },
             "activity_logs": {
                 "businesses": "businesses!activity_logs_business_id_fkey",
             }
@@ -314,7 +311,7 @@ class SupabaseCursor:
 
         # Enrich with joined table data
         for jt in join_tables:
-            if jt == "businesses" and main_table in ("payments", "private_feedback", "activity_logs"):
+            if jt == "businesses" and main_table in ("payments", "activity_logs"):
                 # Get business names for these rows
                 biz_ids = list(set(r.get("business_id") for r in main_rows if r.get("business_id")))
                 if biz_ids:
@@ -386,15 +383,18 @@ class SupabaseCursor:
                 bid = b["id"]
                 b["scans_count"] = _count("analytics_events", {"business_id": f"eq.{bid}", "event_type": "eq.scan"})
                 b["reviews_count"] = _count("analytics_events", {"business_id": f"eq.{bid}", "event_type": "eq.completed_review"})
-                b["feedback_count"] = _count("private_feedback", {"business_id": f"eq.{bid}"})
+                # Google Business connection & reply metrics
+                conn_status = get_business_google_connection_status(bid)
+                b["google_connected"] = conn_status.get("connected", False)
+                usage = get_business_reply_usage(bid)
+                b["replies_posted_count"] = usage.get("total_posted", 0)
             self._result = businesses
         elif bid_match:
             # Single business metrics
             bid = int(bid_match.group(1))
             scans = _count("analytics_events", {"business_id": f"eq.{bid}", "event_type": "eq.scan"})
             reviews = _count("analytics_events", {"business_id": f"eq.{bid}", "event_type": "eq.completed_review"})
-            feedback = _count("private_feedback", {"business_id": f"eq.{bid}"})
-            self._result = [{"scans_count": scans, "reviews_count": reviews, "feedback_count": feedback}]
+            self._result = [{"scans_count": scans, "reviews_count": reviews}]
         else:
             self._result = []
 
@@ -755,17 +755,280 @@ def get_all_platform_payments(limit: int = 100) -> List[Dict[str, Any]]:
 
 
 def get_business_metrics(business_id: int) -> Dict[str, Any]:
-    """Get scan/review/feedback counts for a business."""
+    """Get scan and completed review counts, conversion rate, and AI reply stats for a business."""
     scans = _count("analytics_events", {"business_id": f"eq.{business_id}", "event_type": "eq.scan"})
     reviews = _count("analytics_events", {"business_id": f"eq.{business_id}", "event_type": "eq.completed_review"})
-    feedback = _count("private_feedback", {"business_id": f"eq.{business_id}"})
     conv = round((reviews / scans * 100), 1) if scans > 0 else 0.0
+    reply_usage = get_business_reply_usage(business_id)
+    google_status = get_business_google_connection_status(business_id)
     return {
         "scans_count": scans,
         "reviews_count": reviews,
-        "feedback_count": feedback,
-        "conversion_rate": conv
+        "conversion_rate": conv,
+        "replies_posted_count": reply_usage.get("total_posted", 0),
+        "google_connected": google_status.get("connected", False)
     }
+
+
+# ── WhatsApp Alert Configuration & Audit Logs ─────────────────────────────────
+
+def get_business_whatsapp_settings(business_id: int) -> Dict[str, Any]:
+    """Get WhatsApp alert configuration for a business owner."""
+    default = {
+        "alerts_enabled": False,
+        "phone_number": "",
+        "phone_verified": False,
+        "pending_otp": "",
+        "otp_expires_at": ""
+    }
+    raw = get_setting(f"biz_whatsapp_{business_id}", "")
+    if not raw:
+        return default
+    try:
+        data = json.loads(raw)
+        return {**default, **data}
+    except Exception:
+        return default
+
+
+def save_business_whatsapp_settings(business_id: int, settings: Dict[str, Any]):
+    """Save WhatsApp alert configuration for a business owner."""
+    set_setting(f"biz_whatsapp_{business_id}", json.dumps(settings))
+
+
+def log_whatsapp_alert_status(business_id: int, alert_type: str, recipient_masked: str, status: str, error_code: str = ""):
+    """
+    Log delivery status of a WhatsApp alert.
+    CRITICAL PRIVACY RULE: NEVER logs customer message text, customer contact, or review content.
+    """
+    try:
+        import sqlite3
+        db_path = os.path.join(os.path.dirname(__file__), "reviews.db")
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            conn.execute(
+                "INSERT INTO whatsapp_alert_logs (business_id, alert_type, recipient_masked, status, error_code) VALUES (?, ?, ?, ?, ?)",
+                (business_id, alert_type, recipient_masked, status, error_code)
+            )
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        print(f"[DB] SQLite whatsapp log note: {e}")
+
+    try:
+        raw_logs = get_setting(f"biz_wa_logs_{business_id}", "[]")
+        logs = json.loads(raw_logs) if raw_logs else []
+        logs.insert(0, {
+            "alert_type": alert_type,
+            "recipient_masked": recipient_masked,
+            "status": status,
+            "error_code": error_code,
+            "created_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        })
+        set_setting(f"biz_wa_logs_{business_id}", json.dumps(logs[:50]))
+    except Exception as e:
+        print(f"[DB] Log whatsapp alert note: {e}")
+
+
+def get_whatsapp_alert_logs(business_id: int, limit: int = 20) -> List[Dict[str, Any]]:
+    """Retrieve transmission status logs for a business (no message content)."""
+    raw_logs = get_setting(f"biz_wa_logs_{business_id}", "[]")
+    try:
+        logs = json.loads(raw_logs)
+        return logs[:limit]
+    except Exception:
+        return []
+
+
+# ── Google Business Profile OAuth, Auto-Reply Settings & Reviews ─────────────
+
+def get_google_business_profile_tokens(business_id: int) -> Dict[str, Any]:
+    """
+    Get Google OAuth tokens and connection metadata for a business.
+    Returns decrypted access/refresh tokens in-memory.
+    """
+    raw = get_setting(f"biz_google_bp_{business_id}", "")
+    if not raw:
+        return {"connected": False}
+    try:
+        data = json.loads(raw)
+        from .security import decrypt_secret
+        if data.get("enc_refresh_token"):
+            data["refresh_token"] = decrypt_secret(data["enc_refresh_token"])
+        if data.get("enc_access_token"):
+            data["access_token"] = decrypt_secret(data["enc_access_token"])
+        return data
+    except Exception as e:
+        print(f"[DB] Token decrypt note: {e}")
+        return {"connected": False}
+
+
+def save_google_business_profile_tokens(
+    business_id: int,
+    access_token: str,
+    refresh_token: str,
+    expires_in: int,
+    account_id: str = "",
+    location_id: str = "",
+    location_name: str = ""
+):
+    """Save encrypted Google Business Profile OAuth tokens."""
+    from .security import encrypt_secret
+    enc_access = encrypt_secret(access_token) if access_token else ""
+    enc_refresh = encrypt_secret(refresh_token) if refresh_token else ""
+    data = {
+        "connected": True,
+        "enc_access_token": enc_access,
+        "enc_refresh_token": enc_refresh,
+        "expires_at": (datetime.utcnow() + timedelta(seconds=expires_in)).isoformat(),
+        "account_id": account_id,
+        "location_id": location_id,
+        "location_name": location_name or "Primary Location",
+        "connected_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    }
+    set_setting(f"biz_google_bp_{business_id}", json.dumps(data))
+
+
+def disconnect_google_business_profile(business_id: int):
+    """Disconnect and purge Google OAuth tokens for a business."""
+    set_setting(f"biz_google_bp_{business_id}", json.dumps({"connected": False}))
+
+
+def get_business_google_connection_status(business_id: int) -> Dict[str, Any]:
+    """Public safe check whether business has an active Google connection."""
+    raw = get_setting(f"biz_google_bp_{business_id}", "")
+    if not raw:
+        return {"connected": False}
+    try:
+        data = json.loads(raw)
+        return {
+            "connected": bool(data.get("connected", False)),
+            "location_name": data.get("location_name", ""),
+            "connected_at": data.get("connected_at", "")
+        }
+    except Exception:
+        return {"connected": False}
+
+
+def get_business_autoreply_settings(business_id: int) -> Dict[str, Any]:
+    """
+    Get auto-reply configuration for a business.
+    Default: 1-3 stars = 'Draft for my approval', 4-5 stars = 'Auto-post'.
+    """
+    default = {
+        "mode_5_star": "Auto-post",
+        "mode_4_star": "Auto-post",
+        "mode_3_star": "Draft for my approval",
+        "mode_2_star": "Draft for my approval",
+        "mode_1_star": "Draft for my approval",
+        "tone": "friendly",  # friendly, professional, casual
+        "business_name": "",
+        "signature": "",
+        "required_phrases": "",
+        "banned_phrases": ""
+    }
+    raw = get_setting(f"biz_autoreply_config_{business_id}", "")
+    if not raw:
+        return default
+    try:
+        data = json.loads(raw)
+        return {**default, **data}
+    except Exception:
+        return default
+
+
+def save_business_autoreply_settings(business_id: int, settings: Dict[str, Any]):
+    """Save auto-reply configuration for a business."""
+    set_setting(f"biz_autoreply_config_{business_id}", json.dumps(settings))
+
+
+def get_business_reply_usage(business_id: int) -> Dict[str, Any]:
+    """Retrieve monthly and total reply count for a business."""
+    now = datetime.utcnow()
+    current_month_key = now.strftime("%Y_%m")
+    raw = get_setting(f"biz_reply_usage_{business_id}_{current_month_key}", "")
+    month_count = int(raw) if raw and raw.isdigit() else 0
+
+    raw_total = get_setting(f"biz_reply_total_{business_id}", "")
+    total_posted = int(raw_total) if raw_total and raw_total.isdigit() else 0
+
+    return {
+        "current_month": current_month_key,
+        "month_count": month_count,
+        "total_posted": total_posted
+    }
+
+
+def increment_business_reply_usage(business_id: int) -> int:
+    """Increments reply counter for current billing cycle."""
+    now = datetime.utcnow()
+    current_month_key = now.strftime("%Y_%m")
+    usage = get_business_reply_usage(business_id)
+    new_month = usage["month_count"] + 1
+    new_total = usage["total_posted"] + 1
+
+    set_setting(f"biz_reply_usage_{business_id}_{current_month_key}", str(new_month))
+    set_setting(f"biz_reply_total_{business_id}", str(new_total))
+    return new_month
+
+
+def get_business_google_reviews(business_id: int, limit: int = 100) -> List[Dict[str, Any]]:
+    """Retrieve saved Google reviews with AI drafts and reply statuses for a business."""
+    raw = get_setting(f"biz_reviews_store_{business_id}", "[]")
+    try:
+        reviews = json.loads(raw)
+        return reviews[:limit]
+    except Exception:
+        return []
+
+
+def save_google_review(business_id: int, review_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Saves or updates a Google review in the business review store."""
+    raw = get_setting(f"biz_reviews_store_{business_id}", "[]")
+    try:
+        reviews = json.loads(raw) if raw else []
+    except Exception:
+        reviews = []
+
+    rev_id = review_data.get("google_review_id")
+    existing_idx = next((i for i, r in enumerate(reviews) if r.get("google_review_id") == rev_id), -1)
+
+    if existing_idx >= 0:
+        reviews[existing_idx].update(review_data)
+        reviews[existing_idx]["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        updated_rev = reviews[existing_idx]
+    else:
+        review_data["created_at"] = review_data.get("created_at") or datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        review_data["updated_at"] = review_data["created_at"]
+        reviews.insert(0, review_data)
+        updated_rev = review_data
+
+    set_setting(f"biz_reviews_store_{business_id}", json.dumps(reviews[:200]))
+    return updated_rev
+
+
+def update_google_review_reply(business_id: int, google_review_id: str, reply_text: str, status: str) -> bool:
+    """Updates reply draft/posted status for a specific review."""
+    raw = get_setting(f"biz_reviews_store_{business_id}", "[]")
+    try:
+        reviews = json.loads(raw) if raw else []
+    except Exception:
+        return False
+
+    for r in reviews:
+        if r.get("google_review_id") == google_review_id:
+            if status == "posted":
+                r["posted_reply"] = reply_text
+                r["reply_status"] = "posted"
+                r["reply_posted_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            else:
+                r["drafted_reply"] = reply_text
+                r["reply_status"] = status
+            r["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            set_setting(f"biz_reviews_store_{business_id}", json.dumps(reviews))
+            return True
+    return False
+
 
 
 def update_owner_password(email: str, new_password_hash: str) -> bool:
@@ -917,29 +1180,18 @@ def _seed_demo_data():
         bid = biz.get("id")
         slug = biz.get("slug", "")
         if slug == "artisan-roast":
-            scans, completions, fbacks = 48, 33, 2
+            scans, completions = 48, 33
         elif slug == "smilecraft-dental":
-            scans, completions, fbacks = 29, 19, 1
+            scans, completions = 29, 19
         else:
-            scans, completions, fbacks = 18, 11, 2
+            scans, completions = 18, 11
 
         # Batch insert analytics events
         scan_events = [{"business_id": bid, "event_type": "scan"} for _ in range(scans)]
         review_events = [{"business_id": bid, "event_type": "completed_review", "rating": 5} for _ in range(completions)]
-        feedback_events = [{"business_id": bid, "event_type": "feedback_submitted", "rating": 2} for _ in range(fbacks)]
 
-        all_events = scan_events + review_events + feedback_events
+        all_events = scan_events + review_events
         if all_events:
             # Batch insert via POST with array body
             url = f"{REST_BASE}/analytics_events"
             requests.post(url, headers=_headers(prefer="return=minimal"), json=all_events)
-
-        # Seed private feedback entries
-        for _ in range(fbacks):
-            _post("private_feedback", {
-                "business_id": bid,
-                "rating": 2,
-                "feedback_text": "Service was slightly slower during morning peak hour. Would appreciate faster takeout counter service.",
-                "customer_name": "Alex Jordan",
-                "customer_contact": "alex.j@example.com"
-            })
