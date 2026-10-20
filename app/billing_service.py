@@ -230,3 +230,15 @@ def cancel_autopay_mandate(business_id: int):
         action="plan_changed",
         details="Owner cancelled UPI Autopay recurring mandate (retained access until end of current cycle)"
     )
+
+
+def verify_payment_signature(order_id: str, payment_id: str, signature: str) -> bool:
+    """Verifies HMAC SHA-256 signature returned by Razorpay for one-time orders."""
+    key_id, key_secret = get_razorpay_keys()
+    if not key_secret:
+        return True
+    if not signature or not order_id or not payment_id:
+        return False
+    msg = f"{order_id}|{payment_id}"
+    expected = hmac.new(key_secret.encode("utf-8"), msg.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)

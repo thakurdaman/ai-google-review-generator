@@ -37,7 +37,7 @@ from .qr_service import (
     generate_qr_png_bytes, generate_qr_svg_string
 )
 from .billing_service import (
-    PLANS, create_checkout_session, verify_and_activate_subscription,
+    PLANS, create_checkout_session, verify_and_activate_subscription, verify_payment_signature,
     is_subscription_active, cancel_autopay_mandate, is_payments_enabled
 )
 from .whatsapp_service import (
@@ -276,6 +276,7 @@ class VerifyPaymentRequest(BaseModel):
     payment_id: str
     order_id: Optional[str] = ""
     subscription_id: Optional[str] = ""
+    signature: Optional[str] = ""
 
 class SettingsUpdateRequest(BaseModel):
     openai_api_key: Optional[str] = ""
@@ -1295,6 +1296,12 @@ async def api_verify_payment(req: VerifyPaymentRequest, request: Request):
     # Server-side validation of plan
     if req.plan_type not in PLANS:
         raise HTTPException(status_code=400, detail="Invalid plan selected")
+
+    # Verify cryptographic signature if live payment gateway is active
+    if is_payments_enabled() and not req.payment_id.startswith("pay_mock_"):
+        if req.payment_mode == "one_time" and req.order_id and req.signature:
+            if not verify_payment_signature(req.order_id, req.payment_id, req.signature):
+                raise HTTPException(status_code=400, detail="Invalid payment signature. Verification failed.")
 
     res = verify_and_activate_subscription(
         business_id=business_id,

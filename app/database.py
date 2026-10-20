@@ -9,7 +9,7 @@ import json
 import hashlib
 import requests
 import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any, Tuple
 
 try:
@@ -23,10 +23,7 @@ SUPABASE_URL = os.environ.get(
     "SUPABASE_URL",
     "https://jaggkwijjpsoobcfppnp.supabase.co"
 )
-SUPABASE_KEY = os.environ.get(
-    "SUPABASE_SERVICE_KEY",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZ2drd2lqanBzb29iY2ZwcG5wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTkxMjQ5NCwiZXhwIjoyMTA3NDg4NDk0fQ.nzCe8fliv8VFwxmCZI5tG4MCiN9SDQvC8sneuUbn9OA"
-).strip()
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
 
 
 REST_BASE = f"{SUPABASE_URL}/rest/v1"
@@ -55,10 +52,10 @@ def _get(table: str, *, select: str = "*", params: dict = None, single: bool = F
     if limit:
         url += f"&limit={limit}"
     if single:
-        resp = requests.get(url, headers=_headers(prefer="return=representation"))
+        resp = requests.get(url, headers=_headers(prefer="return=representation"), timeout=10)
         data = resp.json()
         return data[0] if isinstance(data, list) and data else (data if isinstance(data, dict) else None)
-    resp = requests.get(url, headers=_headers())
+    resp = requests.get(url, headers=_headers(), timeout=10)
     return resp.json() if resp.status_code == 200 else []
 
 
@@ -68,7 +65,7 @@ def _post(table: str, data: dict, *, upsert: bool = False) -> dict:
     prefer = "return=representation"
     if upsert:
         prefer += ",resolution=merge-duplicates"
-    resp = requests.post(url, headers=_headers(prefer=prefer), json=data)
+    resp = requests.post(url, headers=_headers(prefer=prefer), json=data, timeout=10)
     result = resp.json()
     if isinstance(result, list) and result:
         return result[0]
@@ -83,7 +80,7 @@ def _patch(table: str, filters: dict, data: dict) -> list:
         params.append(f"{k}={v}")
     if params:
         url += "?" + "&".join(params)
-    resp = requests.patch(url, headers=_headers(prefer="return=representation"), json=data)
+    resp = requests.patch(url, headers=_headers(prefer="return=representation"), json=data, timeout=10)
     return resp.json() if resp.status_code == 200 else []
 
 
@@ -95,7 +92,7 @@ def _delete(table: str, filters: dict) -> None:
         params.append(f"{k}={v}")
     if params:
         url += "?" + "&".join(params)
-    requests.delete(url, headers=_headers())
+    requests.delete(url, headers=_headers(), timeout=10)
 
 
 def _count(table: str, filters: dict = None) -> int:
@@ -105,7 +102,7 @@ def _count(table: str, filters: dict = None) -> int:
         for k, v in filters.items():
             url += f"&{k}={v}"
     h = _headers(prefer="count=exact")
-    resp = requests.get(url, headers=h)
+    resp = requests.get(url, headers=h, timeout=10)
     # Count is in Content-Range header: "0-N/total"
     cr = resp.headers.get("Content-Range", "")
     if "/" in cr:
@@ -228,7 +225,7 @@ class SupabaseCursor:
         if limit:
             url += f"&limit={limit}"
 
-        resp = requests.get(url, headers=_headers())
+        resp = requests.get(url, headers=_headers(), timeout=10)
         self._result = resp.json() if resp.status_code == 200 else []
 
     def _handle_join_select(self, sql: str, join_match):
@@ -305,7 +302,7 @@ class SupabaseCursor:
         if limit_val:
             url += f"&limit={limit_val}"
 
-        resp = requests.get(url, headers=_headers())
+        resp = requests.get(url, headers=_headers(), timeout=10)
         main_rows = resp.json() if resp.status_code == 200 else []
 
         if not main_rows or not join_tables:
@@ -681,7 +678,7 @@ def record_payment(
     days: int = 30
 ) -> int:
     """Record a payment and activate subscription."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cycle_end = now + timedelta(days=days)
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
     end_str = cycle_end.strftime("%Y-%m-%d %H:%M:%S")
@@ -826,7 +823,7 @@ def log_whatsapp_alert_status(business_id: int, alert_type: str, recipient_maske
             "recipient_masked": recipient_masked,
             "status": status,
             "error_code": error_code,
-            "created_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         })
         set_setting(f"biz_wa_logs_{business_id}", json.dumps(logs[:50]))
     except Exception as e:
@@ -883,11 +880,11 @@ def save_google_business_profile_tokens(
         "connected": True,
         "enc_access_token": enc_access,
         "enc_refresh_token": enc_refresh,
-        "expires_at": (datetime.utcnow() + timedelta(seconds=expires_in)).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat(),
         "account_id": account_id,
         "location_id": location_id,
         "location_name": location_name or "Primary Location",
-        "connected_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        "connected_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     }
     set_setting(f"biz_google_bp_{business_id}", json.dumps(data))
 
@@ -947,7 +944,7 @@ def save_business_autoreply_settings(business_id: int, settings: Dict[str, Any])
 
 def get_business_reply_usage(business_id: int) -> Dict[str, Any]:
     """Retrieve monthly and total reply count for a business."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     current_month_key = now.strftime("%Y_%m")
     raw = get_setting(f"biz_reply_usage_{business_id}_{current_month_key}", "")
     month_count = int(raw) if raw and raw.isdigit() else 0
@@ -964,7 +961,7 @@ def get_business_reply_usage(business_id: int) -> Dict[str, Any]:
 
 def increment_business_reply_usage(business_id: int) -> int:
     """Increments reply counter for current billing cycle."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     current_month_key = now.strftime("%Y_%m")
     usage = get_business_reply_usage(business_id)
     new_month = usage["month_count"] + 1
@@ -998,10 +995,10 @@ def save_google_review(business_id: int, review_data: Dict[str, Any]) -> Dict[st
 
     if existing_idx >= 0:
         reviews[existing_idx].update(review_data)
-        reviews[existing_idx]["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        reviews[existing_idx]["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         updated_rev = reviews[existing_idx]
     else:
-        review_data["created_at"] = review_data.get("created_at") or datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        review_data["created_at"] = review_data.get("created_at") or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         review_data["updated_at"] = review_data["created_at"]
         reviews.insert(0, review_data)
         updated_rev = review_data
@@ -1023,11 +1020,11 @@ def update_google_review_reply(business_id: int, google_review_id: str, reply_te
             if status == "posted":
                 r["posted_reply"] = reply_text
                 r["reply_status"] = "posted"
-                r["reply_posted_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+                r["reply_posted_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             else:
                 r["drafted_reply"] = reply_text
                 r["reply_status"] = status
-            r["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            r["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             set_setting(f"biz_reviews_store_{business_id}", json.dumps(reviews))
             return True
     return False
@@ -1078,9 +1075,9 @@ def init_db():
 
 def _seed_demo_data():
     """Seed demo businesses, owner, analytics, and payment data."""
-    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    month_later = (datetime.utcnow() + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-    year_later = (datetime.utcnow() + timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    month_later = (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+    year_later = (datetime.now(timezone.utc) + timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
 
     demo_businesses = [
         {
