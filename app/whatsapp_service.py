@@ -43,7 +43,28 @@ OTP_VERIFY_TEMPLATE = os.getenv("WHATSAPP_OTP_TEMPLATE", "owner_phone_verificati
 # Twilio Configuration Fallback
 TWILIO_ACCOUNT_SID = (os.getenv("TWILIO_ACCOUNT_SID") or get_setting("twilio_account_sid", "")).strip()
 TWILIO_AUTH_TOKEN = (os.getenv("TWILIO_AUTH_TOKEN") or get_setting("twilio_auth_token", "")).strip()
-TWILIO_WHATSAPP_NUMBER = (os.getenv("TWILIO_WHATSAPP_NUMBER") or get_setting("twilio_whatsapp_number", "+17372508034")).strip()
+TWILIO_WHATSAPP_NUMBER = (os.getenv("TWILIO_WHATSAPP_NUMBER") or get_setting("twilio_whatsapp_number", "+14155238886")).strip()
+
+# Telegram Configuration
+TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN") or get_setting("telegram_bot_token", "")).strip()
+TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID") or get_setting("telegram_chat_id", "")).strip()
+
+
+def send_telegram_alert(text: str) -> Tuple[bool, str]:
+    """Dispatches instant notification to business owner via Telegram Bot."""
+    token = TELEGRAM_BOT_TOKEN or get_setting("telegram_bot_token", "")
+    chat_id = TELEGRAM_CHAT_ID or get_setting("telegram_chat_id", "")
+    if not token or not chat_id:
+        return False, "telegram_not_configured"
+    try:
+        url = f"https://api.telegram.org/bot{token.strip()}/sendMessage"
+        resp = requests.post(url, json={"chat_id": chat_id.strip(), "text": text}, timeout=8)
+        if resp.status_code in (200, 201):
+            return True, "delivered_telegram"
+        return False, f"Telegram HTTP {resp.status_code}"
+    except Exception as e:
+        return False, f"Telegram error: {str(e)}"
+
 
 
 def normalize_phone_number(phone: str) -> str:
@@ -147,6 +168,13 @@ def send_whatsapp_message_with_retry(
     Falls back to mock mode if credentials are not configured.
     """
     norm_phone = normalize_phone_number(recipient_phone)
+
+    # 1. Instant Telegram Delivery (Free, no templates or sandboxes required)
+    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+        tel_ok, tel_res = send_telegram_alert(text)
+        if tel_ok:
+            return True, "delivered_telegram"
+
     if not norm_phone or len(norm_phone) < 10:
         return False, "invalid_phone_number"
 
@@ -169,6 +197,8 @@ def send_whatsapp_message_with_retry(
             if attempt < max_retries:
                 time.sleep(1.0 * (2 ** attempt))
         return False, err_msg
+
+
 
     # Development / Test Mock Dispatcher
     try:
