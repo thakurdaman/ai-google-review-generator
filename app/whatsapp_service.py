@@ -41,9 +41,9 @@ LOW_REVIEW_ALERT_TEMPLATE = os.getenv("WHATSAPP_LOW_REVIEW_TEMPLATE", "low_star_
 OTP_VERIFY_TEMPLATE = os.getenv("WHATSAPP_OTP_TEMPLATE", "owner_phone_verification_otp")
 
 # Twilio Configuration Fallback
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
-TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "").strip()
+TWILIO_ACCOUNT_SID = (os.getenv("TWILIO_ACCOUNT_SID") or get_setting("twilio_account_sid", "")).strip()
+TWILIO_AUTH_TOKEN = (os.getenv("TWILIO_AUTH_TOKEN") or get_setting("twilio_auth_token", "")).strip()
+TWILIO_WHATSAPP_NUMBER = (os.getenv("TWILIO_WHATSAPP_NUMBER") or get_setting("twilio_whatsapp_number", "+17372508034")).strip()
 
 
 def normalize_phone_number(phone: str) -> str:
