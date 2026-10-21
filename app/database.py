@@ -23,7 +23,8 @@ SUPABASE_URL = os.environ.get(
     "SUPABASE_URL",
     "https://jaggkwijjpsoobcfppnp.supabase.co"
 )
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
+_FALLBACK_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZ2drd2lqanBzb29iY2ZwcG5wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTkxMjQ5NCwiZXhwIjoyMTA3NDg4NDk0fQ.nzCe8fliv8VFwxmCZI5tG4MCiN9SDQvC8sneuUbn9OA"
+SUPABASE_KEY = (os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY") or _FALLBACK_SUPABASE_KEY).strip()
 
 
 REST_BASE = f"{SUPABASE_URL}/rest/v1"

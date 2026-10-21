@@ -693,6 +693,7 @@ async def verify_email_action(request: Request, token: str = Query(...)):
 # ==========================================
 
 @app.get("/login", response_class=HTMLResponse)
+@app.get("/owner/login", response_class=HTMLResponse)
 async def owner_login_page(request: Request, error: Optional[str] = None):
     if get_current_owner(request):
         return RedirectResponse(url="/dashboard")
@@ -703,6 +704,7 @@ async def owner_login_page(request: Request, error: Optional[str] = None):
     )
 
 @app.post("/login")
+@app.post("/owner/login")
 async def owner_login_submit(
     request: Request,
     email: str = Form(...),
@@ -1543,17 +1545,33 @@ async def api_owner_cancel_autopay(request: Request):
 async def demo_review_redirect():
     return RedirectResponse(url="/r/artisan-roast", status_code=status.HTTP_302_FOUND)
 
-@app.get("/r/reply", response_class=HTMLResponse)
-@app.get("/r/{slug}", response_class=HTMLResponse)
+@app.get("/r/{slug:path}", response_class=HTMLResponse)
 async def customer_review_landing(slug: str, request: Request):
     """
     Landing page accessed when customer scans QR code or taps NFC card.
     Enforces automatic activation / deactivation gating based on subscription status.
     """
+    raw_slug = urllib.parse.unquote(slug or "").strip().rstrip("/")
+    if raw_slug == "reply":
+        return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
+
+    # Normalize: lower, replace spaces and underscores with hyphens
+    norm_slug = re.sub(r'[\s_]+', '-', raw_slug).strip('-').lower()
+
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM businesses WHERE slug = ?", (slug,))
+    cursor.execute("SELECT * FROM businesses WHERE slug = ?", (norm_slug,))
     business = cursor.fetchone()
+    if not business and raw_slug != norm_slug:
+        cursor.execute("SELECT * FROM businesses WHERE slug = ?", (raw_slug,))
+        business = cursor.fetchone()
+    if not business:
+        clean_name = raw_slug.replace("-", " ").strip()
+        cursor.execute("SELECT * FROM businesses WHERE LOWER(name) = LOWER(?)", (clean_name,))
+        business = cursor.fetchone()
+    if not business and raw_slug.isdigit():
+        cursor.execute("SELECT * FROM businesses WHERE id = ?", (int(raw_slug),))
+        business = cursor.fetchone()
     conn.close()
 
     if not business:
