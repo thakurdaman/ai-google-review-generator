@@ -1,3 +1,6 @@
+import base64
+import hmac
+import hashlib
 """
 Google Business Profile API & Review Auto-Reply Management Service.
 Handles:
@@ -36,11 +39,12 @@ from .database import (
     update_google_review_reply
 )
 from .security import (
+    SECRET_KEY,
     encrypt_secret,
     decrypt_secret
 )
-from .ai_service import generate_google_review_reply, detect_review_language, sanitize_review_input
-from .whatsapp_service import send_low_star_review_alert_to_owner
+from .ai_service import generate_google_review_reply, generate_multi_reply_options, detect_review_language, sanitize_review_input
+from .whatsapp_service import send_low_star_review_alert_to_owner, send_multi_option_review_alert_to_owner
 
 
 # ── Google OAuth Configurations ───────────────────────────────────────────────
@@ -342,27 +346,48 @@ def sync_and_process_google_reviews(
             current_month_replies += 1
             auto_posted_count += 1
         else:
-            # Save as Draft for my approval
+            # Generate 3 distinct AI reply options (Warm, Professional, Casual)
+            multi_options = generate_multi_reply_options(
+                review_text=review_text,
+                rating=rating,
+                reviewer_name=reviewer,
+                business_name=business_name,
+                signature=signature,
+                required_phrases=req_phrases,
+                banned_phrases=banned_phrases,
+                previous_replies=previous_replies
+            )
+            opt_texts = [o["text"] for o in multi_options]
             rev["reply_status"] = "draft"
-            rev["drafted_reply"] = ai_reply
+            rev["drafted_reply"] = opt_texts[0] if opt_texts else ai_reply
+            rev["draft_options"] = opt_texts
             rev["posted_reply"] = ""
             drafted_count += 1
 
-            # For 1 and 2 star reviews: Send WhatsApp alert with ready-to-approve drafted reply!
-            if rating in (1, 2):
-                dash_url = f"{base_url}/dashboard?tab=reviews"
-                wa_ok, _ = send_low_star_review_alert_to_owner(
-                    business_id=business_id,
-                    business_name=business_name,
-                    rating=rating,
-                    reviewer_name=reviewer,
-                    review_text=review_text,
-                    drafted_reply=ai_reply,
-                    dashboard_url=dash_url
-                )
-                if wa_ok:
-                    alerts_dispatched += 1
-                    rev["whatsapp_alert_sent"] = True
+            # Build 1-tap signed URLs for each option
+            dash_url = f"{base_url}/dashboard?tab=reviews"
+            opt_links = []
+            for i, opt in enumerate(multi_options):
+                tok = create_quick_reply_token(business_id, rev_id, i)
+                opt_links.append({
+                    "label": opt["label"],
+                    "text": opt["text"],
+                    "url": f"{base_url}/quick-reply?token={tok}"
+                })
+
+            # Send multi-option alert to owner on WhatsApp / Telegram
+            wa_ok, _ = send_multi_option_review_alert_to_owner(
+                business_id=business_id,
+                business_name=business_name,
+                rating=rating,
+                reviewer_name=reviewer,
+                review_text=review_text,
+                options=opt_links,
+                dashboard_url=dash_url
+            )
+            if wa_ok:
+                alerts_dispatched += 1
+                rev["whatsapp_alert_sent"] = True
 
         save_google_review(business_id, rev)
         processed_count += 1
@@ -550,3 +575,33 @@ def _generate_initial_sandbox_reviews(business_name: str) -> List[Dict[str, Any]
             "created_at": (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S UTC")
         }
     ]
+
+
+def create_quick_reply_token(business_id: int, google_review_id: str, option_idx: int) -> str:
+    """Creates a tamper-proof signed token for 1-tap WhatsApp reply approval (valid for 7 days)."""
+    data = {
+        "b": business_id,
+        "r": google_review_id,
+        "o": option_idx,
+        "t": int(time.time())
+    }
+    raw = base64.urlsafe_b64encode(json.dumps(data).encode("utf-8")).decode("ascii")
+    sig = hmac.new(SECRET_KEY.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{raw}.{sig}"
+
+
+def verify_quick_reply_token(token: str, max_age: int = 604800) -> Optional[Tuple[int, str, int]]:
+    """Verifies 1-tap WhatsApp token. Returns (business_id, google_review_id, option_idx) or None."""
+    if not token or "." not in token:
+        return None
+    try:
+        raw, sig = token.split(".", 1)
+        expected_sig = hmac.new(SECRET_KEY.encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        data = json.loads(base64.urlsafe_b64decode(raw.encode("ascii")).decode("utf-8"))
+        if time.time() - data.get("t", 0) > max_age:
+            return None
+        return int(data["b"]), str(data["r"]), int(data["o"])
+    except Exception:
+        return None

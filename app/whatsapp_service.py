@@ -21,7 +21,7 @@ import hashlib
 import secrets
 import requests
 from datetime import datetime, timezone, timedelta
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any, Optional, List
 
 from .database import (
     get_setting,
@@ -446,6 +446,80 @@ def send_low_star_review_alert_to_owner(
     log_whatsapp_alert_status(
         business_id=business_id,
         alert_type="low_star_google_review",
+        recipient_masked=masked_phone,
+        status="sent" if success else "failed",
+        error_code="" if success else msg
+    )
+
+    return success, msg
+
+
+
+def send_multi_option_review_alert_to_owner(
+    business_id: int,
+    business_name: str,
+    rating: int,
+    reviewer_name: str,
+    review_text: str,
+    options: List[Dict[str, str]],
+    dashboard_url: str
+) -> Tuple[bool, str]:
+    """
+    Sends WhatsApp and Telegram alert to business owner with 3 AI-drafted reply options,
+    each with a direct 1-tap link to publish straight to Google Maps.
+    """
+    settings = get_business_whatsapp_settings(business_id)
+    if not settings.get("alerts_enabled") or not settings.get("phone_number"):
+        return False, "owner_alerts_disabled"
+
+    recipient_phone = settings["phone_number"]
+    masked_phone = mask_phone_number(recipient_phone)
+
+    stars_emoji = "⭐" * rating
+    snippet = (review_text or "").strip()[:300] or "[Rating only, no text]"
+
+    options_text_blocks = []
+    emoji_nums = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
+    for i, opt in enumerate(options):
+        num = emoji_nums[i] if i < len(emoji_nums) else f"[{i+1}]"
+        lbl = opt.get("label", f"Option {i+1}")
+        txt = opt.get("text", "")
+        url = opt.get("url", "")
+        block = (
+            f"{num} *{lbl}:*\n"
+            f"\"{txt}\"\n"
+            f"👉 *Tap to Post Option {i+1}:*\n"
+            f"{url}"
+        )
+        options_text_blocks.append(block)
+
+    options_joined = "\n\n".join(options_text_blocks)
+
+    alert_text = (
+        f"⭐ *New {rating}-Star Google Review Alert!*\n"
+        f"🏢 *{business_name}*\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 Reviewer: *{reviewer_name or 'Google Reviewer'}*\n"
+        f"⭐ Rating: {stars_emoji} ({rating}/5)\n"
+        f"💬 Review: \"{snippet}\"\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"🤖 *Choose a Reply to Post Directly to Google:*\n\n"
+        f"{options_joined}\n\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"✏️ *Or edit in dashboard:*\n"
+        f"{dashboard_url}"
+    )
+
+    success, msg = send_whatsapp_message_with_retry(
+        recipient_phone=recipient_phone,
+        text=alert_text,
+        template_name=LOW_REVIEW_ALERT_TEMPLATE,
+        template_params=[business_name, str(rating), reviewer_name or "Reviewer", snippet, options[0]["text"] if options else "", dashboard_url]
+    )
+
+    log_whatsapp_alert_status(
+        business_id=business_id,
+        alert_type="multi_option_review_reply",
         recipient_masked=masked_phone,
         status="sent" if success else "failed",
         error_code="" if success else msg

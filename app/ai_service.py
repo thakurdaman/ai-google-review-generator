@@ -535,3 +535,48 @@ def test_openai_connection(api_key: str) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
+
+
+def generate_multi_reply_options(
+    review_text: str,
+    rating: int,
+    reviewer_name: str,
+    business_name: str,
+    signature: str = "",
+    required_phrases: str = "",
+    banned_phrases: str = "",
+    previous_replies: Optional[List[str]] = None
+) -> List[Dict[str, str]]:
+    """
+    Generates 3 distinct AI reply options for Google reviews:
+    1. Warm and Personal
+    2. Crisp and Professional
+    3. Casual and Friendly
+    """
+    tones = [
+        ("warm", "Warm & Personal"),
+        ("professional", "Crisp & Professional"),
+        ("casual", "Casual & Friendly")
+    ]
+    options = []
+    seen = list(previous_replies or [])
+    for tone_key, tone_label in tones:
+        reply = generate_google_review_reply(
+            review_text=review_text,
+            rating=rating,
+            reviewer_name=reviewer_name,
+            tone=tone_key,
+            business_name=business_name,
+            signature=signature,
+            required_phrases=required_phrases,
+            banned_phrases=banned_phrases,
+            previous_replies=seen
+        )
+        seen.append(reply)
+        options.append({
+            "tone": tone_key,
+            "label": tone_label,
+            "text": reply
+        })
+    return options

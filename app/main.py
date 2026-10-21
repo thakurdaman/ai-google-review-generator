@@ -45,6 +45,7 @@ from .whatsapp_service import (
     verify_owner_otp, toggle_owner_whatsapp_alerts
 )
 from .google_reviews_service import (
+    verify_quick_reply_token,
     build_google_oauth_url, exchange_code_for_tokens,
     sync_and_process_google_reviews, approve_and_post_reply,
     regenerate_ai_reply, get_plan_reply_limit
@@ -1542,6 +1543,7 @@ async def api_owner_cancel_autopay(request: Request):
 async def demo_review_redirect():
     return RedirectResponse(url="/r/artisan-roast", status_code=status.HTTP_302_FOUND)
 
+@app.get("/r/reply", response_class=HTMLResponse)
 @app.get("/r/{slug}", response_class=HTMLResponse)
 async def customer_review_landing(slug: str, request: Request):
     """
@@ -2357,3 +2359,120 @@ async def server_error_exception_handler(request: Request, exc: Any):
         return JSONResponse(status_code=500, content={"detail": "An internal server error occurred"})
     return templates.TemplateResponse(request=request, name="500.html", status_code=500)
 
+
+
+
+@app.get("/quick-reply", response_class=HTMLResponse)
+async def api_quick_reply_from_whatsapp(request: Request, token: str = Query(...)):
+    """
+    1-Tap WhatsApp / Telegram Reply Approval Endpoint:
+    Allows business owners to tap a link directly in WhatsApp to publish their chosen AI reply
+    straight to Google Business Profile without needing to log in.
+    """
+    result = verify_quick_reply_token(token)
+    if not result:
+        return HTMLResponse(
+            status_code=400,
+            content="""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link Expired - ReviewBoost</title>
+<script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4 font-sans">
+<div class="bg-slate-800 rounded-2xl p-8 max-w-md w-full text-center border border-slate-700 shadow-2xl">
+<div class="text-amber-400 text-5xl mb-4">⚠️</div>
+<h1 class="text-xl font-bold mb-2">Link Expired or Invalid</h1>
+<p class="text-slate-400 text-sm mb-6 leading-relaxed">This quick-reply link is either invalid or has expired for security reasons. Please log into your owner dashboard to reply.</p>
+<a href="/owner/login" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">Go to Dashboard</a>
+</div></body></html>"""
+        )
+
+    business_id, google_review_id, option_idx = result
+
+    # Fetch business reviews
+    reviews = get_business_google_reviews(business_id)
+    review = next((r for r in reviews if r.get("google_review_id") == google_review_id), None)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    reviewer = review.get("reviewer_name", "Google Reviewer")
+    star_rating = int(review.get("star_rating", 5))
+    stars_display = "⭐" * star_rating
+
+    # Check if already replied
+    if review.get("reply_status") == "posted":
+        already_reply = review.get("posted_reply", "")
+        return HTMLResponse(
+            content=f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Already Replied - ReviewBoost</title>
+<script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4 font-sans">
+<div class="bg-slate-800 rounded-2xl p-8 max-w-lg w-full text-center border border-emerald-500/30 shadow-2xl">
+<div class="text-emerald-400 text-5xl mb-4">✅</div>
+<h1 class="text-xl font-bold mb-2">Already Published to Google!</h1>
+<p class="text-slate-400 text-sm mb-4">This review by <strong class="text-white">{reviewer}</strong> ({stars_display}) was already replied to on Google Maps.</p>
+<div class="bg-slate-900/90 rounded-xl p-4 text-left border border-slate-700 mb-6 text-slate-300 italic text-sm">
+"{already_reply}"
+</div>
+<a href="/dashboard" class="inline-block bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition">Open Dashboard</a>
+</div></body></html>"""
+        )
+
+    # Determine chosen reply from draft options
+    draft_options = review.get("draft_options", [])
+    if draft_options and 0 <= option_idx < len(draft_options):
+        chosen_reply = draft_options[option_idx]
+    else:
+        chosen_reply = review.get("drafted_reply", "")
+
+    if not chosen_reply:
+        raise HTTPException(status_code=400, detail="No drafted reply found for this review.")
+
+    # Approve and publish reply to Google My Business API
+    success, msg = approve_and_post_reply(business_id, google_review_id, chosen_reply)
+
+    if not success:
+        return HTMLResponse(
+            status_code=500,
+            content=f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publish Failed - ReviewBoost</title>
+<script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4 font-sans">
+<div class="bg-slate-800 rounded-2xl p-8 max-w-md w-full text-center border border-slate-700 shadow-2xl">
+<div class="text-red-400 text-5xl mb-4">❌</div>
+<h1 class="text-xl font-bold mb-2">Publish Failed</h1>
+<p class="text-slate-400 text-sm mb-6">{msg}</p>
+<a href="/dashboard" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">Open Dashboard</a>
+</div></body></html>"""
+        )
+
+    return HTMLResponse(
+        content=f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Published to Google! - ReviewBoost</title>
+<script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4 font-sans">
+<div class="bg-slate-800 rounded-3xl p-8 max-w-lg w-full text-center border border-emerald-500/40 shadow-2xl shadow-emerald-500/10">
+<div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✓</div>
+<h1 class="text-2xl font-bold mb-1 text-white">Successfully Published to Google Maps!</h1>
+<p class="text-slate-400 text-sm mb-6">Your official reply has been posted under your Google Business Profile.</p>
+
+<div class="bg-slate-900/90 rounded-2xl p-5 text-left border border-slate-700 mb-6 space-y-3">
+  <div class="flex items-center justify-between text-xs text-slate-400">
+    <span>Reviewer: <strong class="text-white">{reviewer}</strong></span>
+    <span>{stars_display}</span>
+  </div>
+  <div class="text-xs text-slate-400 italic">"{review.get('review_text', '[Rating only]')[:200]}"</div>
+  <hr class="border-slate-800 my-2">
+  <div class="text-xs font-semibold text-emerald-400">Your Published Reply (Option {option_idx + 1}):</div>
+  <div class="text-sm text-slate-200 bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 leading-relaxed">
+    "{chosen_reply}"
+  </div>
+</div>
+
+<div class="flex items-center justify-center gap-3">
+  <a href="/dashboard" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition">View in Dashboard</a>
+</div>
+</div></body></html>"""
+    )
