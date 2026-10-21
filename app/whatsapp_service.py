@@ -169,11 +169,9 @@ def send_whatsapp_message_with_retry(
     """
     norm_phone = normalize_phone_number(recipient_phone)
 
-    # 1. Instant Telegram Delivery (Free, no templates or sandboxes required)
+    # Mirror alert to Telegram if configured
     if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
-        tel_ok, tel_res = send_telegram_alert(text)
-        if tel_ok:
-            return True, "delivered_telegram"
+        send_telegram_alert(text)
 
     if not norm_phone or len(norm_phone) < 10:
         return False, "invalid_phone_number"
